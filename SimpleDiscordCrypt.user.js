@@ -859,18 +859,54 @@ function Init(nonInvasive)
 
             this.SendSystemMessage(channelId, `*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
         },
-        InitKeyExchange: async function(userId) {
+        InitKeyExchange: async function(userId, auto) {
             if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
                 //prompt for confirmation
                 return;
             }
+
             let channelId = Discord.getDMFromUserId(userId);
-            if(channelId == null)
+            let channelConfig;
+            if(channelId == null) {
                 channelId = await Discord.ensurePrivateChannel(Discord.getCurrentUser().id, userId);
+            }
+            else if(auto) {
+                channelConfig = this.GetChannelConfig(channelId);
+                if(channelConfig != null && (channelConfig.s/*systemMessageTime*/ > 0 || channelConfig.w/*waitingForSystemMessage*/))
+                    return;
+            }
 
             let dhPublicKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(DataBase.dhPublicKey));
 
             Utils.SendSystemMessage(channelId, `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``);
+            channelConfig = channelConfig || Utils.GetOrCreateChannelConfig(channelId);
+            channelConfig.w = 1;
+            DataBase.dbChanged = true;
+        },
+        RequestKey: async function(keyHash, userId, auto) {
+            if(DataBase.keys[keyHash] != null) return;
+
+            if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+                //prompt for confirmation
+                return;
+            }
+
+            let channelId = Discord.getDMFromUserId(userId);
+            if(channelId == null) return;
+
+            let channelConfig;
+            if(auto) {
+                channelConfig = this.GetChannelConfig(channelId);
+                if(channelConfig != null && channelConfig.w/*waitingForSystemMessage*/)
+                    return;
+            }
+
+            let requestedKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(keyHash));
+
+            Utils.SendSystemMessage(channelId, `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``);
+            channelConfig = channelConfig || Utils.GetOrCreateChannelConfig(channelId);
+            channelConfig.w = 1;
+            DataBase.dbChanged = true;
         }
     };
 Discord.window.Utils = Utils;
@@ -1018,7 +1054,7 @@ async function decryptMessage(message, payload) {
         key = await Utils.GetKeyByHash(keyHashBase64);
         if(key == null) {
             if(i === 1) {
-                Utils.InitKeyExchange(message.author.id);
+                await Utils.InitKeyExchange(message.author.id, true);
             }
             else if(i === 10) {
                 message.content = unknownKeyMessage;
@@ -1026,6 +1062,8 @@ async function decryptMessage(message, payload) {
                 message.attachments = [];
                 return;
             }
+            await Utils.RequestKey(keyHashBase64, message.author.id, true);
+
             await Utils.Sleep(i * 200);
             continue;
         }
