@@ -1146,6 +1146,8 @@ async function processSystemMessage(message, sysmsg) {
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `Conversation key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
+                Utils.dbChanged = true;
+                if(message.channel_id == Cache.channelId) MenuBar.Update();
 
                 let key = await Utils.AesImportKey(sharedSecret);
 
