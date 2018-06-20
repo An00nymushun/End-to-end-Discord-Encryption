@@ -1335,7 +1335,7 @@ async function processEmbeds(message) {
         await decryptMessage(message, embed.description);
     }
     else if(embed.author.name === "-----SYSTEM MESSAGE-----") {
-        processSystemMessage(message);
+        processSystemMessage(message, embed.description);
     }
 }
 
