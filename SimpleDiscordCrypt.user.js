@@ -1172,7 +1172,7 @@ async function processSystemMessage(message, sysmsg) {
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
             if(dhKeyPayload == null) break;
             try {
-                let dhRemoteKeyBytes = Utils.PayloadDecrypt(dhKeyPayload);
+                let dhRemoteKeyBytes = Utils.PayloadDecode(dhKeyPayload);
                 let dhRemoteKey = await Utils.DhImportPublicKey(dhRemoteKeyBytes);
 
                 let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
@@ -1207,7 +1207,7 @@ async function processSystemMessage(message, sysmsg) {
             let remotePersonalKeyPayload = getSystemMessageProperty('personalKey', sysmsg);
             if(remotePersonalKeyPayload == null) break;
             try {
-                let dhRemoteKeyBytes = Utils.PayloadDecrypt(dhKeyPayload);
+                let dhRemoteKeyBytes = Utils.PayloadDecode(dhKeyPayload);
                 let dhRemoteKey = await Utils.DhImportPublicKey(dhRemoteKeyBytes);
 
                 let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
@@ -1240,7 +1240,7 @@ async function processSystemMessage(message, sysmsg) {
             let remotePersonalKeyPayload = getSystemMessageProperty('personalKey', sysmsg);
             if(remotePersonalKeyPayload == null) break;
             try {
-                let keyHash = Utils.BytesToBase64(Utils.PayloadDecrypt(keyHashPayload));
+                let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
                 let key = Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
@@ -1263,7 +1263,7 @@ async function processSystemMessage(message, sysmsg) {
             let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
             if(requestedKeyPayload == null) break;
             try {
-                let keyHash = Utils.BytesToBase64(Utils.PayloadDecrypt(requestedKeyPayload));
+                let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
 
                 Utils.ShareKey(keyHash, message.channel_id, true); //no need to wait
             }
@@ -1290,7 +1290,7 @@ async function processSystemMessage(message, sysmsg) {
             let keyDescriptor = getSystemMessageProperty('keyDescriptor', sysmsg);
             if(keyDescriptor == null) break;
             try {
-                let keyHash = Utils.BytesToBase64(Utils.PayloadDecrypt(keyHashPayload));
+                let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
                 let key = Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
