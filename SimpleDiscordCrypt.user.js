@@ -22,6 +22,8 @@
 
 'use strict';
 
+const SavedLocalStorage = (typeof(localStorage) !== undefined) ? localStorage : null;
+
 const BaseColor = "#0fc";
 const BaseColorInt = 0x00ffcc;
 
@@ -493,6 +495,31 @@ function Init(nonInvasive)
         Warn: (message) => { console.warn(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
         Error: (message) => { console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
 
+        StorageSave:
+        (typeof(GM_getValue) !== 'undefined' && typeof(GM_setValue) !== 'undefined') ? (key, value) => new Promise((resolve) => {
+            resolve(GM_setValue(key, JSON.stringify(value)));
+        })
+        : (typeof(chrome) !== 'undefined' && chrome.storage != null) ? (key, value) => new Promise((resolve) => {
+            chrome.storage.sync.set({key: value}, resolve);
+        })
+        : (key, value) => new Promise((resolve) => {
+            resolve(SavedLocalStorage.setItem(key, JSON.stringify(value)));
+        }),
+        StorageLoad:
+        (typeof(GM_getValue) !== 'undefined' && typeof(GM_setValue) !== 'undefined') ? (key) => new Promise((resolve) => {
+            let jsonValue = GM_getValue(key);
+            if(jsonValue == null) resolve(null);
+            resolve(JSON.parse(jsonValue));
+        })
+        : (typeof(chrome) !== 'undefined' && chrome.storage != null) ? (key) => new Promise((resolve) => {
+            chrome.storage.sync.get(key, (result) => resolve(result[key]));
+        })
+        : (key) => new Promise((resolve) => {
+            let jsonValue = SavedLocalStorage.getItem(key);
+            if(jsonValue == null) resolve(null);
+            resolve(JSON.parse(jsonValue));
+        }),
+
         Sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
         ReadFile: (file) => new Promise((resolve, reject) => {
             let fileReader = new FileReader();
@@ -518,7 +545,7 @@ function Init(nonInvasive)
             }).on('error', reject);
         })
         : (url) => new Promise((resolve, reject) => {
-            var xhr = new XMLHttpRequest();
+            let xhr = new XMLHttpRequest();
             xhr.responseType = 'arraybuffer';
             xhr.onload = () => resolve(xhr.response);
             xhr.onerror = reject;
@@ -527,7 +554,7 @@ function Init(nonInvasive)
             xhr.send();
         }),
 
-        GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5) << BigInt(22)).toString() : Date.now().toString(),
+        GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5) << BigInt(22)).toString() : () => Date.now().toString(),
 
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
@@ -669,9 +696,9 @@ function Init(nonInvasive)
         },
 
         dbChanged: false,
-        LoadDb: function(callback) {
-            let dbString = this.storage.getItem('SimpleDiscordCrypt');
-            if(dbString && (DataBase = JSON.parse(dbString))) {
+        LoadDb: function(callback) { (async () => {
+            DataBase = await this.StorageLoad('SimpleDiscordCrypt');
+            if(DataBase != null) {
                 Cache = { keys: {} };
 
                 if(DataBase.isEncrypted) {
@@ -695,16 +722,17 @@ function Init(nonInvasive)
             else {
                 this.NewDb(callback);
             }
-        },
-        SaveDb: function() {
+        })()},
+        SaveDb: async function() {
+            if(!this.dbChanged) return;
             this.dbChanged = false;
-            this.storage.setItem('SimpleDiscordCrypt', JSON.stringify(DataBase));
+            await this.StorageSave('SimpleDiscordCrypt', DataBase);
         },
         saveDbTimeout: null,
         FastSaveDb: function() {
             this.dbChanged = true;
             clearTimeout(this.saveDbTimeout);
-            setTimeout(() => { if(this.dbChanged) this.SaveDb() }, 10);
+            setTimeout(() => { this.SaveDb() }, 10);
         },
 
         NewDb: function(callback) {
@@ -724,6 +752,7 @@ function Init(nonInvasive)
 
                     await this.NewPersonalKey();
                     await this.NewDhKeys();
+                    this.FastSaveDb();
                 })();
                 if(callback) promise.then(callback);
             });
@@ -962,11 +991,6 @@ function Init(nonInvasive)
     };
 Discord.window.Utils = Utils;
 Discord.window.Discord = Discord;
-
-    if(typeof(GM_getValue) !== 'undefined' && typeof(GM_setValue) !== 'undefined')
-        Utils.storage = { getItem: GM_getValue, setItem: GM_setValue };
-    else
-        Utils.storage = window.localStorage;
 
     if(!window.crypto || !crypto.subtle) { Utils.Error("Crypto API not found."); return -1; }
 
@@ -1505,7 +1529,7 @@ function Load()
     },
                  (keyHash) => Utils.SetCurrentChannelKey(keyHash));
 
-    dbSaveInterval = setInterval(() => { if(Utils.dbChanged) Utils.SaveDb() }, 10000);
+    dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
     Utils.Log("loaded");
 }
