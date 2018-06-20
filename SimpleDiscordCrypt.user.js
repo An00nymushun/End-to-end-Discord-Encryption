@@ -655,8 +655,9 @@ function Init(nonInvasive)
             return keyBytes;
         },
         SaveKey: async function(keyBytes, type, descriptor, hidden) {
-            let keyObj = { t: type, d: descriptor, r/*registered*/: Date.now(), l/*lastseen*/: Date.now(), h/*hidden*/: (hidden != null) || ((type > 1) ? 1 : 0) };
             let keyHashBase64 = this.BytesToBase64(await this.Sha512_128(keyBytes));
+            if(DataBase.keys[keyHashBase64] != null) return keyHashBase64;
+            let keyObj = { t: type, d: descriptor, r/*registered*/: Date.now(), l/*lastseen*/: Date.now(), h/*hidden*/: (hidden != null) || ((type > 1) ? 1 : 0) };
 
             if(DataBase.isEncrypted)
                 keyBytes = await this.AesEncrypt(Cache.dbKey, keyBytes);
@@ -739,7 +740,7 @@ function Init(nonInvasive)
             DataBase.dhPublicKey = this.BytesToBase64(dhPublicKeyBytes);
             this.FastSaveDb();
         },
-        ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor; this.FastSaveDb() },
+        ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor; this.FastSaveDb() }, //NOTE: disallow characters '`', '\r', '\n' and limit length to 250
         ReplaceChannelKeys: function(oldHash, newHash) { Object.values(DataBase.keys).forEach(x => { if(x.k === oldHash) x.k = newHash } ); this.FastSaveDb() },
         NewPersonalKey: async function() {
             if(DataBase.personalKeyHash != null) this.ChangeKeyDescriptor(DataBase.personalKeyHash, "#Your old personal key#");
@@ -876,10 +877,10 @@ function Init(nonInvasive)
                     return;
             }
 
-            let dhPublicKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(DataBase.dhPublicKey));
+            let dhPublicKeyPayload = this.PayloadEncode(this.Base64ToBytes(DataBase.dhPublicKey));
 
-            Utils.SendSystemMessage(channelId, `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``);
-            channelConfig = channelConfig || Utils.GetOrCreateChannelConfig(channelId);
+            this.SendSystemMessage(channelId, `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``);
+            channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
             DataBase.dbChanged = true;
         },
@@ -901,11 +902,58 @@ function Init(nonInvasive)
                     return;
             }
 
-            let requestedKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(keyHash));
+            let requestedKeyPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
 
-            Utils.SendSystemMessage(channelId, `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``);
-            channelConfig = channelConfig || Utils.GetOrCreateChannelConfig(channelId);
+            this.SendSystemMessage(channelId, `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``);
+            channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
+            DataBase.dbChanged = true;
+        },
+        ShareKey: async function(keyHash, channelId, auto) {
+            let keyObj = DataBase.keys[keyHash];
+            if(keyObj == null) {
+                if(auto) this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
+                return;
+            }
+            if(keyObj.h/*hidden*/ && keyHash !== DataBase.personalKeyHash) {
+                if(auto) this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
+                return;
+            }
+
+            let sharedKeyBase64 = keyObj.k;
+            let sharedKeyBytes = this.Base64ToBytes(sharedKeyBase64);
+            if(DataBase.isEncrypted)
+                sharedKeyBytes = await this.AesDecrypt(Cache.dbKey, sharedKeyBytes);
+
+            let channelConfig = this.GetOrCreateChannelConfig(channelId);
+            let key = this.GetKeyByHash(channelConfig.k);
+            let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
+
+            let sharedKeyPayload = this.PayloadEncode(sharedKeyBytes);
+
+            if(keyHash === DataBase.personalKeyHash) {
+                let keyDescriptor = `<@${Discord.getCurrentUser().id}>'s personal key`;
+                this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`OK\`\n*key*: \`${keyHashPayload}\`\n*sharedKey*: \`${sharedKeyPayload}\`\n*keyType*: \`PERSONAL\`\n*keyDescriptor*: \`${keyDescriptor}\``);
+            }
+            else {
+                const keyTypes = { 1:'GROUP', 2:'CONVERSATION', 3:'PERSONAL' };
+                let keyType = keyTypes[keyObj.t];
+                let keyDescriptor = keyObj.d;
+                let sharedChannels = [];
+                for(let [id, config] of Object.entries(DataBase.channels)) {
+                    if(id === channelId && config.k === keyHash) {
+                        let channel = Discord.getChannel(id);
+                        if(channel == null || channel.type === 1/*DM*/) continue;
+
+                        if(sharedChannels.push(id) === 20) break;
+                    }
+                }
+                let sharedChannelsJson = JSON.stringify(sharedChannels);
+
+                this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`OK\`\n*key*: \`${keyHashPayload}\`\n*sharedKey*: \`${sharedKeyPayload}\`\n*keyType*: \`${keyType}\`\n*keyDescriptor*: \`${keyDescriptor}\`\n*sharedChannels*: \`${sharedChannelsJson}\``);
+            }
+
+            delete channelConfig.w;
             DataBase.dbChanged = true;
         }
     };
@@ -987,20 +1035,6 @@ const messageRegex = /^([⠀-⣿]{16,}) `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴�
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidMessage = "```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message) {
-
-    /*setTimeout(() => {
-        let embeds = message.embeds;
-        embeds.push({type:'rich', description:"#test#"});
-        Discord.dispatch({
-            type: 'MESSAGE_UPDATE',
-            message: {
-                id: message.id, channel_id: message.channel_id, guild_id: message.guild_id,
-                embeds,
-                content: message.content + "???"
-            }
-        });
-    }, 5000);*/
-
 
     let match = messageRegex.exec(message.content);
     if(match != null) { //simple messsage
@@ -1123,11 +1157,11 @@ async function processSystemMessage(message, sysmsg) {
     message.embeds = [];
     let timestamp = new Date(message.timestamp).getTime();
     let channelConfig = Utils.GetOrCreateChannelConfig(message.channel_id);
-    let oldMessage = false;
+    let oldMessage = true;
     if(channelConfig.s/*systemMessageTime*/ == null || timestamp > channelConfig.s) {
         channelConfig.s = timestamp;
         Utils.dbChanged = true;
-        oldMessage = true;
+        oldMessage = false;
     }
 
     switch(getSystemMessageProperty('type', sysmsg)) {
@@ -1219,6 +1253,68 @@ async function processSystemMessage(message, sysmsg) {
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
+            }
+            catch(e) { break }
+        } return;
+        case 'KEY REQUEST': {
+            message.content = "💻 Hey, can you tell me what this means?";
+            if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
+
+            let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
+            if(requestedKeyPayload == null) break;
+            try {
+                let keyHash = Utils.BytesToBase64(Utils.PayloadDecrypt(requestedKeyPayload));
+
+                Utils.ShareKey(keyHash, message.channel_id, true); //no need to wait
+            }
+            catch(e) { break }
+        } return;
+        case 'KEY SHARE': {
+            let status = getSystemMessageProperty('status', sysmsg);
+            const statusMsgs = {
+                'OK': "💻 There you go, take good care of it!",
+                'DENIED': "💻 That's a secret!!!",
+                'NOT FOUND': "💻 Huh? I don't know"
+            };
+            let statusMsg = statusMsgs[status];
+            if(statusMsg == null) break;
+            message.content = statusMsg;
+            if(oldMessage || message.author.id === Discord.getCurrentUser().id || status !== 'OK') return;
+
+            let keyHashPayload = getSystemMessageProperty('key', sysmsg);
+            if(keyHashPayload == null) break;
+            let sharedKeyPayload = getSystemMessageProperty('sharedKey', sysmsg);
+            if(sharedKeyPayload == null) break;
+            let keyTypeName = getSystemMessageProperty('keyType', sysmsg);
+            if(keyTypeName == null) break;
+            let keyDescriptor = getSystemMessageProperty('keyDescriptor', sysmsg);
+            if(keyDescriptor == null) break;
+            try {
+                let keyHash = Utils.BytesToBase64(Utils.PayloadDecrypt(keyHashPayload));
+                let key = Utils.GetKeyByHash(keyHash);
+                if(key == null) {
+                    message.content = unknownKeySystemMessage;
+                    return;
+                }
+
+                let sharedKey = Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
+                if(sharedKeyPayload.byteLength != 32) break;
+                const keyTypeNames = { 'GROUP':1, 'CONVERSATION':2, 'PERSONAL':3 }; //let's get personal :3
+                let keyType = keyTypeNames[keyTypeName];
+                if(keyType == null) break;
+
+                let sharedKeyHash = await Utils.SaveKey(sharedKey, keyType, keyDescriptor);
+
+                delete channelConfig.w; //waitingForSystemMessage
+                Utils.dbChanged = true;
+
+                let sharedChannelsJson = getSystemMessageProperty('sharedChannels', sysmsg);
+                if(sharedChannelsJson == null) return;
+                let sharedChannels = JSON.parse(sharedChannelsJson);
+                for(let channelId of sharedChannels) {
+                    if(DataBase.channels[channelId] != null) continue;
+                    Utils.NewChannelConfig(channelId, sharedKeyHash);
+                }
             }
             catch(e) { break }
         } return;
