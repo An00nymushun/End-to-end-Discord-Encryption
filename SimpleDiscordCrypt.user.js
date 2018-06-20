@@ -754,7 +754,7 @@ function Init(nonInvasive)
             return descriptor.replace(/<@(\d{1,20})>/g, (m, x) => {
                 let user = Discord.getUser(x);
                 if(user != null) x = user.username;
-                return m;
+                return x;
             }).replace(/<#(\d{1,20})>/g, (m, x) => {
                 let channel = Discord.getChannel(x);
                 if(channel == null) return m;
@@ -854,11 +854,14 @@ function Init(nonInvasive)
             if(channelConfig == null || keyHash === DataBase.personalKeyHash) return;
 
             let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
-            let key = this.GetKeyByHash(keyHash);
-            let personalKey = this.GetKeyBytesByHash(DataBase.personalKeyHash);
-            let personalKeyPayload = this.PayloadEncode(await this.AesEncode(key, personalKey));
+            let key = await this.GetKeyByHash(keyHash);
+            let personalKey = await this.GetKeyBytesByHash(DataBase.personalKeyHash);
+            let personalKeyPayload = this.PayloadEncode(await this.AesEncrypt(key, personalKey));
 
-            this.SendSystemMessage(channelId, `*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
+            this.SendSystemMessage(channelId, `*type*: \`PERSONAL KEY\`*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
+
+            delete channelConfig.w;
+            DataBase.dbChanged = true;
         },
         InitKeyExchange: async function(userId, auto) {
             if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
@@ -1088,7 +1091,8 @@ async function decryptMessage(message, payload) {
         key = await Utils.GetKeyByHash(keyHashBase64);
         if(key == null) {
             if(i === 1) {
-                await Utils.InitKeyExchange(message.author.id, true);
+                if(message.author != null)
+                    await Utils.InitKeyExchange(message.author.id, true);
             }
             else if(i === 10) {
                 message.content = unknownKeyMessage;
@@ -1096,7 +1100,8 @@ async function decryptMessage(message, payload) {
                 message.attachments = [];
                 return;
             }
-            await Utils.RequestKey(keyHashBase64, message.author.id, true);
+            if(message.author != null)
+                await Utils.RequestKey(keyHashBase64, message.author.id, true);
 
             await Utils.Sleep(i * 200);
             continue;
@@ -1181,7 +1186,7 @@ async function processSystemMessage(message, sysmsg) {
                 let dhPrivateKey = await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
-                let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `Conversation key with <@${message.author.id}>`);
+                let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
 
                 let dhPublicKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(DataBase.dhPublicKey));
@@ -1216,15 +1221,15 @@ async function processSystemMessage(message, sysmsg) {
                 let dhPrivateKey = await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
-                let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `Conversation key with <@${message.author.id}>`);
+                let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
                 Utils.dbChanged = true;
                 if(message.channel_id == Cache.channelId) MenuBar.Update();
 
                 let key = await Utils.AesImportKey(sharedSecret);
 
-                let remotePersonalKey = Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
-                if(remotePersonalKey.byteLength != 32) break;
+                let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
+                if(remotePersonalKey.byteLength !== 32) break;
                 await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
 
                 await Utils.SendPersonalKey(message.channel_id);
@@ -1241,14 +1246,14 @@ async function processSystemMessage(message, sysmsg) {
             if(remotePersonalKeyPayload == null) break;
             try {
                 let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
-                let key = Utils.GetKeyByHash(keyHash);
+                let key = await Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
                     return;
                 }
 
-                let remotePersonalKey = Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
-                if(remotePersonalKey.byteLength != 32) break;
+                let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
+                if(remotePersonalKey.byteLength !== 32) break;
                 await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
 
                 delete channelConfig.w; //waitingForSystemMessage
@@ -1291,14 +1296,14 @@ async function processSystemMessage(message, sysmsg) {
             if(keyDescriptor == null) break;
             try {
                 let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
-                let key = Utils.GetKeyByHash(keyHash);
+                let key = await Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
                     return;
                 }
 
-                let sharedKey = Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
-                if(sharedKeyPayload.byteLength != 32) break;
+                let sharedKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
+                if(sharedKeyPayload.byteLength !== 32) break;
                 const keyTypeNames = { 'GROUP':1, 'CONVERSATION':2, 'PERSONAL':3 }; //let's get personal :3
                 let keyType = keyTypeNames[keyTypeName];
                 if(keyType == null) break;
@@ -1360,7 +1365,12 @@ async function handleSend(channelId, message, forceSimple) {
     let channelConfig = Utils.GetChannelConfig(channelId);
     let content = message.content;
     let prefixMatch = prefixRegex.exec(content);
-    if(channelConfig == null) return null;
+    if(channelConfig == null) {
+        if(prefixMatch != null) {
+            channelConfig = Utils.NewChannelConfig(channelId);
+        }
+        else return null;
+    }
     if(prefixMatch != null) content = content.substring(prefixMatch[0].length);
     else if(!channelConfig.e) return null;
 
