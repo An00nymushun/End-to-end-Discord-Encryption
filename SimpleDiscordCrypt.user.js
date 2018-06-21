@@ -538,7 +538,7 @@ function Init(nonInvasive)
             })
         })
         : (typeof(require) !== 'undefined') ? function(url) { return new Promise ((resolve, reject) => {
-            require('https').get(url, function(response) {
+            require('https').get(url, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
