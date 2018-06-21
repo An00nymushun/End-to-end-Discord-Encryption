@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.1.0
+// @version      0.2.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
