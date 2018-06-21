@@ -537,13 +537,13 @@ function Init(nonInvasive)
                 onerror: reject
             })
         })
-        : (typeof(require) !== 'undefined') ? (url) => new Promise ((resolve, reject) => {
+        : (typeof(require) !== 'undefined') ? function(url) { return new Promise ((resolve, reject) => {
             require('https').get(url, function(response) {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
-                response.on('end', () => resolve(Buffer.concat(data)));
+                response.on('end', () => resolve(this.ConcatBuffers(data)));
             }).on('error', reject);
-        })
+        })}
         : (url) => new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             xhr.responseType = 'arraybuffer';
