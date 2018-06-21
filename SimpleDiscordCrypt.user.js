@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.1
+// @version      0.2.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -9,6 +9,7 @@
 // @updateURL    https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.meta.js
 // @icon         https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/logo.png
 // @match        https://discordapp.com/channels/*
+// @match        https://discordapp.com/activity
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
@@ -196,7 +197,48 @@ const Style = {
 	border-style: solid;
 	border-color: transparent transparent black transparent;
 }
-:hover > .sdc-tooltip { visibility: visible }`,
+:hover > .sdc-tooltip { visibility: visible }
+
+.sdc-menu {
+    position: fixed;
+    min-width: 170px;
+    z-index: 1005;
+    border-radius: 5px;
+	background: #282b30;
+	box-shadow: 0 0 1px rgba(0,0,0,.82), 0 1px 4px rgba(0,0,0,.1);
+}
+.sdc-menu a {
+	font-size: 13px;
+	font-weight: 500;
+    line-height: 16px;
+    margin: 2px 0;
+	padding: 6px 10px;
+    overflow: hidden;
+	color: #fff;
+	opacity: .6;
+    border-radius: 5px;
+
+    transition: none;
+    cursor: default;
+}
+.sdc-menu a:hover {
+	background: #25282d;
+	opacity: 1;
+}
+.sdc-menu > div {
+	border-bottom: solid 1px hsla(0,0%,96%,.08);
+	flex-direction: column;
+}
+.sdc-menu > div:last-child { border: 0 }
+.sdc-hidden {
+	width: 0;
+    height: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    outline: 0;
+    margin: 0;
+}`,
     Inject: function() {
         let style = document.createElement('style');
         style.innerHTML = this.css;
@@ -292,7 +334,26 @@ const MenuBar = {
     toggleOffButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" style="opacity:1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 3C12.477 3 8 7.477 8 13v10h4V13c0-3.313 2.686-6 6-6s6 2.687 6 6v10h4V13c0-5.523-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/><p class="sdc-tooltip">Disable Encryption</p></svg>`,
     keySelectHtml: `<div class="sdc sdc-select" style="margin-left:5px"><label style="width:200px;height:30px;justify-content:center"><p class="SDC_SELECTED"></p><input class="SDC_DROPDOWN" type="checkbox"></label><div class="SDC_OPTIONS" style="visibility:hidden"></div></div>`,
     toggledOnCss: `.inner-zqa7da{box-shadow:0 0 0 1px ${BaseColor} !important}`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey) {
+    menuHtml: `<button type="button" class="SDC_FOCUS sdc-hidden"></button>
+<div class="sdc sdc-menu SDC_MENU" style="visibility:hidden">
+	<div class="SDC_DMMENU">
+		<a class="SDC_KEYEXCHANGE">Start Key Exchange</a>
+		<a class="SDC_KEYSHARE">Share Keys</a>
+	</div>
+	<div class="SDC_GROUPMENU">
+		<a class="SDC_NEWKEY">Create Group Key</a>
+	</div>
+	<div>
+		<a class="SDC_KEYMANAGER">Key Manager</a>
+		<a class="SDC_CHMANAGER">Channel Manager</a>
+	</div>
+	<div>
+		<a class="SDC_EXPORTDB">Export Database</a>
+		<a class="SDC_NEWDBKEY">Change Database Key</a>
+		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
+	</div>
+</div>`,
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -305,6 +366,14 @@ const MenuBar = {
         let keySelectSelected = this.keySelect.getElementsByClassName('SDC_SELECTED')[0];
         let keySelectDropdown = this.keySelect.getElementsByClassName('SDC_DROPDOWN')[0];
         let keySelectOptions = this.keySelect.getElementsByClassName('SDC_OPTIONS')[0];
+
+        this.menuWrapper = document.createElement('div');
+        this.menuWrapper.innerHTML = this.menuHtml;
+        document.body.appendChild(this.menuWrapper);
+        let menu = this.menuWrapper.getElementsByClassName('SDC_MENU')[0];
+        let menuFocus = this.menuWrapper.getElementsByClassName('SDC_FOCUS')[0];
+        let menuDmGroup = this.menuWrapper.getElementsByClassName('SDC_DMMENU')[0];
+        let menuNondmGroup = this.menuWrapper.getElementsByClassName('SDC_GROUPMENU')[0];
 
         this.toggleOnButton = document.createElement('div');
         this.toggleOnButton.innerHTML = this.toggleOnButtonHtml;
@@ -343,6 +412,15 @@ const MenuBar = {
             }
         };
 
+        this.toggleOnButton.oncontextmenu = this.toggleOffButton.oncontextmenu = (e) => {
+            e.preventDefault();
+            menu.style.left = e.clientX+"px";
+            menu.style.top = e.clientY+"px";
+            menu.style.visibility = 'visible';
+            menuFocus.focus();
+        };
+        menuFocus.onblur = () => { menu.style.visibility = 'hidden' };
+
         this.Update = function(isRetry) {
             let titleElement = document.body.getElementsByClassName('titleText-3X-zRE')[0];
             if(titleElement == null) {
@@ -374,6 +452,15 @@ const MenuBar = {
                 if(toggleOffEnabled) this.toggleOffButton.parentNode.removeChild(this.toggleOffButton);
                 if(!toggleOnEnabled) titleElement.insertAdjacentElement('afterend', this.toggleOnButton);
             }
+
+            if(getIsDmChannel()) {
+                menuDmGroup.style.display = null;
+                menuNondmGroup.style.display = 'none';
+            }
+            else {
+                menuDmGroup.style.display = 'none';
+                menuNondmGroup.style.display = null;
+            }
         };
         this.Update();
     },
@@ -386,6 +473,8 @@ const MenuBar = {
             document.body.removeChild(this.toggleOnButton);
         if(document.body.contains(this.toggleOffButton))
             document.body.removeChild(this.toggleOffButton);
+        if(document.body.contains(this.menuWrapper))
+            document.body.removeChild(this.menuWrapper);
     }
 };
 
@@ -852,6 +941,7 @@ function Init(nonInvasive)
                 this.dbChanged = true;
             }
         },
+        GetCurrentChannelIsDm: () => Discord.getChannel(Cache.channelId).type === 1,
 
         SendSystemMessage: function(channelId, sysmsg) {
             Discord.enqueue({
@@ -1527,7 +1617,9 @@ function Load()
 
         return keys;
     },
-                 (keyHash) => Utils.SetCurrentChannelKey(keyHash));
+                 (keyHash) => Utils.SetCurrentChannelKey(keyHash),
+                 () => Utils.GetCurrentChannelIsDm()
+                );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
