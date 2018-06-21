@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.0
+// @version      0.2.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1470,26 +1470,26 @@ function Load()
     Cache.channelConfig = DataBase.channels[Cache.channelId];
     if(Cache.channelConfig != null) Cache.channelConfig.l = Date.now();
 
-    modules.MessageQueue.enqueue = function(packet){(async function(){
+    modules.MessageQueue.enqueue = function(packet){(async () => {
 
         await handleSend(packet.message.channelId, packet.message, packet.type === 'edit');
 
         Discord.original_enqueue.apply(this, arguments);
-    }).apply(this, arguments)};
+    })()};
 
-    modules.MessageDispatcher.dispatch = function(event){(async function(){
+    modules.MessageDispatcher.dispatch = function(event){(async () => {
         let handler = eventHandlers[event.type];
         if(handler) await handler(event);
 
         Discord.original_dispatch.apply(this, arguments);
-    }).apply(this, arguments)};
+    })()};
 
-    modules.FileUploader.upload = function(channelId, file, message){(async function(){
+    modules.FileUploader.upload = function(channelId, file, message){(async () => {
 
         arguments[1] = await handleUpload(channelId, file, message);
 
         Discord.original_upload.apply(this, arguments);
-    }).apply(this, arguments)};
+    })()};
 
     /*modules.MessageCache.prototype._merge = function(messages) {
         console.log(messages);
