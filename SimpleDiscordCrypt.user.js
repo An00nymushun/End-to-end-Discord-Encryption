@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.1
+// @version      0.2.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -870,7 +870,7 @@ function Init(nonInvasive)
                         },
                         description: sysmsg,
                         footer: {
-                            text: "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵",
+                            text: "\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}",
                             icon_url: "https://i.imgur.com/zWXtTpX.png",
                         }
                     }
@@ -1058,9 +1058,9 @@ async function handleSearch(event) {
             await processMessage(message);
 }
 
-const messageRegex = /^([⠀-⣿]{16,}) `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵`$/;
+const messageRegex = /^([\x{2800}\x{28FF}]{16,}) `\x{D835}\x{DE1A}\x{D835}\x{DE2A}\x{D835}\x{DE2E}\x{D835}\x{DE31}\x{D835}\x{DE2D}\x{D835}\x{DE26}\x{D835}\x{DE0B}\x{D835}\x{DE2A}\x{D835}\x{DE34}\x{D835}\x{DE24}\x{D835}\x{DE30}\x{D835}\x{DE33}\x{D835}\x{DE25}\x{D835}\x{DE0A}\x{D835}\x{DE33}\x{D835}\x{DE3A}\x{D835}\x{DE31}\x{D835}\x{DE35}`$/;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
-const invalidMessage = "```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
+const invalidMessage = "```diff\n-\u2063----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message) {
 
     let match = messageRegex.exec(message.content);
@@ -1136,7 +1136,7 @@ async function decryptMessage(message, payload) {
     message.embeds = []; //remove embeds in case of edit and in case of the payload is from the embed
 
     if(payloadBuffer.byteLength === 16) {
-        message.content = "<:ENC:458236424798470144>⁣"; //invisible separator at the end to make the emoji smaller
+        message.content = "<:ENC:458236424798470144>\u2063"; //invisible separator at the end to make the emoji smaller
     }
     else {
         try {
@@ -1174,7 +1174,7 @@ function getSystemMessageProperty(propertyName, sysmsg) {
 
 
 const unknownKeySystemMessage = "```fix\n-----SYSTEM MESSAGE WITH UNKNOWN KEY-----\n```";
-const invalidSystemMessage = "```diff\n-⁣----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```";
+const invalidSystemMessage = "```diff\n-\u2063----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```";
 async function processSystemMessage(message, sysmsg) {
     let channel = Discord.getChannel(message.channel_id);
     if(channel.type !== 1/*DM*/) return;
@@ -1195,7 +1195,7 @@ async function processSystemMessage(message, sysmsg) {
 
     switch(getSystemMessageProperty('type', sysmsg)) {
         case 'DH KEY': {
-            message.content = "💻 H-hi I would like to know you better";
+            message.content = "\u{1F4BB} H-hi I would like to know you better";
             if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
@@ -1228,7 +1228,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'DH RESPONSE': {
-            message.content = "💻 I like you :3, you can have my number";
+            message.content = "\u{1F4BB} I like you :3, you can have my number";
             if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
@@ -1261,7 +1261,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'PERSONAL KEY': {
-            message.content = "💻 Here is my number, now we can talk any time!!";
+            message.content = "\u{1F4BB} Here is my number, now we can talk any time!!";
             if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
@@ -1286,7 +1286,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'KEY REQUEST': {
-            message.content = "💻 Hey, can you tell me what this means?";
+            message.content = "\u{1F4BB} Hey, can you tell me what this means?";
             if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
 
             let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
@@ -1301,9 +1301,9 @@ async function processSystemMessage(message, sysmsg) {
         case 'KEY SHARE': {
             let status = getSystemMessageProperty('status', sysmsg);
             const statusMsgs = {
-                'OK': "💻 There you go, take good care of it!",
-                'DENIED': "💻 That's a secret!!!",
-                'NOT FOUND': "💻 Huh? I don't know"
+                'OK': "\u{1F4BB} There you go, take good care of it!",
+                'DENIED': "\u{1F4BB} That's a secret!!!",
+                'NOT FOUND': "\u{1F4BB} Huh? I don't know"
             };
             let statusMsg = statusMsgs[status];
             if(statusMsg == null) break;
@@ -1351,11 +1351,11 @@ async function processSystemMessage(message, sysmsg) {
     message.content = invalidSystemMessage;
 }
 
-const descriptionRegex = /^[⠀-⣿]{33,}$/;
+const descriptionRegex = /^[\x{2800}-\x{28FF}]{33,}$/;
 async function processEmbeds(message) {
     if(message.embeds.length !== 1) return;
     let embed = message.embeds[0];
-    if(embed.footer == null || embed.footer.text !== "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵") return;
+    if(embed.footer == null || embed.footer.text !== "\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}") return;
 
     if(embed.author == null) return;
 
@@ -1412,7 +1412,7 @@ async function handleSend(channelId, message, forceSimple) {
 
     let channel = Discord.getChannel(channelId);
     if(forceSimple || (channel.type === 0 && !Discord.can(0x4000/*EMBED_LINKS*/, Discord.getCurrentUser(), channel))) {
-       message.content = payload + " `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵`";
+       message.content = payload + " `\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}`";
     }
     else {
         message.content = "";
@@ -1426,7 +1426,7 @@ async function handleSend(channelId, message, forceSimple) {
             },
             description: payload,
             footer: {
-                text: "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵",
+                text: "\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}",
                 icon_url: "https://i.imgur.com/zWXtTpX.png",
             }
         };
