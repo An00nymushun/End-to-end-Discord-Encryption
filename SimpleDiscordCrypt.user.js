@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.2
+// @version      0.2.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1058,7 +1058,7 @@ async function handleSearch(event) {
             await processMessage(message);
 }
 
-const messageRegex = /^([\x{2800}\x{28FF}]{16,}) `\x{D835}\x{DE1A}\x{D835}\x{DE2A}\x{D835}\x{DE2E}\x{D835}\x{DE31}\x{D835}\x{DE2D}\x{D835}\x{DE26}\x{D835}\x{DE0B}\x{D835}\x{DE2A}\x{D835}\x{DE34}\x{D835}\x{DE24}\x{D835}\x{DE30}\x{D835}\x{DE33}\x{D835}\x{DE25}\x{D835}\x{DE0A}\x{D835}\x{DE33}\x{D835}\x{DE3A}\x{D835}\x{DE31}\x{D835}\x{DE35}`$/;
+const messageRegex = /^([\u{2800}\u{28FF}]{16,}) `\u{D835}\u{DE1A}\u{D835}\u{DE2A}\u{D835}\u{DE2E}\u{D835}\u{DE31}\u{D835}\u{DE2D}\u{D835}\u{DE26}\u{D835}\u{DE0B}\u{D835}\u{DE2A}\u{D835}\u{DE34}\u{D835}\u{DE24}\u{D835}\u{DE30}\u{D835}\u{DE33}\u{D835}\u{DE25}\u{D835}\u{DE0A}\u{D835}\u{DE33}\u{D835}\u{DE3A}\u{D835}\u{DE31}\u{D835}\u{DE35}`$/u;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidMessage = "```diff\n-\u2063----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message) {
@@ -1351,7 +1351,7 @@ async function processSystemMessage(message, sysmsg) {
     message.content = invalidSystemMessage;
 }
 
-const descriptionRegex = /^[\x{2800}-\x{28FF}]{33,}$/;
+const descriptionRegex = /^[\u{2800}-\u{28FF}]{33,}$/u;
 async function processEmbeds(message) {
     if(message.embeds.length !== 1) return;
     let embed = message.embeds[0];
