@@ -301,11 +301,11 @@ const NewdbWindow = {
 		</div>
 		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
 		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
+		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_IMPORT sdc-lnkbtn" style="padding-right:22px"><p>Import</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
 	</form>
 </div>
 </div>`,
-    Show: function(newdbCallback, cancelCallback) {
+    Show: function(newdbCallback, importCallback, cancelCallback) {
         let wrapper = document.createElement('div');
         wrapper.innerHTML = this.html;
         let self = this;
@@ -314,6 +314,9 @@ const NewdbWindow = {
             e.preventDefault();
             self.Remove();
             newdbCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
+        });
+        Utils.AttachEventToClass(wrapper, 'SDC_IMPORT', 'click', () => {
+            importCallback();
         });
         Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
             self.Remove();
@@ -353,7 +356,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, newDb) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -383,6 +386,9 @@ const MenuBar = {
         this.toggleOffButton.innerHTML = this.toggleOffButtonHtml;
         this.toggleOffButton.onclick = toggle;
 
+        Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', () => exportDb());
+        Utils.AttachEventToClass(menu, 'SDC_NEWDB', 'mousedown', () => newDb());
+
         const dropdownOn = () => {
             let keys = getKeys();
             keySelectOptions.innerText = "";
@@ -393,7 +399,7 @@ const MenuBar = {
                 if(key.selected)
                     option.style.backgroundColor = "rgba(0,0,0,.2)";
                 else
-                    option.onclick = () => selectKey(key.hash);
+                    option.onmousedown = () => selectKey(key.hash);
                 keySelectOptions.appendChild(option);
             };
             keySelectOptions.style.visibility = 'visible';
@@ -875,8 +881,8 @@ function Init(nonInvasive)
         },
 
         dbChanged: false,
-        LoadDb: function(callback) { (async () => {
-            DataBase = await this.StorageLoad('SimpleDiscordCrypt');
+        LoadDb: function(callback, reload) { (async () => {
+            if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');
             if(DataBase != null) {
                 Cache = { keys: {} };
 
@@ -886,7 +892,7 @@ function Init(nonInvasive)
                         if(this.BytesToBase64(await this.Sha512_128str(password + DataBase.dbPasswordSalt)) === DataBase.dbPasswordHash)
                         {
                             Cache.dbKey = await this.AesImportKey(await this.Sha512_256str(password + DataBase.dbKeySalt));
-                            callback();
+                            if(callback) callback();
                         }
                         else
                             UnlockWindow.Show(passwordCallback, newdbCallback);
@@ -895,7 +901,7 @@ function Init(nonInvasive)
                     UnlockWindow.Show(passwordCallback, newdbCallback);
                 }
                 else {
-                    callback();
+                    if(callback) callback();
                 }
             }
             else {
@@ -917,9 +923,22 @@ function Init(nonInvasive)
         DownloadDb: async function(uncompressed) {
             let buffer = this.StringToUtf8Bytes(JSON.stringify(DataBase)).buffer;
             if(!uncompressed) buffer = await this.TryCompress(buffer);
-            this.DownloadBlob("SimpleDiscordCrypt.dat", new Blob([buffer]));
+            this.DownloadBlob(uncompressed ? "SimpleDiscordCrypt.json" : "SimpleDiscordCrypt.dat", new Blob([buffer]));
         },
+        fileInput: (() => { //need reference to keep gc away (bug?)
+            let fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            return fileInput;
+        })(),
         ImportDb: function(callback) {
+            this.fileInput.accept = ".json,.dat";
+            this.fileInput.click();
+            this.fileInput.onchange = async () => {
+                let buffer = await this.ReadFile(this.fileInput.files[0]);
+                DataBase = JSON.parse(this.Utf8BytesToString(await this.TryDecompress(buffer)));
+                this.FastSaveDb();
+                this.LoadDb(callback, true);
+            };
         },
 
         NewDb: function(callback) {
@@ -942,7 +961,9 @@ function Init(nonInvasive)
                     this.FastSaveDb();
                 })();
                 if(callback) promise.then(callback);
-            });
+            },
+                             () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }) }
+                            );
         },
         NewDhKeys: async function() {
             let dhKeys = await this.DhGenerateKeys();
@@ -1716,7 +1737,9 @@ function Load()
         return keys;
     },
                  (keyHash) => Utils.SetCurrentChannelKey(keyHash),
-                 () => Utils.GetCurrentChannelIsDm()
+                 () => Utils.GetCurrentChannelIsDm(),
+                 () => Utils.DownloadDb(),
+                 () => Utils.NewDb(() => MenuBar.Update()),
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
