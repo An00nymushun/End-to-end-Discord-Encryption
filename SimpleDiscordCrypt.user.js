@@ -1079,8 +1079,8 @@ function Init(nonInvasive)
             DataBase.dbChanged = true;
         }
     };
-Discord.window.Utils = Utils;
-Discord.window.Discord = Discord;
+Discord.window.SdcUtils = Utils;
+Discord.window.SdcDiscord = Discord;
 
     if(!window.crypto || !crypto.subtle) { Utils.Error("Crypto API not found."); return -1; }
 
