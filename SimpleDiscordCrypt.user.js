@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.2
+// @version      0.2.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -643,7 +643,89 @@ function Init(nonInvasive)
             xhr.send();
         }),
 
-        GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5) << BigInt(22)).toString() : () => Date.now().toString(),
+        DownloadBlob: (filename, blob) => {
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+
+        TryCompress: (buffer) => new Promise((resolve) => {
+            let length = buffer.byteLength;
+            if(length < 1600) return resolve(buffer);
+            let bufferView = new DataView(buffer);
+            let pixelCount = Math.ceil(length / 3);
+            const maxSafePngWidth = 32767;
+            let lines = Math.ceil(pixelCount / maxSafePngWidth);
+            let width = Math.ceil(pixelCount / lines);
+            let fullPixelCount = lines * width;
+            let pixelBytes = new Uint8ClampedArray(fullPixelCount * 4);
+            let pixels = new DataView(pixelBytes.buffer);
+            let pixelMaxIndex = pixelCount - 1;
+            let remainingBytes = length - (pixelMaxIndex * 3);
+            let i = pixelMaxIndex;
+            while(i--) {
+                let pixel = bufferView.getUint32(i * 3, true) | 0xFF000000; //3 bytes per pixel, alpha is 255
+                pixels.setUint32(i * 4, pixel, true);
+            }
+            if(remainingBytes === 3) {
+                let pixel = bufferView.getUint16(length - 3, true) | (bufferView.getUint8(length - 1) << 16) | 0xFF000000;
+                pixels.setUint32(pixelMaxIndex * 4, pixel, true);
+            }
+            else if(remainingBytes === 2) {
+                let pixel = bufferView.getUint16(length - 2, true) | 0xFF000000;
+                pixels.setUint32(pixelMaxIndex * 4, pixel, true);
+            }
+            else if(remainingBytes === 1) {
+                let pixel = bufferView.getUint8(length - 1) | 0xFF000000;
+                pixels.setUint32(pixelMaxIndex * 4, pixel, true);
+            }
+            let canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = lines;
+            let ctx = canvas.getContext('2d');
+            ctx.putImageData(new ImageData(pixelBytes, width, lines), 0, 0);
+            let fileReader = new FileReader();
+            fileReader.onload = () => {
+                let buffer = fileReader.result;
+                let view = new DataView(buffer);
+                view.setUint16(0, 0x5DC, false); //signature: 05 DC
+                view.setUint32(2, length, true);
+                resolve(buffer)
+            }
+            canvas.toBlob(blob => fileReader.readAsArrayBuffer(blob), 'image/png');
+        }),
+        TryDecompress: (buffer) => new Promise((resolve, reject) => {
+            let bufferView = new DataView(buffer);
+            if(bufferView.getUint16(0, false) !== 0x5DC) return resolve(buffer);
+            let length = bufferView.getUint32(2, true);
+            bufferView.setUint16(0, 0x8950, false);
+            bufferView.setUint32(2, 0x4E470D0A, false); //restore original PNG signature
+
+            let image = new Image();
+            let url = URL.createObjectURL(new Blob([buffer]));
+            image.onload = () => {
+                URL.revokeObjectURL(url);
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+                let width = canvas.width = image.width;
+                let height = canvas.height = image.height;
+                ctx.drawImage(image, 0, 0);
+                let buffer = ctx.getImageData(0, 0, width, height).data.buffer;
+                let bufferView = new DataView(buffer);
+                let pixelCount = Math.ceil(length / 3);
+                for(let i = 0; i < pixelCount; i++) {
+                    bufferView.setUint32(i * 3, bufferView.getUint32(i * 4, true), true);
+                }
+                resolve(buffer.slice(0, length));
+            }
+            image.onerror = reject;
+            image.src = url;
+        }),
+
+        GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5/*DISCORD_EPOCH*/) << BigInt(22)).toString() : () => Date.now().toString(),
 
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
@@ -669,6 +751,14 @@ function Init(nonInvasive)
         AesDecryptString: async function(key, buffer) {
             let bytes = await this.AesDecrypt(key, buffer);
             return this.Utf8BytesToString(bytes);
+        },
+        AesEncryptCompressString: async function(key, string) {
+            let buffer = await this.TryCompress(this.StringToUtf8Bytes(string).buffer);
+            return await this.AesEncrypt(key, buffer);
+        },
+        AesDecryptDecompressString: async function(key, string) {
+            let buffer = await this.TryDecompress(await this.AesDecrypt(key, string));
+            return this.Utf8BytesToString(buffer);
         },
 
         DhGenerateKeys: async () => await crypto.subtle.generateKey({name:'ECDH', namedCurve:'P-521'}, true, ['deriveBits']),
@@ -822,6 +912,12 @@ function Init(nonInvasive)
             this.dbChanged = true;
             clearTimeout(this.saveDbTimeout);
             setTimeout(() => { this.SaveDb() }, 10);
+        },
+
+        DownloadDb() {
+
+        },
+        ImportDb(callback) {
         },
 
         NewDb: function(callback) {
@@ -1231,7 +1327,7 @@ async function decryptMessage(message, payload) {
     else {
         try {
             let encryptedMessage = payloadBuffer.slice(16);
-            message.content = "<:ENC:458236424798470144>" + await Utils.AesDecryptString(key, encryptedMessage);
+            message.content = "<:ENC:458236424798470144>" + await Utils.AesDecryptDecompressString(key, encryptedMessage);
         }
         catch(e) {
             message.content = invalidMessage;
@@ -1493,7 +1589,7 @@ async function handleSend(channelId, message, forceSimple) {
     let messageBytes;
     if(content != "")
     {
-        let encryptedMessage = await Utils.AesEncryptString(key, content);
+        let encryptedMessage = await Utils.AesEncryptCompressString(key, content);
         messageBytes = Utils.ConcatBuffers([keyHashBytes, encryptedMessage]);
     }
     else messageBytes = keyHashBytes;
