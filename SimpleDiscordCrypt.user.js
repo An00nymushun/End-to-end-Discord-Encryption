@@ -914,10 +914,12 @@ function Init(nonInvasive)
             setTimeout(() => { this.SaveDb() }, 10);
         },
 
-        DownloadDb() {
-
+        DownloadDb: async function(uncompressed) {
+            let buffer = this.StringToUtf8Bytes(JSON.stringify(DataBase)).buffer;
+            if(!uncompressed) buffer = await this.TryCompress(buffer);
+            this.DownloadBlob("SimpleDiscordCrypt.dat", new Blob([buffer]));
         },
-        ImportDb(callback) {
+        ImportDb: function(callback) {
         },
 
         NewDb: function(callback) {
@@ -1076,7 +1078,7 @@ function Init(nonInvasive)
             this.SendSystemMessage(channelId, `*type*: \`PERSONAL KEY\`*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
 
             delete channelConfig.w;
-            DataBase.dbChanged = true;
+            this.dbChanged = true;
         },
         InitKeyExchange: async function(userId, auto) {
             if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
@@ -1100,7 +1102,7 @@ function Init(nonInvasive)
             this.SendSystemMessage(channelId, `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``);
             channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
-            DataBase.dbChanged = true;
+            this.dbChanged = true;
         },
         RequestKey: async function(keyHash, userId, auto) {
             if(DataBase.keys[keyHash] != null) return;
@@ -1125,7 +1127,7 @@ function Init(nonInvasive)
             this.SendSystemMessage(channelId, `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``);
             channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
-            DataBase.dbChanged = true;
+            this.dbChanged = true;
         },
         ShareKey: async function(keyHash, channelId, auto) {
             let keyObj = DataBase.keys[keyHash];
@@ -1172,7 +1174,7 @@ function Init(nonInvasive)
             }
 
             delete channelConfig.w;
-            DataBase.dbChanged = true;
+            this.dbChanged = true;
         }
     };
 Discord.window.SdcUtils = Utils;
