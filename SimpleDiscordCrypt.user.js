@@ -1061,6 +1061,11 @@ function Init(nonInvasive)
             }
         },
         GetCurrentChannelIsDm: () => Discord.getChannel(Cache.channelId).type === 1,
+        RefreshCache: () => {
+            Cache.channelId = Discord.getChannelId();
+            Cache.channelConfig = DataBase.channels[Cache.channelId];
+            if(Cache.channelConfig != null) Cache.channelConfig.l = Date.now();
+        },
 
         SendSystemMessage: function(channelId, sysmsg) {
             Discord.enqueue({
@@ -1675,9 +1680,7 @@ function Load()
 {
     let modules = Discord.modules;
 
-    Cache.channelId = Discord.getChannelId();
-    Cache.channelConfig = DataBase.channels[Cache.channelId];
-    if(Cache.channelConfig != null) Cache.channelConfig.l = Date.now();
+    Utils.RefreshCache();
 
     modules.MessageQueue.enqueue = function(packet){(async () => {
 
@@ -1739,7 +1742,7 @@ function Load()
                  (keyHash) => Utils.SetCurrentChannelKey(keyHash),
                  () => Utils.GetCurrentChannelIsDm(),
                  () => Utils.DownloadDb(),
-                 () => Utils.NewDb(() => MenuBar.Update()),
+                 () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
