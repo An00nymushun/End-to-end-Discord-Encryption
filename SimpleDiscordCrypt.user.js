@@ -331,6 +331,43 @@ const NewdbWindow = {
             document.body.removeChild(this.domElement);
     }
 };
+const NewPasswordWindow = {
+    html: `<div class="sdc">
+<div class="SDC_CANCEL sdc-cover"></div>
+<div class="sdc-overlay">
+	<form class="SDC_CHANGEPASSWORD sdc-window" style="min-width: 480px">
+		<div style="margin-top:20px">
+			<h4>Change Database Password</h4>
+		</div>
+		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
+		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
+		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
+	</form>
+</div>
+</div>`,
+    Show: function(newPasswordCallback, cancelCallback) {
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = this.html;
+        let self = this;
+
+        Utils.AttachEventToClass(wrapper, 'SDC_CHANGEPASSWORD', 'submit', (e) => {
+            e.preventDefault();
+            self.Remove();
+            newPasswordCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
+        });
+        Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
+            self.Remove();
+            if(cancelCallback) cancelCallback();
+        });
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
+    }
+};
 const MenuBar = {
     menuBarCss: `.SDC_TOGGLE{opacity:.6;fill:#fff;height:24px;cursor:pointer}.SDC_TOGGLE:hover{opacity:.8}`,
     toggleOnButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 0c-4.612 0-8.483 3.126-9.639 7.371l3.855 1.052C12.91 5.876 15.233 4 18 4c3.313 0 6 2.687 6 6v10h4V10c0-5.522-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/></svg><p class="sdc-tooltip">Encrypt Channel</p></div>`,
@@ -356,7 +393,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, newDb) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -386,8 +423,9 @@ const MenuBar = {
         this.toggleOffButton.innerHTML = this.toggleOffButtonHtml;
         this.toggleOffButton.onclick = toggle;
 
-        Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', () => exportDb());
+        Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', (e) => e.ctrlKey ? exportDbRaw() : exportDb());
         Utils.AttachEventToClass(menu, 'SDC_NEWDB', 'mousedown', () => newDb());
+        Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () => newDbKey());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -942,28 +980,79 @@ function Init(nonInvasive)
         },
 
         NewDb: function(callback) {
-            NewdbWindow.Show((password) => {
-                let promise = (async () => {
-                    DataBase = { isEncrypted: password !== "", keys: {}, channels: {}, autoKeyExchange: "DM+friends" };
-                    Cache = { keys: {} };
-                    if(DataBase.isEncrypted)
-                    {
-                        let salts = this.GetRandomUints(2);
-                        DataBase.dbPasswordSalt = salts[0];
-                        DataBase.dbKeySalt = salts[1];
+            NewdbWindow.Show(async (password) => {
+                DataBase = { isEncrypted: password !== "", keys: {}, channels: {}, autoKeyExchange: "DM+friends" };
+                Cache = { keys: {} };
+                if(DataBase.isEncrypted)
+                {
+                    let salts = this.GetRandomUints(2);
+                    DataBase.dbPasswordSalt = salts[0];
+                    DataBase.dbKeySalt = salts[1];
 
-                        DataBase.dbPasswordHash = await this.BytesToBase64(await this.Sha512_128str(password + DataBase.dbPasswordSalt));
-                        Cache.dbKey = await this.AesImportKey(await this.Sha512_256str(password + DataBase.dbKeySalt));
-                    }
+                    DataBase.dbPasswordHash = await this.BytesToBase64(await this.Sha512_128str(password + DataBase.dbPasswordSalt));
+                    Cache.dbKey = await this.AesImportKey(await this.Sha512_256str(password + DataBase.dbKeySalt));
+                }
 
-                    await this.NewPersonalKey();
-                    await this.NewDhKeys();
-                    this.FastSaveDb();
-                })();
-                if(callback) promise.then(callback);
+                await this.NewPersonalKey();
+                await this.NewDhKeys();
+                this.FastSaveDb();
+                if(callback) callback();
             },
                              () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }) }
                             );
+        },
+        NewDbPassword: function(callback) { //TODO: notifications
+            NewPasswordWindow.Show(async (password) => {
+                let newDataBase = Object.assign({}, DataBase);
+                let newDbKey = null;
+                let oldDbKey = Cache.dbKey;
+                newDataBase.isEncrypted = password !== "";
+                if(newDataBase.isEncrypted) {
+                    let salts = this.GetRandomUints(2);
+                    newDataBase.dbPasswordSalt = salts[0];
+                    newDataBase.dbKeySalt = salts[1];
+
+                    newDataBase.dbPasswordHash = await this.BytesToBase64(await this.Sha512_128str(password + newDataBase.dbPasswordSalt));
+                    newDbKey = await this.AesImportKey(await this.Sha512_256str(password + newDataBase.dbKeySalt));
+
+                    let keys = {};
+                    if(DataBase.isEncrypted) {  //re-encrypt keys
+                        for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
+                            let newKey = Object.assign({}, oldKey);
+                            let keyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(oldKey.k/*key*/));
+                            newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
+                            keys[keyHash] = newKey;
+                        }
+                    }
+                    else {                      //encrypt keys
+                        for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
+                            let newKey = Object.assign({}, oldKey);
+                            let keyBytes = this.Base64ToBytes(oldKey.k/*key*/);
+                            newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
+                            keys[keyHash] = newKey;
+                        }
+                    }
+                    newDataBase.keys = keys;
+                }
+                else if(DataBase.isEncrypted) { //decrypt keys
+                    delete newDataBase.dbPasswordSalt;
+                    delete newDataBase.dbKeySalt;
+                    delete newDataBase.dbPasswordHash;
+                    let keys = {};
+                    for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
+                        let newKey = Object.assign({}, oldKey);
+                        let keyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(oldKey.k/*key*/));
+                        newKey.k = this.BytesToBase64(keyBytes);
+                        keys[keyHash] = newKey;
+                    }
+                    newDataBase.keys = keys;
+                }
+
+                DataBase = newDataBase;
+                Cache.dbKey = newDbKey;
+                this.FastSaveDb();
+                if(callback) callback();
+            });
         },
         NewDhKeys: async function() {
             let dhKeys = await this.DhGenerateKeys();
@@ -1742,7 +1831,9 @@ function Load()
                  (keyHash) => Utils.SetCurrentChannelKey(keyHash),
                  () => Utils.GetCurrentChannelIsDm(),
                  () => Utils.DownloadDb(),
+                 () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
+                 () => Utils.NewDbPassword()
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
