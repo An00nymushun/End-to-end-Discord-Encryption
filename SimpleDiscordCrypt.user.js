@@ -393,7 +393,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -426,6 +426,7 @@ const MenuBar = {
         Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', (e) => e.ctrlKey ? exportDbRaw() : exportDb());
         Utils.AttachEventToClass(menu, 'SDC_NEWDB', 'mousedown', () => newDb());
         Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () => newDbKey());
+        Utils.AttachEventToClass(menu, 'SDC_KEYEXCHANGE', 'mousedown', () => keyExchange());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -1150,6 +1151,7 @@ function Init(nonInvasive)
             }
         },
         GetCurrentChannelIsDm: () => Discord.getChannel(Cache.channelId).type === 1,
+        GetCurrentDmUserId: () => Discord.getChannel(Cache.channelId).recipients[0],
         RefreshCache: () => {
             Cache.channelId = Discord.getChannelId();
             Cache.channelConfig = DataBase.channels[Cache.channelId];
@@ -1196,7 +1198,7 @@ function Init(nonInvasive)
             this.dbChanged = true;
         },
         InitKeyExchange: async function(userId, auto) {
-            if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+            if(auto && /friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
                 //prompt for confirmation
                 return;
             }
@@ -1833,7 +1835,8 @@ function Load()
                  () => Utils.DownloadDb(),
                  () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
-                 () => Utils.NewDbPassword()
+                 () => Utils.NewDbPassword(),
+                 () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId())
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
