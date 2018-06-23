@@ -1813,7 +1813,7 @@ function Load()
     };*/
 
     MenuBar.Show(() => Utils.GetCurrentChannelEncrypt(),
-                 () => { Utils.ToggleCurrentChannelEncrypt(); MenuBar.Update() },
+                 () => { Utils.ToggleCurrentChannelEncrypt(); MenuBar.Update(); },
                  () => Utils.FormatDescriptor(DataBase.keys[Utils.GetCurrentChannelKeyHash()].d),
                  () => {
         let keys = [];
@@ -1837,17 +1837,14 @@ function Load()
 
         return keys;
     },
-                 (keyHash) => Utils.SetCurrentChannelKey(keyHash),
+                 (keyHash) => { Utils.SetCurrentChannelKey(keyHash); MenuBar.Update(); },
                  () => Utils.GetCurrentChannelIsDm(),
                  () => Utils.DownloadDb(),
                  () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
                  () => Utils.NewDbPassword(),
                  () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId()),
-                 () => {
-        Utils.SetCurrentChannelKey(Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `<#${Cache.channelId}>`));
-        MenuBar.Update();
-    }
+                 async () => { Utils.SetCurrentChannelKey(await Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `Group <#${Cache.channelId}>`)); MenuBar.Update(); }
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
