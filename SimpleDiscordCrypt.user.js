@@ -393,7 +393,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -427,6 +427,7 @@ const MenuBar = {
         Utils.AttachEventToClass(menu, 'SDC_NEWDB', 'mousedown', () => newDb());
         Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () => newDbKey());
         Utils.AttachEventToClass(menu, 'SDC_KEYEXCHANGE', 'mousedown', () => keyExchange());
+        Utils.AttachEventToClass(menu, 'SDC_NEWKEY', 'mousedown', () => groupKey());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -1017,6 +1018,7 @@ function Init(nonInvasive)
                     newDbKey = await this.AesImportKey(await this.Sha512_256str(password + newDataBase.dbKeySalt));
 
                     let keys = {};
+                    let dhKeyBytes;
                     if(DataBase.isEncrypted) {  //re-encrypt keys
                         for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
                             let newKey = Object.assign({}, oldKey);
@@ -1024,6 +1026,7 @@ function Init(nonInvasive)
                             newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
                             keys[keyHash] = newKey;
                         }
+                        dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKeyBytes));
                     }
                     else {                      //encrypt keys
                         for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
@@ -1032,7 +1035,9 @@ function Init(nonInvasive)
                             newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
                             keys[keyHash] = newKey;
                         }
+                        dhKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKeyBytes);
                     }
+                    newDataBase.dhPrivateKeyBytes = this.BytesToBase64(await this.AesEncrypt(newDbKey, dhKeyBytes));
                     newDataBase.keys = keys;
                 }
                 else if(DataBase.isEncrypted) { //decrypt keys
@@ -1046,6 +1051,8 @@ function Init(nonInvasive)
                         newKey.k = this.BytesToBase64(keyBytes);
                         keys[keyHash] = newKey;
                     }
+                    let dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKeyBytes));
+                    newDataBase.dhPrivateKeyBytes = this.BytesToBase64(dhKeyBytes);
                     newDataBase.keys = keys;
                 }
 
@@ -1836,7 +1843,11 @@ function Load()
                  () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
                  () => Utils.NewDbPassword(),
-                 () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId())
+                 () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId()),
+                 () => {
+        Utils.SetCurrentChannelKey(Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `<#${Cache.channelId}>`));
+        MenuBar.Update();
+    }
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
