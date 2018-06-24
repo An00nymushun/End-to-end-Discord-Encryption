@@ -921,7 +921,7 @@ function Init(nonInvasive)
         },
 
         dbChanged: false,
-        LoadDb: function(callback, reload) { (async () => {
+        LoadDb: function(callback, failCallback, reload) { (async () => {
             if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');
             if(DataBase != null) {
                 Cache = { keys: {} };
@@ -938,7 +938,7 @@ function Init(nonInvasive)
                             UnlockWindow.Show(passwordCallback, newdbCallback);
                     };
 
-                    UnlockWindow.Show(passwordCallback, newdbCallback);
+                    UnlockWindow.Show(passwordCallback, newdbCallback, failCallback);
                 }
                 else {
                     if(callback) callback();
@@ -977,7 +977,7 @@ function Init(nonInvasive)
                 let buffer = await this.ReadFile(this.fileInput.files[0]);
                 DataBase = JSON.parse(this.Utf8BytesToString(await this.TryDecompress(buffer)));
                 this.FastSaveDb();
-                this.LoadDb(callback, true);
+                this.LoadDb(callback, null, true);
             };
         },
 
@@ -1026,7 +1026,7 @@ function Init(nonInvasive)
                             newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
                             keys[keyHash] = newKey;
                         }
-                        dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKeyBytes));
+                        dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKey));
                     }
                     else {                      //encrypt keys
                         for(let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
@@ -1035,9 +1035,9 @@ function Init(nonInvasive)
                             newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
                             keys[keyHash] = newKey;
                         }
-                        dhKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKeyBytes);
+                        dhKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
                     }
-                    newDataBase.dhPrivateKeyBytes = this.BytesToBase64(await this.AesEncrypt(newDbKey, dhKeyBytes));
+                    newDataBase.dhPrivateKey = this.BytesToBase64(await this.AesEncrypt(newDbKey, dhKeyBytes));
                     newDataBase.keys = keys;
                 }
                 else if(DataBase.isEncrypted) { //decrypt keys
@@ -1051,8 +1051,8 @@ function Init(nonInvasive)
                         newKey.k = this.BytesToBase64(keyBytes);
                         keys[keyHash] = newKey;
                     }
-                    let dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKeyBytes));
-                    newDataBase.dhPrivateKeyBytes = this.BytesToBase64(dhKeyBytes);
+                    let dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKey));
+                    newDataBase.dhPrivateKey = this.BytesToBase64(dhKeyBytes);
                     newDataBase.keys = keys;
                 }
 
@@ -1351,8 +1351,8 @@ Discord.window.SdcDiscord = Discord;
 
     Style.Inject();
 
-
-    Utils.LoadDb(Load);
+    LockMessages(true);
+    Utils.LoadDb(() => { Load(); UnlockMessages(); }, UnlockMessages);
 
     return 1;
 }
@@ -1361,7 +1361,7 @@ async function handleMessage(event) {
     await processMessage(event.message);
 }
 async function handleMessages(event) {
-    for(let message of event.messages)
+    for(let message of event.messages.slice()) //in case they reverse the array
         await processMessage(message);
 }
 async function handleSearch(event) {
@@ -1771,6 +1771,33 @@ const eventHandlers = {
     'SEARCH_FINISH': handleSearch,
     'MESSAGE_CREATE': handleMessage,
     'MESSAGE_UPDATE': handleMessage
+}
+
+var messageLocks = [];
+var UnlockMessages;
+function LockMessages(initial) {
+    let messageDispatcher = Discord.modules.MessageDispatcher;
+    let dispatchHook = function(event){(async () => {
+        if(event.type === 'LOAD_MESSAGES_SUCCESS' || event.type === 'MESSAGE_CREATE' || event.type === 'MESSAGE_UPDATE') {
+            if(initial && event.type === 'LOAD_MESSAGES_SUCCESS')
+                event.messages.reverse(); //initial load has the messages reversed for some reason
+
+            await new Promise((resolve) => { messageLocks.push(resolve) });
+
+            messageDispatcher.dispatch.apply(this, arguments);
+        }
+
+        Discord.original_dispatch.apply(this, arguments);
+    })()};
+    messageDispatcher.dispatch = dispatchHook;
+
+    UnlockMessages = () => {
+        if(messageDispatcher.dispatch === dispatchHook)
+            messageDispatcher.dispatch = Discord.original_dispatch;
+        for(let unlockMessage of messageLocks)
+            unlockMessage();
+        messageLocks = [];
+    }
 }
 
 var dbSaveInterval;
