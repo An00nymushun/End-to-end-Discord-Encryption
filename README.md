@@ -2,8 +2,8 @@ SimpleDiscordCrypt
 
 Discord message encryption plugin
 
-Install it as a userscript or include the js file somehow else
-If you have Discord installed, use the Installer (right click and Run with PowerShell)
+Install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) or include the js file somehow else
+If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (right click and Run with PowerShell)
 
 I hope this is actually simple as the name suggests
 
