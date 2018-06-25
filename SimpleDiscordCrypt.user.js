@@ -1451,7 +1451,7 @@ function Init(nonInvasive)
                         author: {
                             name: "-----SYSTEM MESSAGE-----",
                             icon_url: "https://i.imgur.com/pFuRfDE.png",
-                            url: "http://gitlab.com/An0/SimpleDiscordCrypt"
+                            url: "https://gitlab.com/An0/SimpleDiscordCrypt"
                         },
                         description: sysmsg,
                         footer: {
