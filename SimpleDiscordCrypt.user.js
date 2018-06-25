@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.3.1
+// @version      0.3.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1543,10 +1543,10 @@ function Init(nonInvasive)
                 sharedKeyBytes = await this.AesDecrypt(Cache.dbKey, sharedKeyBytes);
 
             let channelConfig = this.GetOrCreateChannelConfig(channelId);
-            let key = this.GetKeyByHash(channelConfig.k);
+            let key = await this.GetKeyByHash(channelConfig.k);
             let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(channelConfig.k));
 
-            let sharedKeyPayload = this.PayloadEncode(sharedKeyBytes);
+            let sharedKeyPayload = this.PayloadEncode(await Utils.AesEncrypt(key, sharedKeyBytes));
 
             if(keyHash === DataBase.personalKeyHash) {
                 let keyDescriptor = `<@${Discord.getCurrentUser().id}>'s personal key`;
@@ -1558,7 +1558,7 @@ function Init(nonInvasive)
                 let keyDescriptor = keyObj.d;
                 let sharedChannels = [];
                 for(let [id, config] of Object.entries(DataBase.channels)) {
-                    if(id === channelId && config.k === keyHash) {
+                    if(config.k === keyHash) {
                         let channel = Discord.getChannel(id);
                         if(channel == null || channel.type === 1/*DM*/) continue;
 
@@ -1912,7 +1912,7 @@ async function processSystemMessage(message, sysmsg) {
                 }
 
                 let sharedKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
-                if(sharedKeyPayload.byteLength !== 32) break;
+                if(sharedKey.byteLength !== 32) break;
                 const keyTypeNames = { 'GROUP':1, 'CONVERSATION':2, 'PERSONAL':3 }; //let's get personal :3
                 let keyType = keyTypeNames[keyTypeName];
                 if(keyType == null) break;
