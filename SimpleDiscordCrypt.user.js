@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.2.3
+// @version      0.3.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -60,6 +60,7 @@ const Style = {
 	flex-direction: column;
 	border-radius: 5px;
 	pointer-events: auto;
+	position: relative;
 }
 .sdc-window > * { margin: 0 20px }
 .sdc-footer {
@@ -116,19 +117,20 @@ const Style = {
 .sdc-lnkbtn {
 	border: 0;
 	color: #fff;
-	background-color: rgba(0,0,0,0);
+	background-color: transparent;
 }
 .sdc-lnkbtn:hover > * { background-image: linear-gradient(0,transparent,transparent 1px,#fff 0,#fff 2px,transparent 0); }
 .sdc-rbtn {
 	color: #f04747;
 	border: solid 1px rgba(240,71,71,.3);
 	transition: border-color .17s ease;
-	background-color: rgba(0,0,0,0);
+	background-color: transparent;
 }
 .sdc-rbtn:hover { border-color: rgba(240,71,71,.6) }
-.sdc-select input {
-	width: 17px;
-	height: 0;
+.sdc-rbtn:disabled {
+	color: #8b8181;
+	border-color: rgba(130,126,126,.6);
+	cursor: default;
 }
 .sdc-select {
 	background: rgba(0,0,0,.1);
@@ -137,17 +139,18 @@ const Style = {
 	transition: border-color .15s ease;
 }
 .sdc-select:hover { border-color: #040405; }
-.sdc-select input::after {
+.sdc-select input + * { margin-right: 17px }
+.sdc-select input + *::after {
 	content: '';
 	border-color: #999 transparent transparent;
 	border-style: solid;
 	border-width: 5px 5px 2.5px;
 	position: absolute;
 	right: 10px;
-	margin-top: -2px;
+	margin-top: 6px;
 }
-.sdc-select:hover input::after { border-color: #f6f6f7 transparent transparent }
-.sdc-select input:checked::after {
+.sdc-select:hover input + *::after { border-color: #f6f6f7 transparent transparent }
+.sdc-select input:checked + *::after {
 	border-color: transparent transparent #f6f6f7;
 	border-width: 0 5px 5px;
 }
@@ -238,6 +241,124 @@ const Style = {
     overflow: hidden;
     outline: 0;
     margin: 0;
+}
+.sdc-scroll {
+	display: block;
+	overflow-x: hidden;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0 12px 0 20px;
+}
+.sdc-scroll::-webkit-scrollbar {
+	width: 8px;
+}
+.sdc-scroll::-webkit-scrollbar-thumb {
+	background-color: rgba(32,34,37,.6);
+	border: 2px solid transparent;
+	border-radius: 4px;
+	background-clip: padding-box;
+}
+.sdc-list { flex-direction: column }
+.sdc-list > div {
+	border: solid 1px rgba(32,34,37,.6);
+	border-radius: 5px;
+	margin: 4px 0;
+}
+.sdc-list > div:hover {
+	background-color: rgba(32,34,37,.1);
+}
+.sdc-list > div > div:first-child {
+	margin-right: auto;
+	padding: 12px 0 8px 20px;
+	flex-direction: column;
+}
+.sdc-list h6 {
+	font-weight: 600;
+	line-height: 20px;
+	word-break: break-all; /*FF*/
+	word-break: break-word;
+    max-width: 400px;
+}
+.sdc-list p {
+	line-height: 16px;
+	font-size: 12px;
+	font-weight: 400;
+	color: #b9bbbe;
+}
+.sdc-edit {
+	background: url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="%23F6F6F7" viewBox="0 0 36 36"%3E%3Cpath d="M1,35.9L8.2,35l7-9l-5-5l-9,7l-0.9,7.1L3.4,32c-0.2-0.3-0.3-0.6-0.3-1c0-1.1,0.9-2,2-2s2,0.9,2,2s-0.9,2-2,2c-0.4,0-0.7-0.1-1-0.3L1,35.9z"/%3E%3Cpath d="M9.5,18.3l13-13c0,0,0,0,0,0c0,0,0.6-0.6,0.8-0.8l3.4-3.4l0,0c1.2-1.1,3-1.1,4.1,0L35,5.3c1.1,1.1,1.1,3,0,4.1l0,0l0,0c0,0,0,0,0,0l-4.2,4.2c0,0,0,0,0,0l-13,13c-1.1,1.2-3,1.2-4.2,0l-4.2-4.2C8.4,21.3,8.4,19.5,9.5,18.3z"/%3E%3C/svg>');
+	background-size: cover;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	margin: -2px 0 0 6px;
+	opacity: .6;
+}
+.sdc-edit:hover { opacity: 1 }
+.sdc-listbox {
+	width: 76px;
+	align-items: center;
+    justify-content: center;
+}
+.sdc-listbox::before {
+	content: '';
+	width: 1px;
+	height: 30px;
+	background: rgba(32,34,37,.5);
+}
+.sdc-listbox > * { margin: auto }
+.sdc-listcheckbox > label { height: 24px }
+.sdc-listcheckbox input + *::after {
+	content: '';
+	border: solid 1px #62666d;
+	border-radius: 3px;
+	width: 24px;
+	box-sizing: border-box;
+	transition: background .17s ease,border-color .17s ease;
+}
+.sdc-listcheckbox input:enabled + * { cursor: pointer }
+.sdc-listcheckbox input:enabled:hover + *::after { border-color: #72767d }
+.sdc-listcheckbox input:checked + *::after {
+	content: url('data:image/svg+xml,%3Csvg stroke="%23FFF" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"%3E%3Cpolyline stroke-width="2" fill="none" points="3.5 9.5 7 13 15 5"%3E%3C/polyline%3E%3C/svg%3E');
+	border: 0;
+	padding: 3px;
+	background: #72dac7;
+}
+.sdc-listcheckbox input:enabled:checked:hover + *::after { background-color: #67c4b3 }
+.sdc-listcheckbox input:disabled + *::after {
+	background: #72767d;
+	border: 0;
+	opacity: .5;
+}
+.sdc-listbox:last-child {
+	background: rgba(0,0,0,.1);
+	padding: 9px;
+}
+.sdc-listbox:last-child::before { display: none }
+.sdc-list > h5 > p {
+	font-size: 10px;
+	font-weight: 700;
+	color: #dcddde;;
+	padding: 0 8px 1px 8px;
+	box-sizing: border-box;
+	justify-content: center;
+}
+.sdc-close {
+	content: url('data:image/svg+xml;utf8,%3Csvg fill="%23DCDDDE" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M9.5 3.205L8.795 2.5 6 5.295 3.205 2.5l-.705.705L5.295 6 2.5 8.795l.705.705L6 6.705 8.795 9.5l.705-.705L6.705 6"%3E%3C/path%3E%3C/svg%3E');
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+	border-radius: 3px;
+	margin: 0;
+	padding: 4px;
+	position: absolute;
+	right: 16px;
+	top: 16px;
+	opacity: .5;
+}
+.sdc-close:hover {
+	opacity: 1;
+	background-color: hsla(210,3%,87%,.05);
 }`,
     Inject: function() {
         let style = document.createElement('style');
@@ -267,19 +388,18 @@ const UnlockWindow = {
     Show: function(passwordCallback, newdbCallback, cancelCallback) {
         let wrapper = document.createElement('div');
         wrapper.innerHTML = this.html;
-        let self = this;
 
         Utils.AttachEventToClass(wrapper, 'SDC_UNBLOCK', 'submit', (e) => {
             e.preventDefault();
-            self.Remove();
+            this.Remove();
             passwordCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
         });
         Utils.AttachEventToClass(wrapper, 'SDC_NEWDB', 'click', () => {
-            self.Remove();
+            this.Remove();
             newdbCallback();
         });
         Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
-            self.Remove();
+            this.Remove();
             if(cancelCallback) cancelCallback();
         });
 
@@ -308,18 +428,17 @@ const NewdbWindow = {
     Show: function(newdbCallback, importCallback, cancelCallback) {
         let wrapper = document.createElement('div');
         wrapper.innerHTML = this.html;
-        let self = this;
 
         Utils.AttachEventToClass(wrapper, 'SDC_CREATEDB', 'submit', (e) => {
             e.preventDefault();
-            self.Remove();
+            this.Remove();
             newdbCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
         });
         Utils.AttachEventToClass(wrapper, 'SDC_IMPORT', 'click', () => {
             importCallback();
         });
         Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
-            self.Remove();
+            this.Remove();
             if(cancelCallback) cancelCallback();
         });
 
@@ -341,24 +460,153 @@ const NewPasswordWindow = {
 		</div>
 		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
 		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
+		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p><button type="submit" class="sdc-btn" style="min-width:96px">Change</button></div>
 	</form>
 </div>
 </div>`,
     Show: function(newPasswordCallback, cancelCallback) {
         let wrapper = document.createElement('div');
         wrapper.innerHTML = this.html;
-        let self = this;
 
         Utils.AttachEventToClass(wrapper, 'SDC_CHANGEPASSWORD', 'submit', (e) => {
             e.preventDefault();
-            self.Remove();
+            this.Remove();
             newPasswordCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
         });
         Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
-            self.Remove();
+            this.Remove();
             if(cancelCallback) cancelCallback();
         });
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
+    }
+};
+const KeyManagerWindow = {
+    html: `<div class="sdc">
+<div class="SDC_CLOSE sdc-cover"></div>
+<div class="sdc-overlay">
+	<div class="sdc-window" style="min-width: 580px">
+		<div style="margin:20px">
+			<h4>Key Manager</h4>
+		</div>
+		<a class="SDC_CLOSE sdc-close"></a>
+		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+		<div class="SDC_LIST sdc-list">
+			<h5><p>Key</p><p style="margin-left:auto;width:76px">Hidden</p><p style="width:94px">Delete</p></h5>
+
+		</div>
+		</div>
+		<div class="sdc-footer">
+			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+		</div>
+	</div>
+</div>
+</div>`,
+    Show: function(keys, setKeyDescriptor, setKeyHidden, deleteKey) {
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = this.html;
+
+        Utils.AttachEventToClass(wrapper, 'SDC_CLOSE', 'click', () => {
+            this.Remove();
+        });
+
+        let list = wrapper.getElementsByClassName('SDC_LIST')[0];
+        for(let key of keys) {
+            let listItem = document.createElement('div');
+            listItem.innerHTML = `<div>
+					<h6 class="SDC_DESCRIPTOR">${key.descriptor} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a></h6>
+					<p>${Utils.FormatTime(key.lastseen)}</p>
+				</div>
+				<div class="sdc-listbox sdc-listcheckbox"><label><input type="checkbox" class="SDC_SETHIDDEN" style="display:none"${key.hidden?' checked':''}${key.type!=='GROUP'?' disabled':''}><p></p></label></div>
+				<div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px"${key.protected?' disabled':''}>Delete</button></div>`;
+            const editDescriptor = (e) => {
+                let descriptorElement = listItem.getElementsByClassName('SDC_DESCRIPTOR')[0];
+                descriptorElement.innerHTML = `<input type="text" class="SDC_DESCRIPTORINPUT" style="width:320px"></input>`;
+                const changeBack = () => {
+                    descriptorElement.innerHTML = `${key.descriptor} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a>`;
+                    Utils.AttachEventToClass(descriptorElement, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
+                };
+                let descriptorInput = descriptorElement.getElementsByClassName('SDC_DESCRIPTORINPUT')[0];
+                descriptorInput.value = key.rawDescriptor;
+                descriptorInput.onkeydown = function(e) {
+                    if(e.keyCode === 13/*ENTER*/) {
+                        e.preventDefault();
+                        setKeyDescriptor(key, this.value)
+                        changeBack();
+                    }
+                    else if(e.keyCode === 27/*ESC*/)
+                        changeBack();
+                };
+            };
+            Utils.AttachEventToClass(listItem, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
+            Utils.AttachEventToClass(listItem, 'SDC_SETHIDDEN', 'change', function() {
+                setKeyHidden(key, this.checked);
+            });
+            Utils.AttachEventToClass(listItem, 'SDC_DELETE', 'click', () => {
+                deleteKey(key);
+                list.removeChild(listItem);
+            });
+
+            list.appendChild(listItem);
+        }
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
+    }
+};
+const ChannelManagerWindow = {
+    html: `<div class="sdc">
+<div class="SDC_CLOSE sdc-cover"></div>
+<div class="sdc-overlay">
+	<div class="sdc-window" style="min-width: 580px">
+		<div style="margin:20px">
+			<h4>Channel Manager</h4>
+		</div>
+		<a class="SDC_CLOSE sdc-close"></a>
+		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+		<div class="SDC_LIST sdc-list">
+			<h5><p>Config</p><p style="margin-left:auto;width:94px">Delete</p></h5>
+
+		</div>
+		</div>
+		<div class="sdc-footer">
+			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+		</div>
+	</div>
+</div>
+</div>`,
+    Show: function(channels, deleteChannel) {
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = this.html;
+
+        Utils.AttachEventToClass(wrapper, 'SDC_CLOSE', 'click', () => {
+            this.Remove();
+        });
+
+        let list = wrapper.getElementsByClassName('SDC_LIST')[0];
+        for(let channel of channels) {
+            let listItem = document.createElement('div');
+            listItem.innerHTML = `<div>
+					<h6 class="SDC_DESCRIPTOR">${channel.descriptor}</h6>
+					<p>${Utils.FormatTime(channel.lastseen)}</p>
+				</div>
+				<div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px">Delete</button></div>`;
+            Utils.AttachEventToClass(listItem, 'SDC_DELETE', 'click', () => {
+                deleteChannel(channel);
+                list.removeChild(listItem);
+            });
+
+            list.appendChild(listItem);
+        }
 
         document.body.appendChild(wrapper);
         this.domElement = wrapper;
@@ -372,7 +620,7 @@ const MenuBar = {
     menuBarCss: `.SDC_TOGGLE{opacity:.6;fill:#fff;height:24px;cursor:pointer}.SDC_TOGGLE:hover{opacity:.8}`,
     toggleOnButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 0c-4.612 0-8.483 3.126-9.639 7.371l3.855 1.052C12.91 5.876 15.233 4 18 4c3.313 0 6 2.687 6 6v10h4V10c0-5.522-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/></svg><p class="sdc-tooltip">Encrypt Channel</p></div>`,
     toggleOffButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" style="opacity:1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 3C12.477 3 8 7.477 8 13v10h4V13c0-3.313 2.686-6 6-6s6 2.687 6 6v10h4V13c0-5.523-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/><p class="sdc-tooltip">Disable Encryption</p></svg>`,
-    keySelectHtml: `<div class="sdc sdc-select" style="margin-left:5px"><label style="width:200px;height:30px;justify-content:center"><p class="SDC_SELECTED"></p><input class="SDC_DROPDOWN" type="checkbox"></label><div class="SDC_OPTIONS" style="visibility:hidden"></div></div>`,
+    keySelectHtml: `<div class="sdc sdc-select" style="margin-left:5px"><label style="width:200px;height:30px;justify-content:center"><input class="SDC_DROPDOWN sdc-hidden" type="checkbox"><p class="SDC_SELECTED"></p></label><div class="SDC_OPTIONS" style="visibility:hidden"></div></div>`,
     toggledOnCss: `.inner-zqa7da{box-shadow:0 0 0 1px ${BaseColor} !important}`,
     menuHtml: `<button type="button" class="SDC_FOCUS sdc-hidden"></button>
 <div class="sdc sdc-menu SDC_MENU" style="visibility:hidden">
@@ -393,7 +641,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -428,6 +676,8 @@ const MenuBar = {
         Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () => newDbKey());
         Utils.AttachEventToClass(menu, 'SDC_KEYEXCHANGE', 'mousedown', () => keyExchange());
         Utils.AttachEventToClass(menu, 'SDC_NEWKEY', 'mousedown', () => groupKey());
+        Utils.AttachEventToClass(menu, 'SDC_KEYMANAGER', 'mousedown', () => keyManager());
+        Utils.AttachEventToClass(menu, 'SDC_CHMANAGER', 'mousedown', () => channelManager());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -439,7 +689,7 @@ const MenuBar = {
                 if(key.selected)
                     option.style.backgroundColor = "rgba(0,0,0,.2)";
                 else
-                    option.onmousedown = () => selectKey(key.hash);
+                    option.onmousedown = () => selectKey(key);
                 keySelectOptions.appendChild(option);
             };
             keySelectOptions.style.visibility = 'visible';
@@ -773,6 +1023,15 @@ function Init(nonInvasive)
 
         GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5/*DISCORD_EPOCH*/) << BigInt(22)).toString() : () => Date.now().toString(),
 
+        FormatTime: (timestamp) => {
+            let timezoneOffset = new Date().getTimezoneOffset() * 60000;
+            let dateNow = new Date(Date.now() - timezoneOffset).toISOString().slice(0, 10);
+            let datetime = new Date(timestamp - timezoneOffset).toISOString();
+            let date = datetime.slice(0, 10);
+            let time = datetime.slice(11, 16);
+            return `${date === dateNow ? "Today at" : date} ${time}`;
+        },
+
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
         Sha512_128str: async function(string) { return await this.Sha512_128(this.StringToUtf8Bytes(string)) },
@@ -850,9 +1109,8 @@ function Init(nonInvasive)
         PayloadDecode: (string) => Uint8Array.from(string, c => c.charCodeAt(0) - 0x2800),
 
         AttachEventToClass: (rootElement, className, eventName, callback) => {
-            let elements = rootElement.getElementsByClassName(className);
-            for (let i = 0; i < elements.length; i++)
-                elements[i].addEventListener(eventName, callback);
+            for(let element of rootElement.getElementsByClassName(className))
+                element.addEventListener(eventName, callback);
         },
 
         trimKeyCache: () => {
@@ -1074,8 +1332,18 @@ function Init(nonInvasive)
             DataBase.dhPublicKey = this.BytesToBase64(dhPublicKeyBytes);
             this.FastSaveDb();
         },
-        ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor; this.FastSaveDb() }, //NOTE: disallow characters '`', '\r', '\n' and limit length to 250
-        ReplaceChannelKeys: function(oldHash, newHash) { Object.values(DataBase.keys).forEach(x => { if(x.k === oldHash) x.k = newHash } ); this.FastSaveDb() },
+        ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor.replace(/[`\r\n]/g, "").substr(0, 250); this.FastSaveDb() },
+        ChangeKeyHidden: function(hash, hidden) { DataBase.keys[hash].h = hidden; this.FastSaveDb() },
+        DeleteKey: async function(hash) {
+            if(hash === DataBase.personalKeyHash) {
+                await this.NewPersonalKey();
+                return;
+            }
+            Utils.ReplaceChannelKeys(hash, DataBase.personalKeyHash);
+            delete DataBase.keys[hash];
+            this.dbChanged = true;
+        },
+        ReplaceChannelKeys: function(oldHash, newHash) { Object.values(DataBase.channels).forEach(x => { if(x.k === oldHash) x.k = newHash } ); this.FastSaveDb() },
         NewPersonalKey: async function() {
             if(DataBase.personalKeyHash != null) this.ChangeKeyDescriptor(DataBase.personalKeyHash, "#Your old personal key#");
             let newPersonalKeyHash = await this.SaveKey(this.GetRandomBytes(32), 3/*personal*/, "#Your personal key#");
@@ -1117,12 +1385,6 @@ function Init(nonInvasive)
             }
             return this.NewChannelConfig(channelId);
         },
-        GetCurrentChannelKeyHash: () => {
-            return (Cache.channelConfig != null) ? Cache.channelConfig.k : DataBase.personalKeyHash;
-        },
-        GetCurrentChannelEncrypt: () => {
-           return (Cache.channelConfig != null) && Cache.channelConfig.e;
-        },
         NewChannelConfig: function(channelId, keyHash, descriptor, encrypt) {
             let channelConfig = { k: keyHash || DataBase.personalKeyHash, e: encrypt ? 1 : 0, l: Date.now() };
             if(descriptor != null) channelConfig.d = descriptor;
@@ -1136,6 +1398,17 @@ function Init(nonInvasive)
             DataBase.channels[channelId] = channelConfig;
             this.FastSaveDb();
             return channelConfig;
+        },
+        DeleteChannelConfig: function(channelId) {
+            if(Cache.channelId === channelId) Cache.channelConfig = null;
+            delete DataBase.channels[channelId];
+            this.dbChanged = true;
+        },
+        GetCurrentChannelKeyHash: () => {
+            return (Cache.channelConfig != null) ? Cache.channelConfig.k : DataBase.personalKeyHash;
+        },
+        GetCurrentChannelEncrypt: () => {
+           return (Cache.channelConfig != null) && Cache.channelConfig.e;
         },
         ToggleCurrentChannelEncrypt: function() {
             if(Cache.channelConfig == null)
@@ -1864,14 +2137,48 @@ function Load()
 
         return keys;
     },
-                 (keyHash) => { Utils.SetCurrentChannelKey(keyHash); MenuBar.Update(); },
+                 (key) => { Utils.SetCurrentChannelKey(key.hash); MenuBar.Update(); },
                  () => Utils.GetCurrentChannelIsDm(),
                  () => Utils.DownloadDb(),
                  () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
                  () => Utils.NewDbPassword(),
                  () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId()),
-                 async () => { Utils.SetCurrentChannelKey(await Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `Group <#${Cache.channelId}>`)); MenuBar.Update(); }
+                 async () => { Utils.SetCurrentChannelKey(await Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `Group <#${Cache.channelId}>`)); MenuBar.Update(); },
+                 () => {
+        let personalKeyHash = DataBase.personalKeyHash;
+        let personalKey = DataBase.keys[personalKeyHash];
+        let keys = [{hash: personalKeyHash,
+                     rawDescriptor: personalKey.d,
+                     descriptor: Utils.FormatDescriptor(personalKey.d),
+                     lastseen: personalKey.l,
+                     hidden: personalKey.h,
+                     type: 'PERSONAL',
+                     protected: true}];
+        const keyTypes = { 1:'GROUP', 2:'CONVERSATION', 3:'PERSONAL' };
+        Object.entries(DataBase.keys).sort(([,a], [,b]) => b.l - a.l).forEach(([hash, keyObj]) => {
+            if(hash != personalKeyHash) keys.push({ hash, rawDescriptor: keyObj.d, lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: keyObj.h, type: keyTypes[keyObj.t] })
+        });
+        KeyManagerWindow.Show(keys,
+                              (key, rawDescriptor) => {
+            Utils.ChangeKeyDescriptor(key.hash, rawDescriptor);
+            key.rawDescriptor = rawDescriptor;
+            key.descriptor = Utils.FormatDescriptor(rawDescriptor);
+            MenuBar.Update();
+        },
+                             (key, hidden) => {
+            Utils.ChangeKeyHidden(key.hash, hidden);
+            key.hidden = hidden;
+        },
+                              (key) => { Utils.DeleteKey(key.hash); MenuBar.Update(); }
+                             );
+    },
+                 () =>
+        ChannelManagerWindow.Show(Object.entries(DataBase.channels)
+                                  .sort(([,a], [,b]) => b.l - a.l)
+                                  .map(([id, channel]) => ({id, descriptor: Utils.FormatDescriptor(channel.d), lastseen: channel.l })),
+                                 (channel) => { Utils.DeleteChannelConfig(channel.id); if(channel.id === Cache.channelId) MenuBar.Update(); }
+                                  )
                 );
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
