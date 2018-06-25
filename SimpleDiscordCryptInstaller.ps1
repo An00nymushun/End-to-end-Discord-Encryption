@@ -1,4 +1,4 @@
-﻿
+
 
 function RootElectron([string]$electonAsarPath) {
 	'rooting'
@@ -86,7 +86,7 @@ if(Test-Path $discordCanaryPath) {
 if($install) {
 	'installing'
 
-	[void](New-Item "$sdcPath\manifest.json" -Force -Value @'
+	[void](New-Item "$sdcPath\manifest.json" -Type File -Force -Value @'
 {
 	"name": "SimpleDiscordCrypt",
 	"content_scripts": [ {
@@ -97,7 +97,7 @@ if($install) {
 }
 '@)
 
-	[void](New-Item "$sdcPath\SimpleDiscordCryptLoader.js" -Force -Value @'
+	[void](New-Item "$sdcPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
 const localStorage = window.localStorage;
 const require = chrome.require;
 delete chrome.storage; //fake API
