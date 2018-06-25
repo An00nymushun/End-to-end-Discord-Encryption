@@ -4,7 +4,7 @@ function RootElectron([string]$electonAsarPath) {
 	'rooting'
 	$electronAsar = [IO.File]::ReadAllText($electonAsarPath)
 
-	$electronAsar = (New-Object Regex('^(?:\s*\/\/.*\r?\n\s*|\s*)?(exports\.injectTo)\s*?(=)\s*?((?:function)\s*\(.*context.*\)|\(.*context.*\)\s*=>)\s*({)$', [Text.RegularExpressions.RegexOptions]::MultiLine)).Replace($electronAsar, {param($m)
+	$electronAsar = (New-Object Regex('^(?:\s*\/\/.*\r?\n\s*|\s*)?(exports\.injectTo)\s*?(=)\s*?((?:function)\s*\(.*context.*\)|\(.*context.*\)\s*=>)\s*({)(?=\r?\n)', [Text.RegularExpressions.RegexOptions]::MultiLine)).Replace($electronAsar, {param($m)
 		$s = ''
 		for($i = 1; $i -lt $m.Groups.Count; $i++) { $s += $m.Groups[$i] }
 		$s += 'context.chrome={require};'
