@@ -51,7 +51,9 @@ if(Test-Path $discordPath) {
 	if(Test-Path $discordDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	RootElectron(Resolve-Path "$discordResourcesPath\electron.asar")
+	foreach($path in (Resolve-Path "$discordResourcesPath\electron.asar")) {
+		RootElectron($path)
+	}
 
 	AddExtension($discordDataPath)
 
@@ -63,7 +65,9 @@ if(Test-Path $discordPtbPath) {
 	if(Test-Path $discordPtbDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordPtbResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	RootElectron(Resolve-Path "$discordPtbResourcesPath\electron.asar")
+	foreach($path in (Resolve-Path "$discordPtbResourcesPath\electron.asar")) {
+		RootElectron($path)
+	}
 
 	AddExtension($discordPtbDataPath)
 
@@ -75,7 +79,9 @@ if(Test-Path $discordCanaryPath) {
 	if(Test-Path $discordCanaryDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordCanaryResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	RootElectron(Resolve-Path "$discordCanaryResourcesPath\electron.asar")
+	foreach($path in (Resolve-Path "$discordCanaryResourcesPath\electron.asar")) {
+		RootElectron($path)
+	}
 
 	AddExtension($discordCanaryDataPath)
 
