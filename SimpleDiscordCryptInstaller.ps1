@@ -51,6 +51,8 @@ if(Test-Path $discordPath) {
 	if(Test-Path $discordDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
+	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordPath) } | Stop-Process
+	
 	foreach($path in (Resolve-Path "$discordResourcesPath\electron.asar")) {
 		RootElectron($path)
 	}
@@ -65,6 +67,8 @@ if(Test-Path $discordPtbPath) {
 	if(Test-Path $discordPtbDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordPtbResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
+	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordPtbPath) } | Stop-Process
+	
 	foreach($path in (Resolve-Path "$discordPtbResourcesPath\electron.asar")) {
 		RootElectron($path)
 	}
@@ -78,6 +82,8 @@ if(Test-Path $discordCanaryPath) {
 	'DiscordCanary found'
 	if(Test-Path $discordCanaryDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordCanaryResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
+	
+	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordCanaryPath) } | Stop-Process
 	
 	foreach($path in (Resolve-Path "$discordCanaryResourcesPath\electron.asar")) {
 		RootElectron($path)
