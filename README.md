@@ -6,6 +6,8 @@ Install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/maste
 
 If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (right click and Run with PowerShell)
 
+Right click on the lock icon to open the menu
+
 I hope this is actually simple as the name suggests
 
 
