@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.3.0
+// @version      0.2.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1544,7 +1544,7 @@ function Init(nonInvasive)
 
             let channelConfig = this.GetOrCreateChannelConfig(channelId);
             let key = this.GetKeyByHash(channelConfig.k);
-            let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
+            let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(channelConfig.k));
 
             let sharedKeyPayload = this.PayloadEncode(sharedKeyBytes);
 
