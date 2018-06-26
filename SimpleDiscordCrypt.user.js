@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.3.3
+// @version      0.4.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -681,11 +681,11 @@ const MenuBar = {
 
         const dropdownOn = () => {
             let keys = getKeys();
-            keySelectOptions.innerText = "";
+            keySelectOptions.innerHTML = "";
 
             for(let key of keys) {
                 let option = document.createElement('a');
-                option.innerText = key.descriptor;
+                option.innerHTML = key.descriptor;
                 if(key.selected)
                     option.style.backgroundColor = "rgba(0,0,0,.2)";
                 else
@@ -735,7 +735,7 @@ const MenuBar = {
             let toggleOffEnabled = document.body.contains(this.toggleOffButton);
             let toggledOn = getToggleStatus();
 
-            keySelectSelected.innerText = getCurrentKeyDescriptor();
+            keySelectSelected.innerHTML = getCurrentKeyDescriptor();
             if(!keySelectEnabled) titleElement.insertAdjacentElement('afterend', this.keySelect);
 
             if(toggledOn) {
@@ -771,6 +771,61 @@ const MenuBar = {
             document.body.removeChild(this.toggleOffButton);
         if(document.body.contains(this.menuWrapper))
             document.body.removeChild(this.menuWrapper);
+    }
+};
+const PopupManager = {
+    Inject: function() {
+        let wrapper = document.createElement('div');
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
+    },
+    Update: function() {
+        if(!document.body.contains(this.domElement))
+            document.body.appendChild(this.domElement);
+    },
+    New: function(message, okCallback, cancelCallback) {
+        let popup = document.createElement('div');
+        popup.innerHTML = `<div class="sdc sdc-window" style="width:280px;position:fixed;right:50px;bottom:60px">
+	<div style="margin:20px;word-break:break-all;word-break:break-word">
+		${message}
+	</div>
+	<div class="sdc-footer" style="padding:10px">
+		<button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p></button>
+		<button type="button" class="SDC_OK sdc-btn" style="min-width:96px">OK</button>
+	</div>
+</div>
+<button type="button" class="SDC_FOCUS sdc-hidden"></button>`;
+        Utils.AttachEventToClass(listItem, 'SDC_OK', 'click', () => {
+            this.domElement.removeChild(popup);
+            okCallback();
+        });
+        Utils.AttachEventToClass(listItem, 'SDC_CANCEL', 'click', () => {
+            this.domElement.removeChild(popup);
+            if(cancelCallback) cancelCallback();
+        });
+        this.domElement.appendChild(popup);
+        return popup;
+    },
+    NewPromise: function(message, timeout) {
+        return new Promise((resolve) => {
+            if(timeout > 0) {
+                let cancelTimeout;
+                let popup = this.New(message,
+                                     () => { clearTimeout(cancelTimeout); resolve(true); },
+                                     () => { clearTimeout(cancelTimeout); resolve(false); }
+                                     );
+
+                cancelTimeout = setTimeout(() => { this.domElement.removeChild(popup); resolve(false); }, timeout);
+            }
+            else {
+                this.New(message, () => resolve(true), () => resolve(false));
+            }
+        });
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
     }
 };
 
@@ -1352,7 +1407,8 @@ function Init(nonInvasive)
             this.FastSaveDb();
         },
 
-        FormatDescriptor: (descriptor) => {
+        htmlEscapeCharacters: { "<": "&lt;", ">": "&gt;", "&": "&amp;" },
+        FormatDescriptor: function(descriptor) {
             return descriptor.replace(/<@(\d{1,20})>/g, (m, x) => {
                 let user = Discord.getUser(x);
                 if(user != null) x = user.username;
@@ -1363,7 +1419,7 @@ function Init(nonInvasive)
                 if(channel.guild_id == null) return channel.name;
                 let guild = Discord.getGuild(channel.guild_id);
                 return `${guild.name} #${channel.name}`;
-            });
+            }).replace(/[<>&]/g, x => this.htmlEscapeCharacters[x]);
         },
 
         GetChannelConfig: function(channelId) {
@@ -1477,11 +1533,18 @@ function Init(nonInvasive)
             delete channelConfig.w;
             this.dbChanged = true;
         },
+        ongoingKeyExchanges: {},
         InitKeyExchange: async function(userId, auto) {
             if(auto && /friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                //prompt for confirmation
-                return;
+                if(this.ongoingKeyExchanges[userId]) return;
+                this.ongoingKeyExchanges[userId] = true;
+                let user = Discord.getUser(userId);
+                let force = await PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`);
+                //delete this.ongoingKeyExchanges[userId];
+                if(!force) return;
+                keyExchangeWhitelist[userId] = true;
             }
+            delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
 
             let channelId = Discord.getDMFromUserId(userId);
             let channelConfig;
@@ -1501,13 +1564,18 @@ function Init(nonInvasive)
             channelConfig.w = 1;
             this.dbChanged = true;
         },
+        ongoingKeyRequests: {},
         RequestKey: async function(keyHash, userId, auto) {
             if(DataBase.keys[keyHash] != null) return;
 
+            let requestId = keyHash + userId;
             if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                //prompt for confirmation
-                return;
+                if(this.ongoingKeyRequests[requestId]) return;
+                this.ongoingKeyRequests[requestId] = true;
+                let user = Discord.getUser(userId);
+                if(!await PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`)) return;
             }
+            delete this.ongoingKeyRequests[requestId];
 
             let channelId = Discord.getDMFromUserId(userId);
             if(channelId == null) return;
@@ -1760,13 +1828,11 @@ function getSystemMessageProperty(propertyName, sysmsg) {
 
 const unknownKeySystemMessage = "```fix\n-----SYSTEM MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidSystemMessage = "```diff\n-\u2063----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```";
+const blockedSystemMessage = "```fix\n-----SYSTEM MESSAGE BLOCKED-----\n```";
+var keyExchangeWhitelist = {};
 async function processSystemMessage(message, sysmsg) {
     let channel = Discord.getChannel(message.channel_id);
     if(channel.type !== 1/*DM*/) return;
-    if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(channel.recipients[0])) {
-        //prompt for confirmation
-        return;
-    }
 
     message.embeds = [];
     let timestamp = new Date(message.timestamp).getTime();
@@ -1778,7 +1844,30 @@ async function processSystemMessage(message, sysmsg) {
         oldMessage = false;
     }
 
-    switch(getSystemMessageProperty('type', sysmsg)) {
+    let messageType = getSystemMessageProperty('type', sysmsg);
+    let userId = channel.recipients[0];
+
+    message.content = blockedSystemMessage;
+    if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+        let user = Discord.getUser(userId);
+        if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
+            if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${user.username}#${user.discriminator}`)) return;
+            keyExchangeWhitelist[userId] = true;
+        }
+        else if(messageType === 'KEY REQUEST') {
+            let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
+            if(requestedKeyPayload == null) return;
+            let keyHash;
+            try {
+                keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
+            } catch(e) { return }
+            let keyObj = DataBase.keys[keyHash];
+            if(keyObj == null) return;
+            if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) return;
+        }
+    }
+
+    switch(messageType) {
         case 'DH KEY': {
             message.content = "\u{1F4BB} H-hi I would like to know you better";
             if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
@@ -1867,6 +1956,7 @@ async function processSystemMessage(message, sysmsg) {
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
+                delete keyExchangeWhitelist[userId];
             }
             catch(e) { break }
         } return;
@@ -1966,6 +2056,7 @@ async function handleChannelSelect(event) {
         Cache.channelConfig = Utils.GetChannelConfig(channelId);
 
         MenuBar.Update();
+        PopupManager.Update();
     }
 }
 
@@ -2180,6 +2271,8 @@ function Load()
                                  (channel) => { Utils.DeleteChannelConfig(channel.id); if(channel.id === Cache.channelId) MenuBar.Update(); }
                                   )
                 );
+
+    PopupManager.Inject();
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
