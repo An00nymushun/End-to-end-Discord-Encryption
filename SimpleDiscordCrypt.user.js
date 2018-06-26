@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.3.2
+// @version      0.3.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1643,7 +1643,7 @@ async function handleSearch(event) {
             await processMessage(message);
 }
 
-const messageRegex = /^([\u{2800}\u{28FF}]{16,}) `\u{D835}\u{DE1A}\u{D835}\u{DE2A}\u{D835}\u{DE2E}\u{D835}\u{DE31}\u{D835}\u{DE2D}\u{D835}\u{DE26}\u{D835}\u{DE0B}\u{D835}\u{DE2A}\u{D835}\u{DE34}\u{D835}\u{DE24}\u{D835}\u{DE30}\u{D835}\u{DE33}\u{D835}\u{DE25}\u{D835}\u{DE0A}\u{D835}\u{DE33}\u{D835}\u{DE3A}\u{D835}\u{DE31}\u{D835}\u{DE35}`$/u;
+const messageRegex = /^([\u{2800}-\u{28FF}]{16,}) `\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}`$/u;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidMessage = "```diff\n-\u2063----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message) {
