@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.4.0
+// @version      0.4.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -796,11 +796,11 @@ const PopupManager = {
 	</div>
 </div>
 <button type="button" class="SDC_FOCUS sdc-hidden"></button>`;
-        Utils.AttachEventToClass(listItem, 'SDC_OK', 'click', () => {
+        Utils.AttachEventToClass(popup, 'SDC_OK', 'click', () => {
             this.domElement.removeChild(popup);
             okCallback();
         });
-        Utils.AttachEventToClass(listItem, 'SDC_CANCEL', 'click', () => {
+        Utils.AttachEventToClass(popup, 'SDC_CANCEL', 'click', () => {
             this.domElement.removeChild(popup);
             if(cancelCallback) cancelCallback();
         });
@@ -1535,26 +1535,27 @@ function Init(nonInvasive)
         },
         ongoingKeyExchanges: {},
         InitKeyExchange: async function(userId, auto) {
-            if(auto && /friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                if(this.ongoingKeyExchanges[userId]) return;
-                this.ongoingKeyExchanges[userId] = true;
-                let user = Discord.getUser(userId);
-                let force = await PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`);
-                //delete this.ongoingKeyExchanges[userId];
-                if(!force) return;
-                keyExchangeWhitelist[userId] = true;
-            }
-            delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
-
             let channelId = Discord.getDMFromUserId(userId);
             let channelConfig;
-            if(channelId == null) {
-                channelId = await Discord.ensurePrivateChannel(Discord.getCurrentUser().id, userId);
-            }
-            else if(auto) {
+            if(auto) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && (channelConfig.s/*systemMessageTime*/ > 0 || channelConfig.w/*waitingForSystemMessage*/))
                     return;
+
+                if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+                    if(this.ongoingKeyExchanges[userId]) return;
+                    this.ongoingKeyExchanges[userId] = true;
+                    let user = Discord.getUser(userId);
+                    let force = await PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`);
+                    //delete this.ongoingKeyExchanges[userId];
+                    if(!force) return;
+                    keyExchangeWhitelist[userId] = true;
+                }
+            }
+            delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
+
+            if(channelId == null) {
+                channelId = await Discord.ensurePrivateChannel(Discord.getCurrentUser().id, userId);
             }
 
             let dhPublicKeyPayload = this.PayloadEncode(this.Base64ToBytes(DataBase.dhPublicKey));
@@ -1568,24 +1569,26 @@ function Init(nonInvasive)
         RequestKey: async function(keyHash, userId, auto) {
             if(DataBase.keys[keyHash] != null) return;
 
-            let requestId = keyHash + userId;
-            if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                if(this.ongoingKeyRequests[requestId]) return;
-                this.ongoingKeyRequests[requestId] = true;
-                let user = Discord.getUser(userId);
-                if(!await PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`)) return;
-            }
-            delete this.ongoingKeyRequests[requestId];
-
             let channelId = Discord.getDMFromUserId(userId);
             if(channelId == null) return;
 
             let channelConfig;
+            let requestId = keyHash + userId;
             if(auto) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && channelConfig.w/*waitingForSystemMessage*/)
                     return;
+
+                if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+                    if(this.ongoingKeyRequests[requestId]) return;
+                    if(this.ongoingKeyExchanges[userId]) return;
+                    this.ongoingKeyRequests[requestId] = true;
+                    let user = Discord.getUser(userId);
+                    if(!await PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`)) return;
+                    keyExchangeWhitelist[userId] = true;
+                }
             }
+            delete this.ongoingKeyRequests[requestId];
 
             let requestedKeyPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
 
@@ -1769,7 +1772,7 @@ async function decryptMessage(message, payload) {
         if(key == null) {
             if(i === 1) {
                 if(message.author != null)
-                    await Utils.InitKeyExchange(message.author.id, true);
+                    Utils.InitKeyExchange(message.author.id, true);
             }
             else if(i === 10) {
                 message.content = unknownKeyMessage;
@@ -1777,8 +1780,8 @@ async function decryptMessage(message, payload) {
                 message.attachments = [];
                 return;
             }
-            if(message.author != null)
-                await Utils.RequestKey(keyHashBase64, message.author.id, true);
+            else if(message.author != null)
+                Utils.RequestKey(keyHashBase64, message.author.id, true);
 
             await Utils.Sleep(i * 200);
             continue;
@@ -1845,32 +1848,41 @@ async function processSystemMessage(message, sysmsg) {
     }
 
     let messageType = getSystemMessageProperty('type', sysmsg);
-    let userId = channel.recipients[0];
+    let userId;
+    if(message.author == null) oldMessage = true;
+    else {
+        userId = message.author.id;
+        if(userId === Discord.getCurrentUser().id) oldMessage = true;
+    }
 
-    message.content = blockedSystemMessage;
-    if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-        let user = Discord.getUser(userId);
-        if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
-            if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${user.username}#${user.discriminator}`)) return;
-            keyExchangeWhitelist[userId] = true;
-        }
-        else if(messageType === 'KEY REQUEST') {
-            let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
-            if(requestedKeyPayload == null) return;
-            let keyHash;
-            try {
-                keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
-            } catch(e) { return }
-            let keyObj = DataBase.keys[keyHash];
-            if(keyObj == null) return;
-            if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) return;
+    if(!oldMessage) {
+        message.content = blockedSystemMessage;
+        if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+            let user = Discord.getUser(userId);
+            if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
+                if(!keyExchangeWhitelist[userId]) {
+                    if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${user.username}#${user.discriminator}`)) return;
+                    keyExchangeWhitelist[userId] = true;
+                }
+            }
+            else if(messageType === 'KEY REQUEST') {
+                let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
+                if(requestedKeyPayload == null) return;
+                let keyHash;
+                try {
+                    keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
+                } catch(e) { return }
+                let keyObj = DataBase.keys[keyHash];
+                if(keyObj == null) return;
+                if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) return;
+            }
         }
     }
 
     switch(messageType) {
         case 'DH KEY': {
             message.content = "\u{1F4BB} H-hi I would like to know you better";
-            if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
+            if(oldMessage) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
             if(dhKeyPayload == null) break;
@@ -1903,7 +1915,7 @@ async function processSystemMessage(message, sysmsg) {
         } return;
         case 'DH RESPONSE': {
             message.content = "\u{1F4BB} I like you :3, you can have my number";
-            if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
+            if(oldMessage) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
             if(dhKeyPayload == null) break;
@@ -1936,7 +1948,7 @@ async function processSystemMessage(message, sysmsg) {
         } return;
         case 'PERSONAL KEY': {
             message.content = "\u{1F4BB} Here is my number, now we can talk any time!!";
-            if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
+            if(oldMessage) return;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
             if(keyHashPayload == null) break;
@@ -1962,7 +1974,7 @@ async function processSystemMessage(message, sysmsg) {
         } return;
         case 'KEY REQUEST': {
             message.content = "\u{1F4BB} Hey, can you tell me what this means?";
-            if(oldMessage || message.author.id === Discord.getCurrentUser().id) return;
+            if(oldMessage) return;
 
             let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
             if(requestedKeyPayload == null) break;
@@ -1983,7 +1995,7 @@ async function processSystemMessage(message, sysmsg) {
             let statusMsg = statusMsgs[status];
             if(statusMsg == null) break;
             message.content = statusMsg;
-            if(oldMessage || message.author.id === Discord.getCurrentUser().id || status !== 'OK') return;
+            if(oldMessage || status !== 'OK') return;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
             if(keyHashPayload == null) break;
@@ -2011,6 +2023,7 @@ async function processSystemMessage(message, sysmsg) {
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
+                delete keyExchangeWhitelist[userId];
 
                 let sharedChannelsJson = getSystemMessageProperty('sharedChannels', sysmsg);
                 if(sharedChannelsJson == null) return;
@@ -2292,6 +2305,11 @@ function Unload()
     Style.Remove();
     UnlockWindow.Remove();
     NewdbWindow.Remove();
+    NewPasswordWindow.Remove();
+    KeyManagerWindow.Remove();
+    ChannelManagerWindow.Remove();
+    MenuBar.Remove();
+    PopupManager.Remove();
 
     clearInterval(dbSaveInterval);
 }
