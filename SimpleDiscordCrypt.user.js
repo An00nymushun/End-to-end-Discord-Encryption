@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.4.1
+// @version      0.4.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -27,6 +27,9 @@ const SavedLocalStorage = (typeof(localStorage) !== undefined) ? localStorage : 
 
 const BaseColor = "#0fc";
 const BaseColorInt = 0x00ffcc;
+
+const htmlEscapeCharacters = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
+function HtmlEscape(string) { return string.replace(/[<>&]/g, x => htmlEscapeCharacters[x]) }
 
 const Style = {
     css: `.sdc * {
@@ -519,7 +522,7 @@ const KeyManagerWindow = {
         for(let key of keys) {
             let listItem = document.createElement('div');
             listItem.innerHTML = `<div>
-					<h6 class="SDC_DESCRIPTOR">${key.descriptor} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a></h6>
+					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a></h6>
 					<p>${Utils.FormatTime(key.lastseen)}</p>
 				</div>
 				<div class="sdc-listbox sdc-listcheckbox"><label><input type="checkbox" class="SDC_SETHIDDEN" style="display:none"${key.hidden?' checked':''}${key.type!=='GROUP'?' disabled':''}><p></p></label></div>
@@ -528,7 +531,7 @@ const KeyManagerWindow = {
                 let descriptorElement = listItem.getElementsByClassName('SDC_DESCRIPTOR')[0];
                 descriptorElement.innerHTML = `<input type="text" class="SDC_DESCRIPTORINPUT" style="width:320px"></input>`;
                 const changeBack = () => {
-                    descriptorElement.innerHTML = `${key.descriptor} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a>`;
+                    descriptorElement.innerHTML = `${HtmlEscape(key.descriptor)} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a>`;
                     Utils.AttachEventToClass(descriptorElement, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
                 };
                 let descriptorInput = descriptorElement.getElementsByClassName('SDC_DESCRIPTORINPUT')[0];
@@ -596,7 +599,7 @@ const ChannelManagerWindow = {
         for(let channel of channels) {
             let listItem = document.createElement('div');
             listItem.innerHTML = `<div>
-					<h6 class="SDC_DESCRIPTOR">${channel.descriptor}</h6>
+					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(channel.descriptor)}</h6>
 					<p>${Utils.FormatTime(channel.lastseen)}</p>
 				</div>
 				<div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px">Delete</button></div>`;
@@ -681,11 +684,11 @@ const MenuBar = {
 
         const dropdownOn = () => {
             let keys = getKeys();
-            keySelectOptions.innerHTML = "";
+            keySelectOptions.innerText = "";
 
             for(let key of keys) {
                 let option = document.createElement('a');
-                option.innerHTML = key.descriptor;
+                option.innerText = key.descriptor;
                 if(key.selected)
                     option.style.backgroundColor = "rgba(0,0,0,.2)";
                 else
@@ -735,7 +738,7 @@ const MenuBar = {
             let toggleOffEnabled = document.body.contains(this.toggleOffButton);
             let toggledOn = getToggleStatus();
 
-            keySelectSelected.innerHTML = getCurrentKeyDescriptor();
+            keySelectSelected.innerText = getCurrentKeyDescriptor();
             if(!keySelectEnabled) titleElement.insertAdjacentElement('afterend', this.keySelect);
 
             if(toggledOn) {
@@ -788,7 +791,7 @@ const PopupManager = {
         let popup = document.createElement('div');
         popup.innerHTML = `<div class="sdc sdc-window" style="width:280px;position:fixed;right:50px;bottom:60px">
 	<div style="margin:20px;word-break:break-all;word-break:break-word">
-		${message}
+		${HtmlEscape(message)}
 	</div>
 	<div class="sdc-footer" style="padding:10px">
 		<button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p></button>
@@ -1407,7 +1410,6 @@ function Init(nonInvasive)
             this.FastSaveDb();
         },
 
-        htmlEscapeCharacters: { "<": "&lt;", ">": "&gt;", "&": "&amp;" },
         FormatDescriptor: function(descriptor) {
             return descriptor.replace(/<@(\d{1,20})>/g, (m, x) => {
                 let user = Discord.getUser(x);
@@ -1419,7 +1421,7 @@ function Init(nonInvasive)
                 if(channel.guild_id == null) return channel.name;
                 let guild = Discord.getGuild(channel.guild_id);
                 return `${guild.name} #${channel.name}`;
-            }).replace(/[<>&]/g, x => this.htmlEscapeCharacters[x]);
+            });
         },
 
         GetChannelConfig: function(channelId) {
