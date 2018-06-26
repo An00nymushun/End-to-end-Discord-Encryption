@@ -1425,7 +1425,7 @@ function Init(nonInvasive)
             else {
                 let oldKeyHash = Cache.channelConfig.k;
                 if(hash == oldKeyHash) return;
-                if(DataBase.keys[oldKeyHash].t/*type*/ === 2/*conversation*/) delete DataBase.keys[oldKeyHash];
+                //if(DataBase.keys[oldKeyHash].t/*type*/ === 2/*conversation*/) delete DataBase.keys[oldKeyHash];
                 Cache.channelConfig.k = hash;
                 this.dbChanged = true;
             }
