@@ -1603,13 +1603,13 @@ function Init(nonInvasive)
             channelConfig.w = 1;
             this.dbChanged = true;
         },
-        ShareKey: async function(keyHash, channelId, auto, userId) {
+        ShareKey: async function(keyHash, channelId, nonForced, userId) {
             let keyObj = DataBase.keys[keyHash];
             if(keyObj == null) {
-                if(auto) this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
+                this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
                 return;
             }
-            if(auto || keyObj.h/*hidden*/) {
+            if(nonForced || keyObj.h/*hidden*/) {
                 let user = Discord.getUser(userId);
                 if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) {
                     this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
@@ -1864,7 +1864,7 @@ async function processSystemMessage(message, sysmsg) {
         if(userId === Discord.getCurrentUser().id) oldMessage = true;
     }
 
-    let auto = true;
+    let nonForced = true;
     if(!oldMessage) {
         message.content = blockedSystemMessage;
         if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
@@ -1876,7 +1876,7 @@ async function processSystemMessage(message, sysmsg) {
                 }
             }
         }
-        else auto = false;
+        else nonForced = false;
     }
 
     switch(messageType) {
@@ -1981,7 +1981,7 @@ async function processSystemMessage(message, sysmsg) {
             try {
                 let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
 
-                Utils.ShareKey(keyHash, message.channel_id, auto, userId); //no need to wait
+                Utils.ShareKey(keyHash, message.channel_id, nonForced, userId); //no need to wait
             }
             catch(e) { break }
         } return;
