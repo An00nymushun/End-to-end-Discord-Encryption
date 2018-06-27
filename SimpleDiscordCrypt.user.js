@@ -1609,7 +1609,7 @@ function Init(nonInvasive)
                 if(auto) this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
                 return;
             }
-            if(auto && keyObj.h/*hidden*/) {
+            if(auto || keyObj.h/*hidden*/) {
                 let user = Discord.getUser(userId);
                 if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) {
                     this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
