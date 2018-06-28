@@ -8,6 +8,9 @@ If you have Discord installed, use the [installer](https://gitlab.com/An0/Simple
 
 Right click on the lock icon to open the menu
 
+If you would like to download an encrypted image, middle click on "Open original"
+
+
 EDCH P-521 is used for the key exchange and AES256-CBC for the messages
 
 I hope this is actually simple as the name suggests
