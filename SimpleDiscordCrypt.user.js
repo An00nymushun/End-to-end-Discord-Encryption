@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.4.3
+// @version      0.4.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1659,6 +1659,12 @@ Discord.window.SdcDiscord = Discord;
 
     if(!window.crypto || !crypto.subtle) { Utils.Error("Crypto API not found."); return -1; }
 
+    Discord.window.SdcDownloadUrl = (filename, url) => {
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+    };
 
     const mirrorFunction = (moduleName, functionName) => {
         Discord[`original_${functionName}`] = modules[moduleName][functionName];
@@ -1743,9 +1749,9 @@ const extensionRegex = /\.([^.]+)$/
 async function fixAttachment(attachment, filename, fileBuffer) {
     attachment.filename = filename;
     attachment.size = fileBuffer.byteLength;
-    let url = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
-    attachment.url = url;
-    attachment.proxy_url = url;
+    let url = URL.createObjectURL(new File([fileBuffer], filename));
+    attachment.url = `javascript:SdcDownloadUrl('${filename}','${url}')`;
+    attachment.proxy_url = `${url}#${filename}`;
 
     let match = extensionRegex.exec(filename);
     if(match == null) return;
