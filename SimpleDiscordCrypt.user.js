@@ -2145,7 +2145,7 @@ async function handleUpload(channelId, file, message) {
         return new File([encryptedBuffer], encryptedFilename);
     }
     catch(e) {
-        return file;
+        return null;
     }
 }
 
