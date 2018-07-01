@@ -14,7 +14,7 @@ Right click on the lock icon to open the menu.
 If you would like to download an encrypted image, middle click on the image or on "Open original".
 
 
-ECDH P-521 is used for the key exchange and AES256-CBC for the messages offering the equivilent security of 256-bits.
+ECDH P-521 is used for the key exchange and AES256-CBC for the messages offering the equivalent security of 256-bits.
 
 I hope this is actually simple as the name suggests.
 
