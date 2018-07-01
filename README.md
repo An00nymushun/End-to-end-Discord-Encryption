@@ -19,7 +19,7 @@ ECDH P-521 is used for the key exchange and AES256-CBC for the messages offering
 I hope this is actually simple as the name suggests.
 
 
-
+Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt) for BetterDiscord users.
 
 
 
