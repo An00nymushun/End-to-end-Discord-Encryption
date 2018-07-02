@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.4.5
+// @version      0.5.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -632,6 +632,7 @@ const MenuBar = {
     menuHtml: `<button type="button" class="SDC_FOCUS sdc-hidden"></button>
 <div class="sdc sdc-menu SDC_MENU" style="visibility:hidden">
 	<div class="SDC_DMMENU">
+		<a class="SDC_KEYART">Visualize Key</a>
 		<a class="SDC_KEYEXCHANGE">Start Key Exchange</a>
 		<a class="SDC_KEYSHARE">Share Keys</a>
 	</div>
@@ -648,7 +649,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager, keyVisualizer) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -685,6 +686,7 @@ const MenuBar = {
         Utils.AttachEventToClass(menu, 'SDC_NEWKEY', 'mousedown', () => groupKey());
         Utils.AttachEventToClass(menu, 'SDC_KEYMANAGER', 'mousedown', () => keyManager());
         Utils.AttachEventToClass(menu, 'SDC_CHMANAGER', 'mousedown', () => channelManager());
+        Utils.AttachEventToClass(menu, 'SDC_KEYART', 'mousedown', () => keyVisualizer());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -829,6 +831,269 @@ const PopupManager = {
                 this.New(message, () => resolve(true), () => resolve(false));
             }
         });
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
+    }
+};
+const KeyVisualizerWindow = {
+    EmojiHash: function(canvas, hashBuffer) {
+var ctx;
+
+function drawEmoji(emoji, x, y, size, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	if(rotation) ctx.rotate(rotation * Math.PI / 180);
+	ctx.scale(size, size);
+	ctx.fillText(emoji, 0, 0);
+	ctx.restore();
+}
+function drawRectangle(color, x, y, width, height, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	if(rotation) ctx.rotate(rotation * Math.PI / 180);
+	ctx.fillStyle = color;
+	ctx.fillRect(-width/2, -height/2, width, height);
+	ctx.restore();
+}
+var byteOffset = 0;
+var inByteOffset = 0;
+var bytes = new Uint8Array(hashBuffer);
+function popBits(count) { //max 8
+	let bits;
+	let newInByteOffset = inByteOffset + count;
+	if(newInByteOffset > 7) {
+		bits = bytes[byteOffset] & ~(~0 << (8 - inByteOffset));
+		inByteOffset = newInByteOffset - 8;
+		if(++byteOffset === hashBuffer.byteLength) byteOffset = 0;
+		if(inByteOffset !== 0) {
+			bits = (bits << inByteOffset) | (bytes[byteOffset] >> (8 - inByteOffset));
+		}
+	}
+	else {
+		bits = (bytes[byteOffset] >> (8 - newInByteOffset)) & ~(~0 << count);
+		inByteOffset = newInByteOffset;
+	}
+
+	return bits;
+}
+
+ctx = canvas.getContext('2d');
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.font = "1px sans-serif";
+ctx.translate(canvas.width / 2, canvas.height / 2);
+let scale = Math.min(canvas.width / 4, canvas.height / 3) / 100 * 4;
+ctx.scale(scale, scale);
+
+
+function drawSky() {
+	let color;
+	switch(popBits(3)) {
+	case 0: //purple
+		color = "#a254d3";
+	break;
+	case 1: //rose
+		color = "#f6c4df";
+	break;
+	case 2: //blue
+		color = "#2b7cb3";
+	break;
+	case 3: //darkblue
+		color = "#154167";
+	break;
+	default: //lightblue
+		color = "#9bcfea";
+	}
+
+	drawRectangle(color, 0, 0, 1000, 1000);
+}
+
+const airObjects = "\u{2600}\u{FE0F}|\u{1F311}|\u{2601}\u{FE0F}|\u{1F329}\u{FE0F}|\u{1F328}\u{FE0F}|\u{1F409}|\u{1F987}|\u{1F985}|\u{1F54A}\u{FE0F}|\u{1F41D}|\u{1F98B}|\u{1F343}|\u{1F681}|\u{2708}\u{FE0F}|\u{1F6E9}\u{FE0F}|\u{1F680}|\u{1F6F8}|\u{1F6F0}\u{FE0F}|\u{1F31C}|\u{2604}\u{FE0F}|\u{1F31F}|\u{2744}\u{FE0F}|\u{26A1}|\u{2728}|\u{1F388}|\u{1F47E}|\u{1F47B}".split("|");
+function drawAirObject(x, y, size, rotation) {
+	if(popBits(1)) return;
+
+	drawEmoji(airObjects[popBits(5) % 27], x, y, size, rotation); //32-27 first 5 have double probability
+}
+const handEmojis = "\u{1F44C}|\u{1F595}|\u{270C}|\u{1F44A}|\u{1F44D}|\u{1F44E}|\u{1F44B}|\u{1F448}|\u{1F449}|\u{261D}|\u{1F446}|\u{1F447}|\u{1F91E}|\u{1F596}|\u{1F91F}|\u{1F919}|\u{1F590}|\u{270B}|\u{270D}|\u{1F4B0}|\u{1F480}|\u{1F4A9}|\u{1F4A3}|\u{1F94A}|\u{1F3A8}|\u{1F3BA}|\u{1F4F7}|\u{1F3A5}|\u{1F526}|\u{1F4BC}|\u{1F50E}|\u{1F4D5}|\u{2709}\u{FE0F}|\u{270F}\u{FE0F}|\u{1F4CF}|\u{1F52B}|\u{1F528}|\u{1F527}|\u{1F489}|\u{1F6AC}|\u{1F5DD}\u{FE0F}|\u{1F4DE}|\u{1F3AE}|\u{1F393}|\u{1F346}".split("|");
+function drawHandEmoji(x, y, size, rotation) {
+	drawEmoji(handEmojis[popBits(6) % 45], x, y, size, rotation);
+}
+const bodyEmojis = "\u{1F454}|\u{1F455}|\u{1F94B}|\u{1F3BD}|\u{1F9E5}|\u{1F457}|\u{1F458}|\u{1F459}|\u{1F45A}".split("|");
+const headEmojis = "\u{1F914}|\u{1F602}|\u{1F624}|\u{1F62D}|\u{1F60B}|\u{1F917}|\u{1F60F}|\u{1F633}|\u{1F606}|\u{1F928}|\u{1F60E}|\u{1F644}|\u{1F611}|\u{1F60D}|\u{1F618}|\u{1F642}|\u{1F929}|\u{1F636}|\u{1F623}|\u{1F62E}|\u{1F910}|\u{1F62B}|\u{1F634}|\u{1F61C}|\u{1F924}|\u{1F612}|\u{1F643}|\u{1F911}|\u{2639}\u{FE0F}|\u{1F601}|\u{1F616}|\u{1F631}|\u{1F92F}|\u{1F62C}|\u{1F92A}|\u{1F635}|\u{1F621}|\u{1F912}|\u{1F922}|\u{1F92E}|\u{1F927}|\u{1F607}|\u{1F920}|\u{1F921}|\u{1F925}|\u{1F923}|\u{1F92B}|\u{1F9D0}|\u{1F913}|\u{1F608}|\u{1F4A9}|\u{1F916}|\u{1F47D}|\u{1F480}|\u{1F47A}|\u{1F476}|\u{1F469}|\u{1F468}|\u{1F474}|\u{1F475}|\u{1F934}|\u{1F473}|\u{1F472}|\u{1F9D4}|\u{1F471}|\u{1F385}|\u{1F435}|\u{1F436}|\u{1F43A}|\u{1F98A}|\u{1F431}|\u{1F981}|\u{1F42F}|\u{1F434}|\u{1F984}|\u{1F993}|\u{1F42E}|\u{1F437}|\u{1F417}|\u{1F42D}|\u{1F439}|\u{1F430}|\u{1F43B}|\u{1F438}|\u{1F432}|\u{1F414}|\u{1F383}".split("|");
+function drawPerson(x, y, size) {
+	ctx.save();
+	ctx.translate(x, y);
+	let scale = size / 100;
+	ctx.scale(scale, scale);
+
+	drawRectangle("#000", 0, -10, 4, 50); //body
+	drawRectangle("#000", -9, 26, 4, 30, 35); //legs
+	drawRectangle("#000", 9, 26, 4, 30, -35);
+
+	switch(popBits(2)) { //left arm
+	case 0: //up
+		drawRectangle("#000", -12, -23, 4, 30, -55);
+		drawHandEmoji(-26, -34, 15);
+	break;
+	case 1: //middle
+		drawRectangle("#000", -15, -15, 30, 4);
+		drawHandEmoji(-30, -18, 15);
+	break;
+	default: //down
+		drawRectangle("#000", -12, -8, 4, 30, 55);
+		drawHandEmoji(-26, -4, 15);
+	}
+	switch(popBits(2)) { //right arm
+	case 0: //up
+		drawRectangle("#000", 12, -23, 4, 30, 55);
+		drawHandEmoji(26, -34, 15);
+	break;
+	case 1: //middle
+		drawRectangle("#000", 15, -15, 30, 4);
+		drawHandEmoji(30, -18, 15);
+	break;
+	default: //down
+		drawRectangle("#000", 12, -8, 4, 30, -55);
+		drawHandEmoji(26, -4, 15);
+	}
+
+	drawEmoji(bodyEmojis[popBits(4) % 9], 0, -5, 28); //chest
+	drawEmoji(headEmojis[popBits(12) % 87], 0, -35, 25); //face 4096 % 87 = first 7 have increased chance
+
+	if(popBits(1)) drawEmoji("\u{1F45F}", -13, 35, 15); //left foot
+	if(popBits(1)) drawEmoji("\u{1F45F}", 19, 35, 15); //right foot
+
+	ctx.restore();
+}
+const tableObjects = "\u{1F35E}|\u{1F453}|\u{1F6CD}\u{FE0F}|\u{1F48E}|\u{1F34E}|\u{1F347}|\u{1F349}|\u{1F34A}|\u{1F34B}|\u{1F34C}|\u{1F34F}|\u{1F350}|\u{1F351}|\u{1F352}|\u{1F353}|\u{1F95D}|\u{1F345}|\u{1F965}|\u{1F954}|\u{1F955}|\u{1F33D}|\u{1F336}\u{FE0F}|\u{1F952}|\u{1F966}|\u{1F344}|\u{1F95C}|\u{1F950}|\u{1F968}|\u{1F95E}|\u{1F9C0}|\u{1F356}|\u{1F357}|\u{1F969}|\u{1F953}|\u{1F354}|\u{1F35F}|\u{1F355}|\u{1F32D}|\u{1F96A}|\u{1F32E}|\u{1F95A}|\u{1F372}|\u{1F963}|\u{1F957}|\u{1F37F}|\u{1F96B}|\u{1F371}|\u{1F359}|\u{1F363}|\u{1F961}|\u{1F366}|\u{1F369}|\u{1F382}|\u{1F967}|\u{1F36B}|\u{1F36E}|\u{1F36F}|\u{1F37C}|\u{2615}|\u{1F377}|\u{1F378}|\u{1F37A}|\u{1F52A}|\u{1F3FA}|\u{1F6CE}\u{FE0F}|\u{23F0}|\u{231B}|\u{1F302}|\u{1F381}|\u{1F3C6}|\u{26BD}|\u{1F3B3}|\u{1F52E}|\u{1F579}\u{FE0F}|\u{1F3B2}|\u{1F4E2}|\u{1F4FB}|\u{1F3A7}|\u{1F3A4}|\u{260E}\u{FE0F}|\u{1F4BB}|\u{1F5A8}\u{FE0F}|\u{1F4FA}|\u{1F56F}\u{FE0F}|\u{1F4E6}|\u{1F52D}|\u{2697}\u{FE0F}|\u{1F52C}|\u{2696}\u{FE0F}|\u{1F964}|\u{1F4DA}".split("|");
+function drawTableObject(x, y, size, rotation) {
+	if(popBits(1)) return;
+
+	drawEmoji(tableObjects[popBits(12) % 91], x, y, size, rotation);
+}
+function drawTable(x, y, size, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	let scale = size / 100;
+	ctx.scale(scale, scale);
+
+	drawRectangle("#999", 0, 33, 4, 34);
+	drawRectangle("#f00", 0, 14, 70, 4);
+
+	drawTableObject(-25, 2, 20);
+	drawTableObject(-3, 2, 20);
+	drawTableObject(25, 2, 20);
+
+	ctx.restore();
+}
+const groundObjects = "\u{1F409}|\u{1F4A9}|\u{1F46F}|\u{1F46B}|\u{1F6B6}\u{1F3FB}|\u{1F3C3}\u{1F3FB}|\u{1F483}\u{1F3FB}|\u{1F57A}\u{1F3FB}|\u{1F9D8}\u{1F3FB}|\u{1F574}\u{1F3FB}|\u{1F93A}|\u{1F3C7}\u{1F3FB}|\u{1F3CC}\u{1F3FB}|\u{26F9}\u{1F3FB}|\u{1F3CB}\u{1F3FB}|\u{1F6B4}\u{1F3FB}|\u{1F938}\u{1F3FB}|\u{1F93C}|\u{1F93E}\u{1F3FB}|\u{1F412}|\u{1F98D}|\u{1F415}|\u{1F429}|\u{1F408}|\u{1F405}|\u{1F406}|\u{1F40E}|\u{1F98C}|\u{1F402}|\u{1F404}|\u{1F416}|\u{1F411}|\u{1F410}|\u{1F42A}|\u{1F418}|\u{1F98F}|\u{1F401}|\u{1F400}|\u{1F407}|\u{1F43F}\u{FE0F}|\u{1F994}|\u{1F983}|\u{1F413}|\u{1F427}|\u{1F424}|\u{1F426}|\u{1F986}|\u{1F989}|\u{1F40A}|\u{1F422}|\u{1F98E}|\u{1F40D}|\u{1F995}|\u{1F996}|\u{1F40C}|\u{1F41B}|\u{1F41C}|\u{1F339}|\u{1F940}|\u{1F33B}|\u{1F33C}|\u{1F337}|\u{1F331}|\u{1F332}|\u{1F333}|\u{1F334}|\u{1F335}|\u{1F33E}|\u{1F340}|\u{26E9}\u{FE0F}|\u{26F2}|\u{1F3AA}|\u{1F6E2}\u{FE0F}|\u{1F6F5}|\u{1F6B2}|\u{1F6F4}|\u{1F38F}|\u{1F945}|\u{1F5D1}\u{FE0F}|\u{1F5FF}|\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}|\u{1F6A9}|\u{1F3C1}|\u{1F3F4}|\u{1F3F3}\u{FE0F}".split("|");
+function drawGroundObject(x, y, size, rotation) {
+	switch(popBits(2)) {
+	case 0:
+		drawPerson(x, y, size, rotation);
+	break;
+	case 1:
+		drawTable(x, y, size, rotation);
+	break;
+	case 2:
+		drawEmoji(groundObjects[popBits(8) % 85], x, y, size / 2, rotation);
+	break;
+	}
+}
+
+
+switch(popBits(2)) {
+	case 0: { //park
+		drawSky();
+		drawRectangle("#5ce64e", 0, 50, 200, 100, 1);
+		drawAirObject(-40, -27, 8);
+		drawAirObject(-16, -30, 10);
+		drawAirObject(17, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(10, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+	} break;
+	case 1: { //beach
+		drawSky();
+		drawRectangle("#e5e886", 0, 50, 200, 100);
+		drawRectangle("#3cc", 0, 0, 200, 10, -.5);
+		drawAirObject(-40, -27, 8);
+		drawAirObject(-16, -30, 10);
+		drawAirObject(17, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(10, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+
+	} break;
+	case 2: { //campfire
+		drawSky();
+		drawRectangle("#49be3d", 0, 50, 200, 100);
+		drawEmoji('\u{1F525}', 0, 10, 20);
+		drawRectangle("#333", 0, 20, 15, 5);
+		drawAirObject(-42, -20, 8);
+		drawAirObject(-25, -25, 10);
+		drawAirObject(22, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-13, 20, 23);
+		drawGroundObject(-35, -5, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+
+	} break;
+	case 3: { //mountainslide
+		drawSky();
+		drawRectangle("#eff", 0, 50, 200, 100, -30);
+		drawAirObject(-42, -10, 8);
+		drawAirObject(-40, -25, 10);
+		drawAirObject(-15, -30, 9);
+		drawAirObject(15, -30, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(20, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+
+	} break;
+}
+
+},
+    html: `<div class="sdc">
+<div class="SDC_CLOSE sdc-cover"></div>
+<div class="sdc-overlay">
+	<div class="sdc-window">
+		<div style="margin:20px">
+			<h4>Key Visualizer v1.0</h4>
+		</div>
+		<a class="SDC_CLOSE sdc-close"></a>
+		<canvas class="SDC_ART" width="600" height="450"></canvas>
+		<div class="sdc-footer">
+			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Close</button>
+		</div>
+	</div>
+</div>
+</div>`,
+    Show: function(buffer) {
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = this.html;
+
+        Utils.AttachEventToClass(wrapper, 'SDC_CLOSE', 'click', () => {
+            this.Remove();
+        });
+
+        let canvas = wrapper.getElementsByClassName('SDC_ART')[0];
+        this.EmojiHash(canvas, buffer);
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
     },
     Remove: function() {
         if(document.body.contains(this.domElement))
@@ -2293,7 +2558,8 @@ function Load()
                                   .sort(([,a], [,b]) => b.l - a.l)
                                   .map(([id, channel]) => ({id, descriptor: Utils.FormatDescriptor(channel.d), lastseen: channel.l })),
                                  (channel) => { Utils.DeleteChannelConfig(channel.id); if(channel.id === Cache.channelId) MenuBar.Update(); }
-                                  )
+                                  ),
+                 () => KeyVisualizerWindow.Show(Utils.Base64ToBytes(Utils.GetCurrentChannelKeyHash()))
                 );
 
     PopupManager.Inject();
