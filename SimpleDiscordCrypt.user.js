@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.0
+// @version      0.5.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -857,23 +857,24 @@ function drawRectangle(color, x, y, width, height, rotation) {
 	ctx.fillRect(-width/2, -height/2, width, height);
 	ctx.restore();
 }
-var byteOffset = 0;
-var inByteOffset = 0;
-var bytes = new Uint8Array(hashBuffer);
-function popBits(count) { //max 8
+var uintOffset = 0;
+var inUintOffset = 0;
+var uints = new DataView(hashBuffer);
+function popBits(count) { //max 32
 	let bits;
-	let newInByteOffset = inByteOffset + count;
-	if(newInByteOffset > 7) {
-		bits = bytes[byteOffset] & ~(~0 << (8 - inByteOffset));
-		inByteOffset = newInByteOffset - 8;
-		if(++byteOffset === hashBuffer.byteLength) byteOffset = 0;
-		if(inByteOffset !== 0) {
-			bits = (bits << inByteOffset) | (bytes[byteOffset] >> (8 - inByteOffset));
+	let newInUintOffset = inUintOffset + count;
+	if(newInUintOffset > 31) {
+		bits = uints.getUint32(uintOffset) & ~(~0 << (32 - inUintOffset));
+		inUintOffset = newInUintOffset - 32;
+		uintOffset += 4;
+		if(uintOffset === hashBuffer.byteLength) uintOffset = 0;
+		if(inUintOffset !== 0) {
+			bits = (bits << inUintOffset) | (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
 		}
 	}
 	else {
-		bits = (bytes[byteOffset] >> (8 - newInByteOffset)) & ~(~0 << count);
-		inByteOffset = newInByteOffset;
+		bits = (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) & ~(~0 << count);
+		inUintOffset = newInUintOffset;
 	}
 
 	return bits;
@@ -1071,7 +1072,7 @@ switch(popBits(2)) {
 <div class="sdc-overlay">
 	<div class="sdc-window">
 		<div style="margin:20px">
-			<h4>Key Visualizer v1.0</h4>
+			<h4>Key Visualizer v1.1</h4>
 		</div>
 		<a class="SDC_CLOSE sdc-close"></a>
 		<canvas class="SDC_ART" width="600" height="450"></canvas>
@@ -2559,7 +2560,7 @@ function Load()
                                   .map(([id, channel]) => ({id, descriptor: Utils.FormatDescriptor(channel.d), lastseen: channel.l })),
                                  (channel) => { Utils.DeleteChannelConfig(channel.id); if(channel.id === Cache.channelId) MenuBar.Update(); }
                                   ),
-                 () => KeyVisualizerWindow.Show(Utils.Base64ToBytes(Utils.GetCurrentChannelKeyHash()))
+                 () => KeyVisualizerWindow.Show(Utils.Base64ToBytes(Utils.GetCurrentChannelKeyHash()).buffer)
                 );
 
     PopupManager.Inject();
