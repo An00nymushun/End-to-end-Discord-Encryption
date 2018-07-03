@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.1
+// @version      0.5.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -133,6 +133,18 @@ const Style = {
 .sdc-rbtn:disabled {
 	color: #8b8181;
 	border-color: rgba(130,126,126,.6);
+	cursor: default;
+}
+.sdc-wbtn {
+	color: #f6f6f7;
+	border: solid 1px rgba(240,240,242,.3);
+	transition: border-color .17s ease;
+	background-color: transparent;
+}
+.sdc-wbtn:hover { border-color: rgba(240,240,242,.6) }
+.sdc-wbtn:disabled {
+	color: #a6a6a7;
+	border-color: rgba(126,126,126,.6);
 	cursor: default;
 }
 .sdc-select {
@@ -623,6 +635,59 @@ const ChannelManagerWindow = {
             document.body.removeChild(this.domElement);
     }
 };
+const ShareKeyWindow = {
+    html: `<div class="sdc">
+<div class="SDC_CLOSE sdc-cover"></div>
+<div class="sdc-overlay">
+	<div class="sdc-window" style="min-width: 580px">
+		<div style="margin:20px">
+			<h4>Share Keys</h4>
+		</div>
+		<a class="SDC_CLOSE sdc-close"></a>
+		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+		<div class="SDC_LIST sdc-list">
+			<h5><p>Key</p><p style="margin-left:auto;width:94px">Share</p></h5>
+
+		</div>
+		</div>
+		<div class="sdc-footer">
+			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+		</div>
+	</div>
+</div>
+</div>`,
+    Show: function(keys, shareKey) {
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = this.html;
+
+        Utils.AttachEventToClass(wrapper, 'SDC_CLOSE', 'click', () => {
+            this.Remove();
+        });
+
+        let list = wrapper.getElementsByClassName('SDC_LIST')[0];
+        for(let key of keys) {
+            let listItem = document.createElement('div');
+            listItem.innerHTML = `<div>
+					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)}</h6>
+					<p>${Utils.FormatTime(key.lastseen)}</p>
+				</div>
+				<div class="sdc-listbox"><button type="button" class="SDC_SHARE sdc-wbtn" style="margin:0 4px">Share</button></div>`;
+            Utils.AttachEventToClass(listItem, 'SDC_SHARE', 'click', function() {
+                shareKey(key);
+                this.disabled = true;
+            });
+
+            list.appendChild(listItem);
+        }
+
+        document.body.appendChild(wrapper);
+        this.domElement = wrapper;
+    },
+    Remove: function() {
+        if(document.body.contains(this.domElement))
+            document.body.removeChild(this.domElement);
+    }
+};
 const MenuBar = {
     menuBarCss: `.SDC_TOGGLE{opacity:.6;fill:#fff;height:24px;cursor:pointer}.SDC_TOGGLE:hover{opacity:.8}`,
     toggleOnButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 0c-4.612 0-8.483 3.126-9.639 7.371l3.855 1.052C12.91 5.876 15.233 4 18 4c3.313 0 6 2.687 6 6v10h4V10c0-5.522-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/></svg><p class="sdc-tooltip">Encrypt Channel</p></div>`,
@@ -649,7 +714,7 @@ const MenuBar = {
 		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
 	</div>
 </div>`,
-    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager, keyVisualizer) {
+    Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager, keyVisualizer, keyShare) {
         this.toggledOnStyle = document.createElement('style');
         this.toggledOnStyle.innerHTML = this.toggledOnCss;
 
@@ -687,6 +752,7 @@ const MenuBar = {
         Utils.AttachEventToClass(menu, 'SDC_KEYMANAGER', 'mousedown', () => keyManager());
         Utils.AttachEventToClass(menu, 'SDC_CHMANAGER', 'mousedown', () => channelManager());
         Utils.AttachEventToClass(menu, 'SDC_KEYART', 'mousedown', () => keyVisualizer());
+        Utils.AttachEventToClass(menu, 'SDC_KEYSHARE', 'mousedown', () => keyShare());
 
         const dropdownOn = () => {
             let keys = getKeys();
@@ -1875,7 +1941,7 @@ function Init(nonInvasive)
                 this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
                 return;
             }
-            if(nonForced || keyObj.h/*hidden*/) {
+            if(nonForced != null && (nonForced || keyObj.h/*hidden*/)) {
                 let user = Discord.getUser(userId);
                 if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) {
                     this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
@@ -2211,7 +2277,10 @@ async function processSystemMessage(message, sysmsg) {
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
                 Utils.dbChanged = true;
-                if(message.channel_id == Cache.channelId) MenuBar.Update();
+                if(message.channel_id == Cache.channelId) {
+                    Cache.channelConfig = channelConfig; //in case it's a new config
+                    MenuBar.Update();
+                }
 
                 let key = await Utils.AesImportKey(sharedSecret);
 
@@ -2560,7 +2629,18 @@ function Load()
                                   .map(([id, channel]) => ({id, descriptor: Utils.FormatDescriptor(channel.d), lastseen: channel.l })),
                                  (channel) => { Utils.DeleteChannelConfig(channel.id); if(channel.id === Cache.channelId) MenuBar.Update(); }
                                   ),
-                 () => KeyVisualizerWindow.Show(Utils.Base64ToBytes(Utils.GetCurrentChannelKeyHash()).buffer)
+                 () => KeyVisualizerWindow.Show(Utils.Base64ToBytes(Utils.GetCurrentChannelKeyHash()).buffer),
+                 () => {
+        let personalKeyHash = DataBase.personalKeyHash;
+        let personalKey = DataBase.keys[personalKeyHash];
+        let keys = [{hash: personalKeyHash, descriptor: Utils.FormatDescriptor(personalKey.d), lastseen: personalKey.l}];
+        keys = keys.concat(Object.entries(DataBase.keys)
+            .filter(([,x]) => x.t/*type*/ === 1/*group*/)
+            .sort(([,a], [,b]) => b.l - a.l)
+            .map(([hash, keyObj]) => ({ hash, lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d) })));
+
+        ShareKeyWindow.Show(keys, (key) => Utils.ShareKey(key.hash, Cache.channelId));
+    }
                 );
 
     PopupManager.Inject();
