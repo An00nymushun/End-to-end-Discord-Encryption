@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.3
+// @version      0.5.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2117,19 +2117,41 @@ function createYoutubeEmbed(id) {
         video: { url: `https://youtube.com/embed/${id}`, width: 1280, height: 720 }
     }
 }
-const youtubeRegex = /(?<=[?&]v=)[\w-]+/
-function embedYoutube(embeds, queryString) {
+const youtubeRegex = /(?<=[?&]v=)[\w-]+/;
+function embedYoutube(message, url, queryString) {
     let id = youtubeRegex.exec(queryString);
-    if(id != null) embeds.push(createYoutubeEmbed(id));
+    if(id != null) message.embeds.push(createYoutubeEmbed(id));
 }
-const youtuRegex = /^[\w-]+/
-function embedYoutu(embeds, queryString) {
+const youtuRegex = /^[\w-]+/;
+function embedYoutu(message, url, queryString) {
     let id = youtuRegex.exec(queryString);
-    if(id != null) embeds.push(createYoutubeEmbed(id));
+    if(id != null) message.embeds.push(createYoutubeEmbed(id));
+}
+const imageRegex = /\.(?:png|jpe?g|gif|webp)$/;
+function embedImage(message, url, queryString) {
+    if(!imageRegex.test(queryString)) return;
+
+    let tmpimg = document.createElement('img');
+    tmpimg.onload = () => {
+        message.embeds.push({
+            type: 'image',
+            url,
+            thumbnail: {
+                url,
+                width: tmpimg.width,
+                height: tmpimg.height
+            }
+        });
+        Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+    };
+    tmpimg.src = url;
 }
 const linkEmbedders = {
     "www.youtube.com": embedYoutube,
-    "youtu.be": embedYoutu
+    "youtu.be": embedYoutu,
+    "cdn.discordapp.com": embedImage,
+    "i.imgur.com": embedImage,
+    "i.redd.it": embedImage
 };
 let urlRegex = /https?:\/\/((?:[^\s/?\.#]+\.?)+)\/([^\s<>'"]+)/g
 function postProcessMessage(message, content) {
@@ -2137,11 +2159,10 @@ function postProcessMessage(message, content) {
     if(content.includes(`<@${currentUser.id}>`))
         message.mentions = [currentUser];
 
-    let embeds = message.embeds;
     let url;
     while ((url = urlRegex.exec(content)) != null) {
         let linkEmbedder = linkEmbedders[url[1]];
-        if(linkEmbedder != null) linkEmbedder(embeds, url[2]);
+        if(linkEmbedder != null) linkEmbedder(message, url[0], url[2]);
     }
     urlRegex.lastIndex = 0;
 }
