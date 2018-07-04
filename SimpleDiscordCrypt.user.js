@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.2
+// @version      0.5.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2109,6 +2109,43 @@ async function fixAttachment(attachment, filename, fileBuffer) {
     }
 }
 
+function createYoutubeEmbed(id) {
+    return {
+        type: 'video',
+        url: `https://youtube.com/watch?v=${id}`,
+        thumbnail: { url: `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`, width: 1280, height: 720 },
+        video: { url: `https://youtube.com/embed/${id}`, width: 1280, height: 720 }
+    }
+}
+const youtubeRegex = /(?<=[?&]v=)[\w-]+/
+function embedYoutube(embeds, queryString) {
+    let id = youtubeRegex.exec(queryString);
+    if(id != null) embeds.push(createYoutubeEmbed(id));
+}
+const youtuRegex = /^[\w-]+/
+function embedYoutu(embeds, queryString) {
+    let id = youtuRegex.exec(queryString);
+    if(id != null) embeds.push(createYoutubeEmbed(id));
+}
+const linkEmbedders = {
+    "www.youtube.com": embedYoutube,
+    "youtu.be": embedYoutu
+};
+let urlRegex = /https?:\/\/((?:[^\s/?\.#]+\.?)+)\/([^\s<>'"]+)/g
+function postProcessMessage(message, content) {
+    let currentUser = Discord.getCurrentUser();
+    if(content.includes(`<@${currentUser.id}>`))
+        message.mentions = [currentUser];
+
+    let embeds = message.embeds;
+    let url;
+    while ((url = urlRegex.exec(content)) != null) {
+        let linkEmbedder = linkEmbedders[url[1]];
+        if(linkEmbedder != null) linkEmbedder(embeds, url[2]);
+    }
+    urlRegex.lastIndex = 0;
+}
+
 async function decryptMessage(message, payload) {
     let payloadBuffer = Utils.PayloadDecode(payload).buffer;
     let keyHashBytes = payloadBuffer.slice(0, 16);
@@ -2153,9 +2190,7 @@ async function decryptMessage(message, payload) {
             return;
         }
         message.content = "<:ENC:458236424798470144>" + content;
-        let currentUser = Discord.getCurrentUser();
-        if(content.includes(`<@${currentUser.id}>`))
-            message.mentions = [currentUser];
+        postProcessMessage(message, content);
     }
 
     if(message.attachments == null) return;
