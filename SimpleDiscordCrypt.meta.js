@@ -1,4 +1,4 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
-// @version      0.5.3
+// @version      0.5.4
 // ==/UserScript==
