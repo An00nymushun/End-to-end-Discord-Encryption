@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.5
+// @version      0.5.6
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2076,7 +2076,7 @@ async function processMessage(message) {
     await processEmbeds(message);
 }
 
-const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video' }
+const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video' }
 const extensionRegex = /\.([^.]+)$/
 async function fixAttachment(attachment, filename, fileBuffer) {
     attachment.filename = filename;
@@ -2091,13 +2091,21 @@ async function fixAttachment(attachment, filename, fileBuffer) {
     if(mediaType == null) return;
 
     let tmpMedia = document.createElement(mediaType);
-    if(mediaType === 'video') { return; //todo: fix if possible
+    if(mediaType === 'video') { //return; //todo: fix if possible
         await (new Promise((resolve) => {
-            tmpMedia.onloadedmetadata = resolve;
+            //tmpMedia.onloadedmetadata = resolve;
+            tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
             tmpMedia.src = url;
         }));
         attachment.width = tmpMedia.videoWidth;
         attachment.height = tmpMedia.videoHeight;
+        let canvas = document.createElement("canvas");
+        canvas.width = tmpMedia.videoWidth;
+        canvas.height = tmpMedia.videoHeight;
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(tmpMedia, 0, 0);
+        attachment.url = attachment.proxy_url;
+        attachment.proxy_url = URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#";
     }
     else {
         await (new Promise((resolve) => {
