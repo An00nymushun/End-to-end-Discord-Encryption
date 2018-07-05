@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.5
+// @version      0.5.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2124,8 +2124,8 @@ function embedYoutube(message, url, queryString) {
 }
 const youtuRegex = /^[\w-]+/;
 function embedYoutu(message, url, queryString) {
-    let id = youtuRegex.exec(queryString);
-    if(id != null) message.embeds.push(createYoutubeEmbed(id));
+    let match = youtuRegex.exec(queryString);
+    if(match != null) message.embeds.push(createYoutubeEmbed(match[0]));
 }
 const imageRegex = /\.(?:png|jpe?g|gif|webp)$/;
 function embedImage(message, url, queryString) {
