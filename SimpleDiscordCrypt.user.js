@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.4
+// @version      0.5.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2146,12 +2146,26 @@ function embedImage(message, url, queryString) {
     };
     tmpimg.src = url;
 }
+function embedEncrypted(message, url, queryString) {
+    message.embeds.push({
+        type: 'video',
+        url,
+        thumbnail: { url: "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/images/key128.png", width: 128, height: 128 },
+        video: { url, width: 400, height: 300 }
+    });
+}
+function embedMega(message, url, queryString) {
+    if(queryString.startsWith("embed"))
+        embedEncrypted(message, url, queryString);
+}
 const linkEmbedders = {
     "www.youtube.com": embedYoutube,
     "youtu.be": embedYoutu,
     "cdn.discordapp.com": embedImage,
     "i.imgur.com": embedImage,
-    "i.redd.it": embedImage
+    "i.redd.it": embedImage,
+    "share.riseup.net": embedEncrypted,
+    "mega.nz": embedMega
 };
 let urlRegex = /https?:\/\/((?:[^\s/?\.#]+\.?)+)\/([^\s<>'"]+)/g
 function postProcessMessage(message, content) {
