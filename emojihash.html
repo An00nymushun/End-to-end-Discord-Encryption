@@ -1,0 +1,236 @@
+<body style="background:black">
+<canvas id="canvas" width="800" height="600"></canvas>
+</body>
+<script>
+//EmojiHash v1.1
+//by An0
+function EmojiHash(canvas, hashBuffer) {
+var ctx;
+
+function drawEmoji(emoji, x, y, size, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	if(rotation) ctx.rotate(rotation * Math.PI / 180);
+	ctx.scale(size, size);
+	ctx.fillText(emoji, 0, 0);
+	ctx.restore();
+}
+function drawRectangle(color, x, y, width, height, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	if(rotation) ctx.rotate(rotation * Math.PI / 180);
+	ctx.fillStyle = color;
+	ctx.fillRect(-width/2, -height/2, width, height);
+	ctx.restore();
+}
+var uintOffset = 0;
+var inUintOffset = 0;
+var uints = new DataView(hashBuffer);
+function popBits(count) { //max 32
+	let bits;
+	let newInUintOffset = inUintOffset + count;
+	if(newInUintOffset > 31) {
+		bits = uints.getUint32(uintOffset) & ~(~0 << (32 - inUintOffset));
+		inUintOffset = newInUintOffset - 32;
+		uintOffset += 4;
+		if(uintOffset === hashBuffer.byteLength) uintOffset = 0;
+		if(inUintOffset !== 0) {
+			bits = (bits << inUintOffset) | (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
+		}
+	}
+	else {
+		bits = (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) & ~(~0 << count);
+		inUintOffset = newInUintOffset;
+	}
+	
+	return bits;
+}
+
+ctx = canvas.getContext('2d');
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.font = "1px sans-serif";
+ctx.translate(canvas.width / 2, canvas.height / 2);
+let scale = Math.min(canvas.width / 4, canvas.height / 3) / 100 * 4;
+ctx.scale(scale, scale);
+
+
+function drawSky() {
+	let color;
+	switch(popBits(3)) {
+	case 0: //purple
+		color = "#a254d3";
+	break;
+	case 1: //rose
+		color = "#f6c4df";
+	break;
+	case 2: //blue
+		color = "#2b7cb3";	
+	break;
+	case 3: //darkblue
+		color = "#154167";	
+	break;
+	default: //lightblue
+		color = "#9bcfea";
+	}
+	
+	drawRectangle(color, 0, 0, 1000, 1000);
+}
+
+const airObjects = "☀️|🌑|☁️|🌩️|🌨️|🐉|🦇|🦅|🕊️|🐝|🦋|🍃|🚁|✈️|🛩️|🚀|🛸|🛰️|🌜|☄️|🌟|❄️|⚡|✨|🎈|👾|👻".split("|");
+function drawAirObject(x, y, size, rotation) {
+	if(popBits(1)) return;
+	
+	drawEmoji(airObjects[popBits(5) % 27], x, y, size, rotation); //32-27 first 5 have double probability
+}
+const handEmojis = "👌|🖕|✌|👊|👍|👎|👋|👈|👉|☝|👆|👇|🤞|🖖|🤟|🤙|🖐|✋|✍|💰|💀|💩|💣|🥊|🎨|🎺|📷|🎥|🔦|💼|🔎|📕|✉️|✏️|📏|🔫|🔨|🔧|💉|🚬|🗝️|📞|🎮|🎓|🍆".split("|");
+function drawHandEmoji(x, y, size, rotation) {
+	drawEmoji(handEmojis[popBits(6) % 45], x, y, size, rotation);
+}
+const bodyEmojis = "👔|👕|🥋|🎽|🧥|👗|👘|👙|👚".split("|");
+const headEmojis = "🤔|😂|😤|😭|😋|🤗|😏|😳|😆|🤨|😎|🙄|😑|😍|😘|🙂|🤩|😶|😣|😮|🤐|😫|😴|😜|🤤|😒|🙃|🤑|☹️|😁|😖|😱|🤯|😬|🤪|😵|😡|🤒|🤢|🤮|🤧|😇|🤠|🤡|🤥|🤣|🤫|🧐|🤓|😈|💩|🤖|👽|💀|👺|👶|👩|👨|👴|👵|🤴|👳|👲|🧔|👱|🎅|🐵|🐶|🐺|🦊|🐱|🦁|🐯|🐴|🦄|🦓|🐮|🐷|🐗|🐭|🐹|🐰|🐻|🐸|🐲|🐔|🎃".split("|");
+function drawPerson(x, y, size) {
+	ctx.save();
+	ctx.translate(x, y);
+	let scale = size / 100;
+	ctx.scale(scale, scale);
+
+	drawRectangle("#000", 0, -10, 4, 50); //body
+	drawRectangle("#000", -9, 26, 4, 30, 35); //legs
+	drawRectangle("#000", 9, 26, 4, 30, -35);
+	
+	switch(popBits(2)) { //left arm
+	case 0: //up
+		drawRectangle("#000", -12, -23, 4, 30, -55);
+		drawHandEmoji(-26, -34, 15);
+	break;
+	case 1: //middle
+		drawRectangle("#000", -15, -15, 30, 4);
+		drawHandEmoji(-30, -18, 15);
+	break;
+	default: //down
+		drawRectangle("#000", -12, -8, 4, 30, 55);
+		drawHandEmoji(-26, -4, 15);
+	}
+	switch(popBits(2)) { //right arm
+	case 0: //up
+		drawRectangle("#000", 12, -23, 4, 30, 55);
+		drawHandEmoji(26, -34, 15);
+	break;
+	case 1: //middle
+		drawRectangle("#000", 15, -15, 30, 4);
+		drawHandEmoji(30, -18, 15);
+	break;
+	default: //down
+		drawRectangle("#000", 12, -8, 4, 30, -55);
+		drawHandEmoji(26, -4, 15);
+	}
+	
+	drawEmoji(bodyEmojis[popBits(4) % 9], 0, -5, 28); //chest
+	drawEmoji(headEmojis[popBits(12) % 87], 0, -35, 25); //face 4096 % 87 = first 7 have increased chance
+	
+	if(popBits(1)) drawEmoji("👟", -13, 35, 15); //left foot
+	if(popBits(1)) drawEmoji("👟", 19, 35, 15); //right foot
+	
+	ctx.restore();
+}
+const tableObjects = "🍞|👓|🛍️|💎|🍎|🍇|🍉|🍊|🍋|🍌|🍏|🍐|🍑|🍒|🍓|🥝|🍅|🥥|🥔|🥕|🌽|🌶️|🥒|🥦|🍄|🥜|🥐|🥨|🥞|🧀|🍖|🍗|🥩|🥓|🍔|🍟|🍕|🌭|🥪|🌮|🥚|🍲|🥣|🥗|🍿|🥫|🍱|🍙|🍣|🥡|🍦|🍩|🎂|🥧|🍫|🍮|🍯|🍼|☕|🍷|🍸|🍺|🔪|🏺|🛎️|⏰|⌛|🌂|🎁|🏆|⚽|🎳|🔮|🕹️|🎲|📢|📻|🎧|🎤|☎️|💻|🖨️|📺|🕯️|📦|🔭|⚗️|🔬|⚖️|🥤|📚".split("|");
+function drawTableObject(x, y, size, rotation) {
+	if(popBits(1)) return;
+	
+	drawEmoji(tableObjects[popBits(12) % 91], x, y, size, rotation);
+}
+function drawTable(x, y, size, rotation) {
+	ctx.save();
+	ctx.translate(x, y);
+	let scale = size / 100;
+	ctx.scale(scale, scale);
+	
+	drawRectangle("#999", 0, 33, 4, 34);
+	drawRectangle("#f00", 0, 14, 70, 4);
+	
+	drawTableObject(-25, 2, 20);
+	drawTableObject(-3, 2, 20);
+	drawTableObject(25, 2, 20);
+	
+	ctx.restore();
+}
+const groundObjects = "🐉|💩|👯|👫|🚶🏻|🏃🏻|💃🏻|🕺🏻|🧘🏻|🕴🏻|🤺|🏇🏻|🏌🏻|⛹🏻|🏋🏻|🚴🏻|🤸🏻|🤼|🤾🏻|🐒|🦍|🐕|🐩|🐈|🐅|🐆|🐎|🦌|🐂|🐄|🐖|🐑|🐐|🐪|🐘|🦏|🐁|🐀|🐇|🐿️|🦔|🦃|🐓|🐧|🐤|🐦|🦆|🦉|🐊|🐢|🦎|🐍|🦕|🦖|🐌|🐛|🐜|🌹|🥀|🌻|🌼|🌷|🌱|🌲|🌳|🌴|🌵|🌾|🍀|⛩️|⛲|🎪|🛢️|🛵|🚲|🛴|🎏|🥅|🗑️|🗿|🏳️‍🌈|🚩|🏁|🏴|🏳️".split("|");
+function drawGroundObject(x, y, size, rotation) {
+	switch(popBits(2)) {
+	case 0:
+		drawPerson(x, y, size, rotation);
+	break;
+	case 1:
+		drawTable(x, y, size, rotation);
+	break;
+	case 2:
+		drawEmoji(groundObjects[popBits(8) % 85], x, y, size / 2, rotation);
+	break;
+	}
+}
+
+
+switch(popBits(2)) {
+	case 0: { //park
+		drawSky();
+		drawRectangle("#5ce64e", 0, 50, 200, 100, 1);
+		drawAirObject(-40, -27, 8);
+		drawAirObject(-16, -30, 10);
+		drawAirObject(17, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(10, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+	} break;
+	case 1: { //beach
+		drawSky();
+		drawRectangle("#e5e886", 0, 50, 200, 100);
+		drawRectangle("#3cc", 0, 0, 200, 10, -.5);
+		drawAirObject(-40, -27, 8);
+		drawAirObject(-16, -30, 10);
+		drawAirObject(17, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(10, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+	
+	} break;
+	case 2: { //campfire
+		drawSky();
+		drawRectangle("#49be3d", 0, 50, 200, 100);
+		drawEmoji('🔥', 0, 10, 20);
+		drawRectangle("#333", 0, 20, 15, 5);
+		drawAirObject(-42, -20, 8);
+		drawAirObject(-25, -25, 10);
+		drawAirObject(22, -28, 9);
+		drawAirObject(41, -20, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-13, 20, 23);
+		drawGroundObject(-35, -5, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+	
+	} break;
+	case 3: { //mountainslide
+		drawSky();
+		drawRectangle("#eff", 0, 50, 200, 100, -30);
+		drawAirObject(-42, -10, 8);
+		drawAirObject(-40, -25, 10);
+		drawAirObject(-15, -30, 9);
+		drawAirObject(15, -30, 10);
+		drawGroundObject(-37, 20, 30);
+		drawGroundObject(-10, 10, 23);
+		drawGroundObject(20, 0, 20);
+		drawGroundObject(15, 25, 20);
+		drawGroundObject(35, 20, 26);
+	
+	} break;
+}
+
+}EmojiHash(document.getElementById('canvas'), crypto.getRandomValues(new Uint8Array(16)).buffer);
+</script>
