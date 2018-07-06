@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.6
+// @version      0.5.7
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1389,7 +1389,7 @@ function Init(nonInvasive)
         }),
         TryDecompress: (buffer) => new Promise((resolve, reject) => {
             let bufferView = new DataView(buffer);
-            if(bufferView.getUint16(0, false) !== 0x5DC) return resolve(buffer);
+            if(buffer.byteLength < 2 || bufferView.getUint16(0, false) !== 0x5DC) return resolve(buffer);
             let length = bufferView.getUint32(2, true);
             bufferView.setUint16(0, 0x8950, false);
             bufferView.setUint32(2, 0x4E470D0A, false); //restore original PNG signature
