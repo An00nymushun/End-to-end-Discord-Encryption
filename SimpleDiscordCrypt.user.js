@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.7
+// @version      0.5.8
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2170,6 +2170,7 @@ const linkEmbedders = {
     "www.youtube.com": embedYoutube,
     "youtu.be": embedYoutu,
     "cdn.discordapp.com": embedImage,
+    "media.discordapp.net": embedImage,
     "i.imgur.com": embedImage,
     "i.redd.it": embedImage,
     "share.riseup.net": embedEncrypted,
@@ -2219,7 +2220,7 @@ async function decryptMessage(message, payload) {
     message.embeds = []; //remove embeds in case of edit and in case of the payload is from the embed
 
     if(payloadBuffer.byteLength === 16) {
-        message.content = "<:ENC:458236424798470144>\u2063"; //invisible separator at the end to make the emoji smaller
+        message.content = "<:ENC:465534298662109185>\u2063"; //invisible separator at the end to make the emoji smaller
     }
     else {
         let content;
@@ -2232,7 +2233,7 @@ async function decryptMessage(message, payload) {
             message.attachments = [];
             return;
         }
-        message.content = "<:ENC:458236424798470144>" + content;
+        message.content = "<:ENC:465534298662109185>" + content;
         postProcessMessage(message, content);
     }
 
