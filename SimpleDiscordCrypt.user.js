@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.5.8
+// @version      0.6.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1997,6 +1997,11 @@ Discord.window.SdcDiscord = Discord;
         a.download = filename;
         a.click();
     };
+    Discord.window.SdcDecryptDl = async (filename, keyHash, url) => {
+        let encryptedFileBuffer = await Utils.DownloadFile(url);
+        let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
+        Utils.DownloadBlob(filename, new File([fileBuffer], filename));
+    };
 
     const mirrorFunction = (moduleName, functionName) => {
         Discord[`original_${functionName}`] = modules[moduleName][functionName];
@@ -2078,43 +2083,73 @@ async function processMessage(message) {
 
 const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video' }
 const extensionRegex = /\.([^.]+)$/
-async function fixAttachment(attachment, filename, fileBuffer) {
+async function decryptAttachment(key, keyHash, message, attachment) {
+    let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
+    let filename = await Utils.AesDecryptString(key, encryptedFilename);
     attachment.filename = filename;
-    attachment.size = fileBuffer.byteLength;
-    let url = URL.createObjectURL(new File([fileBuffer], filename));
-    attachment.url = `javascript:SdcDownloadUrl('${filename}','${url}')`;
-    attachment.proxy_url = `${url}#${filename}`;
+    //attachment.size = fileBuffer.byteLength;
+    let encryptedUrl = attachment.url;
 
     let match = extensionRegex.exec(filename);
-    if(match == null) return;
-    let mediaType = mediaTypes[match[1]];
-    if(mediaType == null) return;
+    let mediaType;
+    if(match != null) {
+        mediaType = mediaTypes[match[1]];
+        if(mediaType == null) {
+            attachment.url = `javascript:SdcDecryptDl('${filename}','${keyHash}','${encryptedUrl}')`;
+            delete attachment.proxy_url;
+            message.attachments.push(attachment);
+            return;
+        }
+    }
 
-    let tmpMedia = document.createElement(mediaType);
-    if(mediaType === 'video') { //return; //todo: fix if possible
-        await (new Promise((resolve) => {
-            //tmpMedia.onloadedmetadata = resolve;
-            tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
-            tmpMedia.src = url;
-        }));
-        attachment.width = tmpMedia.videoWidth;
-        attachment.height = tmpMedia.videoHeight;
-        let canvas = document.createElement("canvas");
-        canvas.width = tmpMedia.videoWidth;
-        canvas.height = tmpMedia.videoHeight;
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(tmpMedia, 0, 0);
-        attachment.url = attachment.proxy_url;
-        attachment.proxy_url = URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#";
-    }
-    else {
-        await (new Promise((resolve) => {
-            tmpMedia.onload = resolve;
-            tmpMedia.src = url;
-        }));
-        attachment.width = tmpMedia.width;
-        attachment.height = tmpMedia.height;
-    }
+    (async () => {
+        let encryptedFileBuffer = await Utils.DownloadFile(encryptedUrl);
+        let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
+        let url = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
+        let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${url}')`;
+
+        let tmpMedia = document.createElement(mediaType);
+        if(mediaType === 'video') {
+            await (new Promise((resolve) => {
+                //tmpMedia.onloadedmetadata = resolve;
+                tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
+                tmpMedia.src = url;
+            }));
+            let width = tmpMedia.videoWidth;
+            let height = tmpMedia.videoHeight;
+            let canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            let ctx = canvas.getContext("2d");
+            ctx.drawImage(tmpMedia, 0, 0);
+
+            message.embeds.push({
+                type: 'video',
+                url: downloadUrl,
+                thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
+                video: { url: downloadUrl, proxy_url: url, width, height }
+            });
+        }
+        else {
+            await (new Promise((resolve) => {
+                tmpMedia.onload = resolve;
+                tmpMedia.src = url;
+            }));
+
+            message.embeds.push({
+                type: 'image',
+                url: downloadUrl,
+                thumbnail: {
+                    url: downloadUrl,
+                    proxy_url: url,
+                    width: tmpMedia.width,
+                    height: tmpMedia.height
+                }
+            });
+        }
+
+        Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+    })();
 }
 
 function createYoutubeEmbed(id) {
@@ -2158,7 +2193,7 @@ function embedEncrypted(message, url, queryString) {
     message.embeds.push({
         type: 'video',
         url,
-        thumbnail: { url: "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/images/key128.png", width: 128, height: 128 },
+        thumbnail: { url: "https://media.discordapp.net/attachments/449522590978146304/465783850144890890/key128.png", width: 128, height: 128 },
         video: { url, width: 400, height: 300 }
     });
 }
@@ -2239,14 +2274,11 @@ async function decryptMessage(message, payload) {
 
     if(message.attachments == null) return;
 
-    for(let attachment of message.attachments) {
+    let attachments = message.attachments;
+    message.attachments = [];
+    for(let attachment of attachments) {
         try {
-            let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
-            let filename = await Utils.AesDecryptString(key, encryptedFilename);
-            let encryptedFileBuffer = await Utils.DownloadFile(attachment.url);
-            let fileBuffer = await Utils.AesDecrypt(key, encryptedFileBuffer);
-
-            await fixAttachment(attachment, filename, fileBuffer);
+            await decryptAttachment(key, keyHashBase64, message, attachment);
         }
         catch(e) {
             attachment.filename = "-----ENCRYPTED FILE FAILED TO DECRYPT-----";
