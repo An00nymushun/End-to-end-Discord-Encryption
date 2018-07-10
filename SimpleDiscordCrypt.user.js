@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.0
+// @version      0.6.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2083,6 +2083,8 @@ async function processMessage(message) {
 
 const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video' }
 const extensionRegex = /\.([^.]+)$/
+var downloadLocked = false;
+var downloadLocks = [];
 async function decryptAttachment(key, keyHash, message, attachment) {
     let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
     let filename = await Utils.AesDecryptString(key, encryptedFilename);
@@ -2103,7 +2105,20 @@ async function decryptAttachment(key, keyHash, message, attachment) {
     }
 
     (async () => {
-        let encryptedFileBuffer = await Utils.DownloadFile(encryptedUrl);
+        if(downloadLocked) {
+            await (new Promise((resolve) => downloadLocks.unshift(resolve)));
+        }
+        else downloadLocked = true;
+
+        let encryptedFileBuffer;
+        try {
+            encryptedFileBuffer = await Utils.DownloadFile(encryptedUrl);
+        }
+        finally {
+            if(downloadLocks.length !== 0) downloadLocks.pop()();
+            else downloadLocked = false;
+        }
+
         let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
         let url = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
         let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${url}')`;
