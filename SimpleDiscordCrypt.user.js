@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.1
+// @version      0.6.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -561,6 +561,7 @@ const KeyManagerWindow = {
                     else if(e.keyCode === 27/*ESC*/)
                         changeBack();
                 };
+                descriptorInput.focus();
             };
             Utils.AttachEventToClass(listItem, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
             Utils.AttachEventToClass(listItem, 'SDC_SETHIDDEN', 'change', function() {
