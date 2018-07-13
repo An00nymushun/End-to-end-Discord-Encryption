@@ -1,4 +1,4 @@
-
+$ErrorActionPreference = "Stop"
 
 function RootElectron([string]$electonAsarPath) {
 	'rooting'
@@ -30,6 +30,19 @@ function AddExtension([string]$electonDataPath) {
 	Set-Content $extensionListPath '["../../SimpleDiscordCrypt"]'
 }
 
+function StopProcesses([string]$name, [string]$root) {
+	$targets = Get-Process | ? { $_.Name -eq $name -or ($_.Path -and $_.Path.StartsWith($root)) }
+	if($targets.Length -eq 0) { return }
+    try {
+    	$targets | Stop-Process
+    } catch { "PLEASE CLOSE $name!" }
+	"waiting for $name to close"
+	do {
+		sleep 1
+		$targets = Get-Process | ? { $_.Name -eq $name -or ($_.Path -and $_.Path.StartsWith($root)) }
+	} while($targets.Length -gt 0)
+}
+
 $discordPath = $env:LOCALAPPDATA+'\Discord'
 $discordDataPath = $env:APPDATA+'\discord'
 $discordResourcesPath = $discordPath+'\app-*\resources'
@@ -51,13 +64,13 @@ if(Test-Path $discordPath) {
 	if(Test-Path $discordDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordPath) } | Stop-Process
+	StopProcesses 'Discord' $discordPath
 	
 	foreach($path in (Resolve-Path "$discordResourcesPath\electron.asar")) {
-		RootElectron($path)
+		RootElectron $path
 	}
 
-	AddExtension($discordDataPath)
+	AddExtension $discordDataPath
 
 	$install = $true
 }
@@ -67,13 +80,13 @@ if(Test-Path $discordPtbPath) {
 	if(Test-Path $discordPtbDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordPtbResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordPtbPath) } | Stop-Process
+	StopProcesses 'DiscordPTB' $discordPtbPath
 	
 	foreach($path in (Resolve-Path "$discordPtbResourcesPath\electron.asar")) {
-		RootElectron($path)
+		RootElectron $path
 	}
 
-	AddExtension($discordPtbDataPath)
+	AddExtension $discordPtbDataPath
 
 	$install = $true
 }
@@ -83,13 +96,13 @@ if(Test-Path $discordCanaryPath) {
 	if(Test-Path $discordCanaryDataPath) { 'data directory found' } else { 'data directory not found'; return }
 	if(Test-Path $discordCanaryResourcesPath) { 'resources directory found' } else { 'resources directory not found'; return }
 	
-	Get-Process | ? { $_.Path -and $_.Path.StartsWith($discordCanaryPath) } | Stop-Process
+	StopProcesses 'DiscordCanary' $discordCanaryPath
 	
 	foreach($path in (Resolve-Path "$discordCanaryResourcesPath\electron.asar")) {
-		RootElectron($path)
+		RootElectron $path
 	}
 
-	AddExtension($discordCanaryDataPath)
+	AddExtension $discordCanaryDataPath
 
 	$install = $true
 }
