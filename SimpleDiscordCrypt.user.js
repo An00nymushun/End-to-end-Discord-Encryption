@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.2
+// @version      0.6.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2088,21 +2088,27 @@ var downloadLocked = false;
 var downloadLocks = [];
 async function decryptAttachment(key, keyHash, message, attachment) {
     let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
-    let filename = await Utils.AesDecryptString(key, encryptedFilename);
+    console.log(attachment.filename);
+    let filename
+    try {
+        filename = await Utils.AesDecryptString(key, encryptedFilename);
+    }
+    catch(e) {
+        filename = "file";
+    }
+    console.log(filename + ' ' + attachment.filename);
     attachment.filename = filename;
     //attachment.size = fileBuffer.byteLength;
     let encryptedUrl = attachment.url;
 
     let match = extensionRegex.exec(filename);
     let mediaType;
-    if(match != null) {
-        mediaType = mediaTypes[match[1]];
-        if(mediaType == null) {
-            attachment.url = `javascript:SdcDecryptDl('${filename}','${keyHash}','${encryptedUrl}')`;
-            delete attachment.proxy_url;
-            message.attachments.push(attachment);
-            return;
-        }
+    if(match != null) mediaType = mediaTypes[match[1]];
+    if(mediaType == null) {
+        attachment.url = `javascript:SdcDecryptDl('${filename}','${keyHash}','${encryptedUrl}')`;
+        delete attachment.proxy_url;
+        message.attachments.push(attachment);
+        return;
     }
 
     (async () => {
@@ -2596,12 +2602,18 @@ async function handleSend(channelId, message, forceSimple) {
     return key;
 }
 
+const filenameLimit = 47;
+const filenameRegex = /^(.*?)((?:\.[^.]*)?)$/;
 async function handleUpload(channelId, file, message) {
     let key = await handleSend(channelId, message, true);
     if(key == null) return file;
 
+    let filenameParts = filenameRegex.exec(file.name);
+    let filenameMax = filenameLimit - filenameParts[2].length;
+    let filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
+
     try {
-        let encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncryptString(key, file.name));
+        let encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncryptString(key, filename));
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
         return new File([encryptedBuffer], encryptedFilename);
