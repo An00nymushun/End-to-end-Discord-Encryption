@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.3
+// @version      0.6.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1310,7 +1310,7 @@ function Init(nonInvasive)
         DownloadFile:
         (typeof(GM_xmlhttpRequest) !== 'undefined') ? (url) => new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
-                method: "GET",
+                method: 'GET',
                 url,
                 responseType: 'arraybuffer',
                 onload: (result) => resolve(result.response),
@@ -1399,8 +1399,8 @@ function Init(nonInvasive)
             let url = URL.createObjectURL(new Blob([buffer]));
             image.onload = () => {
                 URL.revokeObjectURL(url);
-                let canvas = document.createElement("canvas");
-                let ctx = canvas.getContext("2d");
+                let canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
                 let width = canvas.width = image.width;
                 let height = canvas.height = image.height;
                 ctx.drawImage(image, 0, 0);
@@ -2088,7 +2088,6 @@ var downloadLocked = false;
 var downloadLocks = [];
 async function decryptAttachment(key, keyHash, message, attachment) {
     let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
-    console.log(attachment.filename);
     let filename
     try {
         filename = await Utils.AesDecryptString(key, encryptedFilename);
@@ -2096,7 +2095,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
     catch(e) {
         filename = "file";
     }
-    console.log(filename + ' ' + attachment.filename);
+
     attachment.filename = filename;
     //attachment.size = fileBuffer.byteLength;
     let encryptedUrl = attachment.url;
