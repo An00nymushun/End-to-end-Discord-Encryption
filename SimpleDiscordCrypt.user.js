@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.4
+// @version      0.6.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1598,7 +1598,7 @@ function Init(nonInvasive)
                 }
             }
             else {
-                this.NewDb(callback);
+                this.NewDb(callback, failCallback);
             }
         })()},
         SaveDb: async function() {
@@ -1634,7 +1634,7 @@ function Init(nonInvasive)
             };
         },
 
-        NewDb: function(callback) {
+        NewDb: function(callback, cancelCallback) {
             NewdbWindow.Show(async (password) => {
                 DataBase = { isEncrypted: password !== "", keys: {}, channels: {}, autoKeyExchange: "DM+friends" };
                 Cache = { keys: {} };
@@ -1653,7 +1653,8 @@ function Init(nonInvasive)
                 this.FastSaveDb();
                 if(callback) callback();
             },
-                             () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }) }
+                             () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }) },
+                             cancelCallback
                             );
         },
         NewDbPassword: function(callback) { //TODO: notifications
@@ -1987,8 +1988,8 @@ function Init(nonInvasive)
             this.dbChanged = true;
         }
     };
-Discord.window.SdcUtils = Utils;
-Discord.window.SdcDiscord = Discord;
+//Discord.window.SdcUtils = Utils;
+//Discord.window.SdcDiscord = Discord;
 
     if(!window.crypto || !crypto.subtle) { Utils.Error("Crypto API not found."); return -1; }
 
