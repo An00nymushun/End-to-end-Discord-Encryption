@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      0.6.5
+// @version      1.0.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -15,6 +15,7 @@
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @connect      cdn.discordapp.com
+// @connect      gitlab.com
 // ==/UserScript==
 
 // Credits to the original DiscordCrypt
@@ -22,6 +23,8 @@
 (function() {
 
 'use strict';
+
+const BlacklistUrl = "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/blacklist.txt";
 
 const SavedLocalStorage = (typeof(localStorage) !== undefined) ? localStorage : null;
 
@@ -1174,6 +1177,7 @@ var Discord;
 var Utils;
 var DataBase;
 var Cache;
+var Blacklist;
 
 function Init(nonInvasive)
 {
@@ -1804,9 +1808,11 @@ function Init(nonInvasive)
             return (Cache.channelConfig != null) ? Cache.channelConfig.k : DataBase.personalKeyHash;
         },
         GetCurrentChannelEncrypt: () => {
-            return (Cache.channelConfig != null) && Cache.channelConfig.e;
+            return Cache.channelConfig != null && Cache.channelConfig.e && Cache.channelBlacklist !== 1;
         },
         ToggleCurrentChannelEncrypt: function() {
+            if(Cache.channelBlacklist === 1) return;
+
             if(Cache.channelConfig == null)
                 Cache.channelConfig = this.NewChannelConfig(Cache.channelId, null, null, true);
             else
@@ -1832,6 +1838,13 @@ function Init(nonInvasive)
             Cache.channelId = Discord.getChannelId();
             Cache.channelConfig = DataBase.channels[Cache.channelId];
             if(Cache.channelConfig != null) Cache.channelConfig.l = Date.now();
+            if(Blacklist != null) {
+                let channel = Discord.getChannel(Cache.channelId);
+                if(channel == null) return false;
+                let guildId = channel.guild_id;
+                Cache.channelBlacklist = (guildId == null) ? null : Blacklist[guildId];
+            }
+            return true;
         },
 
         SendSystemMessage: function(channelId, sysmsg) {
@@ -2131,14 +2144,16 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${url}')`;
 
         let tmpMedia = document.createElement(mediaType);
+        let width;
+        let height;
         if(mediaType === 'video') {
             await (new Promise((resolve) => {
                 //tmpMedia.onloadedmetadata = resolve;
                 tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
                 tmpMedia.src = url;
             }));
-            let width = tmpMedia.videoWidth;
-            let height = tmpMedia.videoHeight;
+            width = tmpMedia.videoWidth;
+            height = tmpMedia.videoHeight;
             let canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
@@ -2157,6 +2172,8 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                 tmpMedia.onload = resolve;
                 tmpMedia.src = url;
             }));
+            width = tmpMedia.width;
+            height = tmpMedia.height;
 
             message.embeds.push({
                 type: 'image',
@@ -2164,13 +2181,29 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                 thumbnail: {
                     url: downloadUrl,
                     proxy_url: url,
-                    width: tmpMedia.width,
-                    height: tmpMedia.height
+                    width,
+                    height
                 }
             });
         }
 
         Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+        if(message.channel_id !== Cache.channelId) return;
+        let messageContainer = document.getElementsByClassName('messages')[0];
+        if(messageContainer != null) {
+            if(messageContainer.scrollTop >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
+
+            let displayHeight = height;
+            if(width > 400 || height > 300) { //image will be resized
+                if(width / 400 > height / 300) { //scale by with
+                    displayHeight = Math.round(height / (width / 400));
+                }
+                else { //scale by height
+                    displayHeight = 300;
+                }
+            }
+            messageContainer.scrollTop -= displayHeight;
+        }
     })();
 }
 
@@ -2542,6 +2575,10 @@ async function processEmbeds(message) {
 }*/
 
 async function handleChannelSelect(event) {
+    if(Blacklist != null) {
+        let guildId = event.guildId;
+        Cache.channelBlacklist = (guildId == null) ? null : Blacklist[guildId];
+    }
     let channelId = event.channelId;
     if(channelId != null) {
         Cache.channelId = channelId;
@@ -2559,12 +2596,18 @@ async function handleSend(channelId, message, forceSimple) {
     let prefixMatch = prefixRegex.exec(content);
     if(channelConfig == null) {
         if(prefixMatch != null) {
-            channelConfig = Utils.NewChannelConfig(channelId);
+            if(Cache.channelBlacklist !== 1)
+                channelConfig = Utils.NewChannelConfig(channelId);
         }
         else return null;
     }
     if(prefixMatch != null) content = content.substring(prefixMatch[0].length);
     else if(!channelConfig.e) return null;
+
+    if(Cache.channelBlacklist === 1) {
+        if(prefixMatch != null) message.content = content;
+        return null;
+    }
 
     let key = await Utils.GetKeyByHash(channelConfig.k);
     let keyHashBytes = Utils.Base64ToBytes(channelConfig.k);
@@ -2579,7 +2622,7 @@ async function handleSend(channelId, message, forceSimple) {
     let payload = Utils.PayloadEncode(messageBytes);
 
     let channel = Discord.getChannel(channelId);
-    if(forceSimple || (channel.type === 0 && !Discord.can(0x4000/*EMBED_LINKS*/, Discord.getCurrentUser(), channel))) {
+    if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(0x4000/*EMBED_LINKS*/, Discord.getCurrentUser(), channel))) {
        message.content = payload + " `\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}`";
     }
     else {
@@ -2660,6 +2703,23 @@ function LockMessages(initial) {
             unlockMessage();
         messageLocks = [];
     }
+}
+
+async function LoadBlacklist() {
+    let blacklistString = Utils.Utf8BytesToString(await Utils.DownloadFile(BlacklistUrl));
+    let blacklistRegex = /^\s*(\d{1,20})(E?)/gm;
+    Blacklist = {};
+    let record;
+    while ((record = blacklistRegex.exec(blacklistString)) != null) {
+        Blacklist[record[1]] = (record[2] === 'E') ? 2 : 1;
+    }
+
+    for(let i = 1;; i++) {
+        if(await Utils.RefreshCache() || i === 10) break;
+        await Utils.Sleep(i * 200);
+    }
+
+    if(Cache.channelBlacklist === 1) MenuBar.Update();
 }
 
 var dbSaveInterval;
@@ -2787,6 +2847,8 @@ function Load()
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
     Utils.Log("loaded");
+
+    LoadBlacklist();
 }
 
 function Unload()
