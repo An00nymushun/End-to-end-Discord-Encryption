@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.1
+// @version      1.0.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1881,7 +1881,7 @@ function Init(nonInvasive)
             let personalKey = await this.GetKeyBytesByHash(DataBase.personalKeyHash);
             let personalKeyPayload = this.PayloadEncode(await this.AesEncrypt(key, personalKey));
 
-            this.SendSystemMessage(channelId, `*type*: \`PERSONAL KEY\`*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
+            this.SendSystemMessage(channelId, `*type*: \`PERSONAL KEY\`\n*key*: \`${keyHashPayload}\`\n*personalKey*: \`${personalKeyPayload}\``);
 
             delete channelConfig.w;
             this.dbChanged = true;
