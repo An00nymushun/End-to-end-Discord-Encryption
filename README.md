@@ -7,7 +7,7 @@ Discord message encryption plugin, it gives end-to-end client side encryption fo
 
 Install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) or include the js file somehow else
 
-If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (right click and Run with PowerShell)
+If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (Alt+click to download, right click on the downloaded file and Run with PowerShell)
 
 Right click on the lock icon to open the menu
 
