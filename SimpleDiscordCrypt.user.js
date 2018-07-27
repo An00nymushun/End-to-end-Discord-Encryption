@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.2
+// @version      1.0.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -10,6 +10,10 @@
 // @icon         https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/logo.png
 // @match        https://discordapp.com/channels/*
 // @match        https://discordapp.com/activity
+// @match        https://ptb.discordapp.com/channels/*
+// @match        https://ptb.discordapp.com/activity
+// @match        https://canary.discordapp.com/channels/*
+// @match        https://canary.discordapp.com/activity
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
@@ -2102,7 +2106,7 @@ var downloadLocked = false;
 var downloadLocks = [];
 async function decryptAttachment(key, keyHash, message, attachment) {
     let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
-    let filename
+    let filename;
     try {
         filename = await Utils.AesDecryptString(key, encryptedFilename);
     }
@@ -2656,7 +2660,10 @@ async function handleUpload(channelId, file, message) {
     let filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
 
     try {
-        let encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncryptString(key, filename));
+        let encryptedFilename;
+        do {
+            encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncryptString(key, filename));
+        } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
         return new File([encryptedBuffer], encryptedFilename);
