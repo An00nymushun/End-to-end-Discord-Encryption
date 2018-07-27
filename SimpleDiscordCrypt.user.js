@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.3
+// @version      1.0.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2128,6 +2128,16 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         return;
     }
 
+    let placeholder = {
+        type: 'image',
+        thumbnail: {
+            url: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+            width: 1,
+            height: 300
+        }
+    };
+    message.embeds.push(placeholder);
+
     (async () => {
         if(downloadLocked) {
             await (new Promise((resolve) => downloadLocks.unshift(resolve)));
@@ -2164,7 +2174,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             let ctx = canvas.getContext("2d");
             ctx.drawImage(tmpMedia, 0, 0);
 
-            message.embeds.push({
+            Object.assign(placeholder, {
                 type: 'video',
                 url: downloadUrl,
                 thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
@@ -2179,7 +2189,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             width = tmpMedia.width;
             height = tmpMedia.height;
 
-            message.embeds.push({
+            Object.assign(placeholder, {
                 type: 'image',
                 url: downloadUrl,
                 thumbnail: {
@@ -2206,7 +2216,8 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                     displayHeight = 300;
                 }
             }
-            messageContainer.scrollTop -= displayHeight;
+
+            if(displayHeight != 300) messageContainer.scrollTop += 300 - displayHeight;
         }
     })();
 }
