@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.4
+// @version      1.0.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2338,7 +2338,8 @@ async function decryptMessage(message, payload) {
             message.attachments = [];
             return;
         }
-        message.content = "<:ENC:465534298662109185>" + content;
+        //message.content = "<:ENC:465534298662109185>" + content;
+        message.content = content.replace(/^/gm, "<:ENC:465534298662109185>");
         postProcessMessage(message, content);
     }
 
