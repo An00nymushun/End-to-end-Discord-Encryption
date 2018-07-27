@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.5
+// @version      1.0.6
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2120,7 +2120,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
 
     let match = extensionRegex.exec(filename);
     let mediaType;
-    if(match != null) mediaType = mediaTypes[match[1]];
+    if(match != null) mediaType = mediaTypes[match[1].toLowerCase()];
     if(mediaType == null) {
         attachment.url = `javascript:SdcDecryptDl('${filename}','${keyHash}','${encryptedUrl}')`;
         delete attachment.proxy_url;
@@ -2176,7 +2176,13 @@ async function decryptAttachment(key, keyHash, message, attachment) {
 
             Object.assign(placeholder, {
                 type: 'video',
+                //color: BaseColorInt,
                 url: downloadUrl,
+                /*author: {
+                    name: "Download",
+                    url: downloadUrl
+                },*/
+                title: "Download",
                 thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
                 video: { url: downloadUrl, proxy_url: url, width, height }
             });
@@ -2240,7 +2246,7 @@ function embedYoutu(message, url, queryString) {
     let match = youtuRegex.exec(queryString);
     if(match != null) message.embeds.push(createYoutubeEmbed(match[0]));
 }
-const imageRegex = /\.(?:png|jpe?g|gif|webp)$/;
+const imageRegex = /\.(?:png|jpe?g|gif|webp)$/i;
 function embedImage(message, url, queryString) {
     if(!imageRegex.test(queryString)) return;
 
