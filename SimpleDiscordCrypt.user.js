@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.6
+// @version      1.0.7
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1178,7 +1178,11 @@ switch(popBits(2)) {
 
 
 var Discord;
-var Utils;
+var Utils = {
+    Log: (message) => { console.log(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
+    Warn: (message) => { console.warn(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
+    Error: (message) => { console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") }
+};
 var DataBase;
 var Cache;
 var Blacklist;
@@ -1278,10 +1282,7 @@ function Init(nonInvasive)
 
     Discord.modules = modules;
 
-    Utils = {
-        Log: (message) => { console.log(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
-        Warn: (message) => { console.warn(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
-        Error: (message) => { console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
+    Object.assign(Utils, {
 
         StorageSave:
         (typeof(GM_getValue) !== 'undefined' && typeof(GM_setValue) !== 'undefined') ? (key, value) => new Promise((resolve) => {
@@ -1892,6 +1893,9 @@ function Init(nonInvasive)
         },
         ongoingKeyExchanges: {},
         InitKeyExchange: async function(userId, auto) {
+            let currentUserId = Discord.getCurrentUser().id;
+            if(userId === currentUserId) return;
+
             let channelId = Discord.getDMFromUserId(userId);
             let channelConfig;
             if(auto) {
@@ -1912,7 +1916,7 @@ function Init(nonInvasive)
             delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
 
             if(channelId == null) {
-                channelId = await Discord.ensurePrivateChannel(Discord.getCurrentUser().id, userId);
+                channelId = await Discord.ensurePrivateChannel(currentUserId, userId);
             }
 
             let dhPublicKeyPayload = this.PayloadEncode(this.Base64ToBytes(DataBase.dhPublicKey));
@@ -2004,7 +2008,7 @@ function Init(nonInvasive)
             delete channelConfig.w;
             this.dbChanged = true;
         }
-    };
+    });
 //Discord.window.SdcUtils = Utils;
 //Discord.window.SdcDiscord = Discord;
 
@@ -2131,7 +2135,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
     let placeholder = {
         type: 'image',
         thumbnail: {
-            url: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+            url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
             width: 1,
             height: 300
         }
