@@ -20,7 +20,7 @@ function AddExtension([string]$electonDataPath) {
 	$extensionListPath = "$electonDataPath\DevTools Extensions"
 	if(Test-Path $extensionListPath) {
 		$extensionList = ConvertFrom-Json (Get-Content $extensionListPath)
-		$extensionList = $extensionList | ? { $_ -notmatch '(?:^|[\\\/])SimpleDiscordcrypt[\\\/]?$' }
+		$extensionList = @($extensionList | ? { $_ -notmatch '(?:^|[\\\/])SimpleDiscordcrypt[\\\/]?$' })
 		if($extensionList.Length -ne 0) {
 			$extensionList += '../../SimpleDiscordCrypt'
 			Set-Content $extensionListPath (ConvertTo-Json $extensionList)
@@ -52,7 +52,7 @@ $discordPtbResourcesPath = $discordPtbPath+'\app-*\resources'
 $discordCanaryPath = $env:LOCALAPPDATA+'\DiscordCanary'
 $discordCanaryDataPath = $env:APPDATA+'\discordcanary'
 $discordCanaryResourcesPath = $discordCanaryPath+'\app-*\resources'
-$sdcPath = $env:LOCALAPPDATA+'\SimpleDiscordCrypt'
+$pluginPath = $env:LOCALAPPDATA+'\SimpleDiscordCrypt'
 
 
 $install = $false
@@ -111,7 +111,7 @@ if(Test-Path $discordCanaryPath) {
 if($install) {
 	'installing'
 
-	[void](New-Item "$sdcPath\manifest.json" -Type File -Force -Value @'
+	[void](New-Item "$pluginPath\manifest.json" -Type File -Force -Value @'
 {
 	"name": "SimpleDiscordCrypt",
 	"content_scripts": [ {
@@ -122,7 +122,7 @@ if($install) {
 }
 '@)
 
-	[void](New-Item "$sdcPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
+	[void](New-Item "$pluginPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
 const localStorage = window.localStorage;
 const require = chrome.require;
 delete chrome.storage; //fake API
