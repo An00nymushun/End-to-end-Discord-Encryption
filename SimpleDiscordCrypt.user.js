@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.7
+// @version      1.0.8
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2615,7 +2615,8 @@ async function handleChannelSelect(event) {
     }
 }
 
-const prefixRegex = /^(?::ENC:|<:ENC:\d{1,20}>)\s*/;
+const prefixRegex = /^(?::?ENC(?::|\b)|<:ENC:\d{1,20}>)\s*/;
+const noencprefixRegex = /^(?::?NOENC:?|<:NOENC:\d{1,20}>)\s*/; //not really expecting an emoji
 async function handleSend(channelId, message, forceSimple) {
     let channelConfig = Utils.GetChannelConfig(channelId);
     let content = message.content;
@@ -2634,6 +2635,13 @@ async function handleSend(channelId, message, forceSimple) {
         if(prefixMatch != null) message.content = content;
         return null;
     }
+
+    let noencprefixMatch = noencprefixRegex.exec(content);
+    if(noencprefixMatch != null) {
+        message.content = content.substring(noencprefixMatch[0].length);
+        return null;
+    }
+
 
     let key = await Utils.GetKeyByHash(channelConfig.k);
     let keyHashBytes = Utils.Base64ToBytes(channelConfig.k);
