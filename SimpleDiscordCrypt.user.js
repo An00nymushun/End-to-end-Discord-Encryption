@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.0.8
+// @version      1.1.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -447,11 +447,11 @@ const NewdbWindow = {
 		</div>
 		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
 		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_IMPORT sdc-lnkbtn" style="padding-right:22px"><p>Import</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
+		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_IMPORT sdc-lnkbtn"><p>Import</p></button><button type="button" class="SDC_SECONDARY sdc-lnkbtn" style="padding-right:22px"><p>Secondary</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
 	</form>
 </div>
 </div>`,
-    Show: function(newdbCallback, importCallback, cancelCallback) {
+    Show: function(newdbCallback, importCallback, secondaryCallback, cancelCallback) {
         let wrapper = document.createElement('div');
         wrapper.innerHTML = this.html;
 
@@ -462,6 +462,9 @@ const NewdbWindow = {
         });
         Utils.AttachEventToClass(wrapper, 'SDC_IMPORT', 'click', () => {
             importCallback();
+        });
+        Utils.AttachEventToClass(wrapper, 'SDC_SECONDARY', 'click', () => {
+            secondaryCallback();
         });
         Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
             this.Remove();
@@ -1632,12 +1635,14 @@ function Init(nonInvasive)
             fileInput.type = 'file';
             return fileInput;
         })(),
-        ImportDb: function(callback) {
+        ImportDb: function(callback, secondary) {
             this.fileInput.accept = ".json,.dat";
             this.fileInput.click();
             this.fileInput.onchange = async () => {
                 let buffer = await this.ReadFile(this.fileInput.files[0]);
                 DataBase = JSON.parse(this.Utf8BytesToString(await this.TryDecompress(buffer)));
+                if(secondary) DataBase.isSecondary = true;
+                else delete DataBase.isSecondary;
                 this.FastSaveDb();
                 this.LoadDb(callback, null, true);
             };
@@ -1663,6 +1668,7 @@ function Init(nonInvasive)
                 if(callback) callback();
             },
                              () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }) },
+                             () => { this.ImportDb(() => { NewdbWindow.Remove(); if(callback) callback(); }, true) },
                              cancelCallback
                             );
         },
@@ -1910,10 +1916,11 @@ function Init(nonInvasive)
                     let force = await PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`);
                     //delete this.ongoingKeyExchanges[userId];
                     if(!force) return;
-                    keyExchangeWhitelist[userId] = true;
                 }
             }
             delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
+
+            keyExchangeWhitelist[userId] = true;
 
             if(channelId == null) {
                 channelId = await Discord.ensurePrivateChannel(currentUserId, userId);
@@ -1946,10 +1953,11 @@ function Init(nonInvasive)
                     this.ongoingKeyRequests[requestId] = true;
                     let user = Discord.getUser(userId);
                     if(!await PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`)) return;
-                    keyExchangeWhitelist[userId] = true;
                 }
             }
             delete this.ongoingKeyRequests[requestId];
+
+            keyExchangeWhitelist[userId] = true;
 
             let requestedKeyPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
 
@@ -2309,27 +2317,27 @@ async function decryptMessage(message, payload) {
     let payloadBuffer = Utils.PayloadDecode(payload).buffer;
     let keyHashBytes = payloadBuffer.slice(0, 16);
     let keyHashBase64 = Utils.BytesToBase64(keyHashBytes);
-    let key;
-    for(let i = 1;; i++) {
-        key = await Utils.GetKeyByHash(keyHashBase64);
-        if(key == null) {
-            if(i === 1) {
-                if(message.author != null)
-                    Utils.InitKeyExchange(message.author.id, true);
-            }
-            else if(i === 10) {
-                message.content = unknownKeyMessage;
-                message.embeds = [];
-                message.attachments = [];
-                return;
-            }
-            else if(message.author != null)
-                Utils.RequestKey(keyHashBase64, message.author.id, true);
+    let key = await Utils.GetKeyByHash(keyHashBase64);
 
-            await Utils.Sleep(i * 200);
-            continue;
+    if(key == null) {
+        if(!DataBase.isSecondary) {
+            if(message.author != null) Utils.InitKeyExchange(message.author.id, true);
+
+            for(let i = 1; i <= 10; i++) {
+                await Utils.Sleep(i * 200);
+
+                key = await Utils.GetKeyByHash(keyHashBase64);
+                if(key != null) break;
+
+                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author.id, true);
+            }
         }
-        break;
+        if(key == null) {
+            message.content = unknownKeyMessage;
+            message.embeds = [];
+            message.attachments = [];
+            return;
+        }
     }
 
     message.embeds = []; //remove embeds in case of edit and in case of the payload is from the embed
@@ -2399,13 +2407,15 @@ async function processSystemMessage(message, sysmsg) {
         if(userId === Discord.getCurrentUser().id) oldMessage = true;
     }
 
+    if(DataBase.isSecondary && !keyExchangeWhitelist[userId]) oldMessage = true;
+
     let nonForced = true;
     if(!oldMessage) {
         message.content = blockedSystemMessage;
         if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-            let user = Discord.getUser(userId);
             if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
                 if(!keyExchangeWhitelist[userId]) {
+                    let user = Discord.getUser(userId);
                     if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${user.username}#${user.discriminator}`)) return;
                     keyExchangeWhitelist[userId] = true;
                 }
