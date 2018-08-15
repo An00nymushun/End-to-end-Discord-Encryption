@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.1
+// @version      1.1.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1189,6 +1189,7 @@ var Utils = {
 var DataBase;
 var Cache;
 var Blacklist;
+var Patcher;
 
 function Init(nonInvasive)
 {
@@ -1507,7 +1508,7 @@ function Init(nonInvasive)
             for(let buffer of buffers) {
                 newBuffer.set(new Uint8Array(buffer), currentOffset);
                 currentOffset += buffer.byteLength;
-            };
+            }
 
             return newBuffer;
         },
@@ -2084,6 +2085,7 @@ function Init(nonInvasive)
     return 1;
 }
 
+
 async function handleMessage(event) {
     await processMessage(event.message);
 }
@@ -2112,7 +2114,7 @@ async function processMessage(message) {
     await processEmbeds(message);
 }
 
-const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video' }
+const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img'/*, 'webm': 'video', 'mp4': 'video'*/ }
 const extensionRegex = /\.([^.]+)$/
 var downloadLocked = false;
 var downloadLocks = [];
@@ -2166,13 +2168,15 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         }
 
         let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
-        let url = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
-        let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${url}')`;
+        let blob = new File([fileBuffer], filename);
+        let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
+        let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
+        let url = `https://media.discordapp.net/attachments/479272118538862592/479272171944804377/keylogo.png#${id}`;
+        let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${bloburl}')`;
 
-        let tmpMedia = document.createElement(mediaType);
         let width;
         let height;
-        if(mediaType === 'video') {
+        /*if(mediaType === 'video') {
             await (new Promise((resolve) => {
                 //tmpMedia.onloadedmetadata = resolve;
                 tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
@@ -2180,32 +2184,27 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             }));
             width = tmpMedia.videoWidth;
             height = tmpMedia.videoHeight;
-            let canvas = document.createElement("canvas");
+            let canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            let ctx = canvas.getContext("2d");
+            let ctx = canvas.getContext('2d');
             ctx.drawImage(tmpMedia, 0, 0);
 
             Object.assign(placeholder, {
                 type: 'video',
                 //color: BaseColorInt,
                 url: downloadUrl,
-                /*author: {
-                    name: "Download",
-                    url: downloadUrl
-                },*/
                 title: "Download",
                 thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
                 video: { url: downloadUrl, proxy_url: url, width, height }
             });
         }
-        else {
-            await (new Promise((resolve) => {
-                tmpMedia.onload = resolve;
-                tmpMedia.src = url;
-            }));
-            width = tmpMedia.width;
-            height = tmpMedia.height;
+        else */{
+            let bitmap = await createImageBitmap(blob);
+            width = bitmap.width;
+            height = bitmap.height;
+
+            Patcher.Images[id] = blob;
 
             Object.assign(placeholder, {
                 type: 'image',
@@ -2220,6 +2219,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         }
 
         Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+
         if(message.channel_id !== Cache.channelId) return;
         let messageContainer = document.getElementsByClassName('messages')[0];
         if(messageContainer != null) {
@@ -2891,6 +2891,62 @@ function Load()
 
     PopupManager.Inject();
 
+    const imgsrcIdRegex = /#([^?]+)/;
+    const tryReplaceImage = async (img) => {
+        let srcmatch = imgsrcIdRegex.exec(img.src);
+        if(srcmatch == null) return;
+        let blob = Patcher.Images[srcmatch[1]];
+        if(blob == null) return;
+        let bitmap = await createImageBitmap(blob);
+        let width = bitmap.width;
+        let height = bitmap.height;
+        let canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0);
+        canvas.style.cssText = img.style.cssText;
+        img.replaceWith(canvas);
+    };
+    const scriptLink = function(event) {
+        event.preventDefault();
+        return new Function(this.href.substr(11)).apply(this);
+    };
+    Patcher = {
+        observer: new MutationObserver((mutations) => {
+            for(let mutation of mutations) {
+                if(mutation.type === 'attributes') {
+                    let tagName = mutation.target.tagName;
+                    if(tagName === 'IMG') {
+                        if(mutation.attributeName !== 'src') continue;
+                        let img = mutation.target;
+                        tryReplaceImage(img);
+                    }
+                    else if(tagName === 'A') {
+                        if(!mutation.target.href.startsWith("javascript:")) continue;
+                        mutation.target.addEventListener('auxclick', scriptLink);
+                    }
+                }
+                else {
+                    let addedNode = mutation.addedNodes[0];
+                    if(addedNode == null || addedNode.getElementsByTagName == null) continue;
+
+                    let replaceImages = Patcher.Images;
+                    for(let img of addedNode.getElementsByTagName('img')) {
+                        tryReplaceImage(img);
+                    }
+
+                    for(let a of addedNode.getElementsByTagName('a')) {
+                        if(!a.href.startsWith("javascript:")) continue;
+                        a.addEventListener('auxclick', scriptLink);
+                    }
+                }
+             }
+        }),
+        Images: []
+    };
+    Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true })
+
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
     Utils.Log("loaded");
@@ -2907,6 +2963,8 @@ function Unload()
     restoreFunction('FileUploader', 'upload');
 
     //Discord.MessageCache.prototype._merge = Discord.original__merge;
+
+    Patcher.observer.disconnect();
 
     Style.Remove();
     UnlockWindow.Remove();
