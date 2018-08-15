@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.2
+// @version      1.1.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1401,33 +1401,27 @@ function Init(nonInvasive)
             }
             canvas.toBlob(blob => fileReader.readAsArrayBuffer(blob), 'image/png');
         }),
-        TryDecompress: (buffer) => new Promise((resolve, reject) => {
+        TryDecompress: async (buffer) => {
             let bufferView = new DataView(buffer);
-            if(buffer.byteLength < 2 || bufferView.getUint16(0, false) !== 0x5DC) return resolve(buffer);
+            if(buffer.byteLength < 2 || bufferView.getUint16(0, false) !== 0x5DC) return buffer;
             let length = bufferView.getUint32(2, true);
             bufferView.setUint16(0, 0x8950, false);
             bufferView.setUint32(2, 0x4E470D0A, false); //restore original PNG signature
 
-            let image = new Image();
-            let url = URL.createObjectURL(new Blob([buffer]));
-            image.onload = () => {
-                URL.revokeObjectURL(url);
-                let canvas = document.createElement('canvas');
-                let ctx = canvas.getContext('2d');
-                let width = canvas.width = image.width;
-                let height = canvas.height = image.height;
-                ctx.drawImage(image, 0, 0);
-                let buffer = ctx.getImageData(0, 0, width, height).data.buffer;
-                let bufferView = new DataView(buffer);
-                let pixelCount = Math.ceil(length / 3);
-                for(let i = 0; i < pixelCount; i++) {
-                    bufferView.setUint32(i * 3, bufferView.getUint32(i * 4, true), true);
-                }
-                resolve(buffer.slice(0, length));
+            let bitmap = await createImageBitmap(new Blob([buffer], {type:'image/png'}));
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            let width = canvas.width = bitmap.width;
+            let height = canvas.height = bitmap.height;
+            ctx.drawImage(bitmap, 0, 0);
+            let pxbuffer = ctx.getImageData(0, 0, width, height).data.buffer;
+            let pxbufferView = new DataView(pxbuffer);
+            let pixelCount = Math.ceil(length / 3);
+            for(let i = 0; i < pixelCount; i++) {
+                pxbufferView.setUint32(i * 3, pxbufferView.getUint32(i * 4, true), true);
             }
-            image.onerror = reject;
-            image.src = url;
-        }),
+            return pxbuffer.slice(0, length);
+        },
 
         GetNonce: (window.BigInt != null) ? () => (BigInt(Date.now() - 14200704e5/*DISCORD_EPOCH*/) << BigInt(22)).toString() : () => Date.now().toString(),
 
@@ -2731,8 +2725,8 @@ function LockMessages(initial) {
     let messageDispatcher = Discord.modules.MessageDispatcher;
     let dispatchHook = function(event){(async () => {
         if(event.type === 'LOAD_MESSAGES_SUCCESS' || event.type === 'MESSAGE_CREATE' || event.type === 'MESSAGE_UPDATE') {
-            if(initial && event.type === 'LOAD_MESSAGES_SUCCESS')
-                event.messages.reverse(); //initial load has the messages reversed for some reason
+            //if(initial && event.type === 'LOAD_MESSAGES_SUCCESS')
+            //    event.messages.reverse(); //initial load has the messages reversed for some reason //(seems like not anymore)
 
             await new Promise((resolve) => { messageLocks.push(resolve) });
 
