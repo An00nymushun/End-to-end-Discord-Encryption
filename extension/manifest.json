@@ -1,0 +1,32 @@
+{
+	"name": "SimpleDiscordCrypt",
+	"version": "1.0",
+	"description": "",
+	"permissions": [
+		"storage",
+		"webRequest",
+		"webRequestBlocking",
+		"https://gitlab.com/",
+		"https://cdn.discordapp.com/",
+		"https://discordapp.com/",
+		"https://ptb.discordapp.com/",
+		"https://canary.discordapp.com/"
+	],
+	"background": {
+	  "scripts": ["background.js"],
+	  "persistent": true
+	},
+	"content_scripts": [ {
+		"js": ["SimpleDiscordCryptLoader.js"],
+		"matches": [
+			"https://discordapp.com/channels/*",
+			"https://discordapp.com/activity",
+			"https://ptb.discordapp.com/channels/*",
+			"https://ptb.discordapp.com/activity",
+			"https://canary.discordapp.com/channels/*",
+			"https://canary.discordapp.com/activity"
+		],
+		"run_at": "document_start"
+	} ],
+	"manifest_version": 2
+}
