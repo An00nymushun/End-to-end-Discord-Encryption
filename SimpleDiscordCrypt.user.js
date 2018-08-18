@@ -2204,6 +2204,17 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                 }));
                 width = tmpMedia.width;
                 height = tmpMedia.height;
+
+                Object.assign(placeholder, {
+                    type: 'image',
+                    url: downloadUrl,
+                    thumbnail: {
+                        url: downloadUrl,
+                        proxy_url: url,
+                        width,
+                        height
+                    }
+            });
             }
         }
         else {
