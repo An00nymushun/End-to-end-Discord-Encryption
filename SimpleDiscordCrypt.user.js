@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.3
+// @version      1.1.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -30,7 +30,8 @@
 
 const BlacklistUrl = "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/blacklist.txt";
 
-const SavedLocalStorage = (typeof(localStorage) !== undefined) ? localStorage : null;
+const SavedLocalStorage = (typeof(localStorage) !== 'undefined') ? localStorage : null;
+const FixedCsp = (typeof(CspDisarmed) !== 'undefined') ? CspDisarmed : false;
 
 const BaseColor = "#0fc";
 const BaseColorInt = 0x00ffcc;
@@ -1861,7 +1862,6 @@ function Init(nonInvasive)
                     nonce: this.GetNonce(),
                     content: "",
                     embed: {
-                        type: 'rich',
                         color: BaseColorInt,
                         author: {
                             name: "-----SYSTEM MESSAGE-----",
@@ -2108,8 +2108,9 @@ async function processMessage(message) {
     await processEmbeds(message);
 }
 
-const mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img'/*, 'webm': 'video', 'mp4': 'video'*/ }
-const extensionRegex = /\.([^.]+)$/
+var mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img' };
+if(FixedCsp) mediaTypes['webm'] = mediaTypes['mp4'] = 'video';
+const extensionRegex = /\.([^.]+)$/;
 var downloadLocked = false;
 var downloadLocks = [];
 async function decryptAttachment(key, keyHash, message, attachment) {
@@ -2165,35 +2166,48 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         let blob = new File([fileBuffer], filename);
         let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
         let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
-        let url = `https://media.discordapp.net/attachments/479272118538862592/479272171944804377/keylogo.png#${id}`;
+        let url;
         let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${bloburl}')`;
 
         let width;
         let height;
-        /*if(mediaType === 'video') {
-            await (new Promise((resolve) => {
-                //tmpMedia.onloadedmetadata = resolve;
-                tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
-                tmpMedia.src = url;
-            }));
-            width = tmpMedia.videoWidth;
-            height = tmpMedia.videoHeight;
-            let canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            let ctx = canvas.getContext('2d');
-            ctx.drawImage(tmpMedia, 0, 0);
+        if(FixedCsp) {
+            url = bloburl;
+            let tmpMedia = document.createElement(mediaType);
+            if(mediaType === 'video') {
+                await (new Promise((resolve) => {
+                    //tmpMedia.onloadedmetadata = resolve;
+                    tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
+                    tmpMedia.src = url;
+                }));
+                width = tmpMedia.videoWidth;
+                height = tmpMedia.videoHeight;
+                let canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                let ctx = canvas.getContext('2d');
+                ctx.drawImage(tmpMedia, 0, 0);
 
-            Object.assign(placeholder, {
-                type: 'video',
-                //color: BaseColorInt,
-                url: downloadUrl,
-                title: "Download",
-                thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
-                video: { url: downloadUrl, proxy_url: url, width, height }
-            });
+                Object.assign(placeholder, {
+                    type: 'video',
+                    //color: BaseColorInt,
+                    url: downloadUrl,
+                    title: "Download",
+                    thumbnail: { url: URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + "#", width, height },
+                    video: { url: downloadUrl, proxy_url: url, width, height }
+                });
+            }
+            else {
+                await (new Promise((resolve) => {
+                    tmpMedia.onload = resolve;
+                    tmpMedia.src = url;
+                }));
+                width = tmpMedia.width;
+                height = tmpMedia.height;
+            }
         }
-        else */{
+        else {
+            url = `https://media.discordapp.net/attachments/479272118538862592/479272171944804377/keylogo.png#${id}`;
             let bitmap = await createImageBitmap(blob);
             width = bitmap.width;
             height = bitmap.height;
@@ -2666,7 +2680,6 @@ async function handleSend(channelId, message, forceSimple) {
     else {
         message.content = "";
         message.embed = {
-            type: 'rich',
             color: BaseColorInt,
             author: {
                 name: "-----ENCRYPTED MESSAGE-----",
@@ -2885,61 +2898,63 @@ function Load()
 
     PopupManager.Inject();
 
-    const imgsrcIdRegex = /#([^?]+)/;
-    const tryReplaceImage = async (img) => {
-        let srcmatch = imgsrcIdRegex.exec(img.src);
-        if(srcmatch == null) return;
-        let blob = Patcher.Images[srcmatch[1]];
-        if(blob == null) return;
-        let bitmap = await createImageBitmap(blob);
-        let width = bitmap.width;
-        let height = bitmap.height;
-        let canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(bitmap, 0, 0);
-        canvas.style.cssText = img.style.cssText;
-        img.replaceWith(canvas);
-    };
-    const scriptLink = function(event) {
-        event.preventDefault();
-        return new Function(this.href.substr(11)).apply(this);
-    };
-    Patcher = {
-        observer: new MutationObserver((mutations) => {
-            for(let mutation of mutations) {
-                if(mutation.type === 'attributes') {
-                    let tagName = mutation.target.tagName;
-                    if(tagName === 'IMG') {
-                        if(mutation.attributeName !== 'src') continue;
-                        let img = mutation.target;
-                        tryReplaceImage(img);
+    if(!FixedCsp) {
+        const imgsrcIdRegex = /#([^?]+)/;
+        const tryReplaceImage = async (img) => {
+            let srcmatch = imgsrcIdRegex.exec(img.src);
+            if(srcmatch == null) return;
+            let blob = Patcher.Images[srcmatch[1]];
+            if(blob == null) return;
+            let bitmap = await createImageBitmap(blob);
+            let width = bitmap.width;
+            let height = bitmap.height;
+            let canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+            canvas.style.cssText = img.style.cssText;
+            img.replaceWith(canvas);
+        };
+        const scriptLink = function(event) {
+            event.preventDefault();
+            return new Function(this.href.substr(11)).apply(this);
+        };
+        Patcher = {
+            observer: new MutationObserver((mutations) => {
+                for(let mutation of mutations) {
+                    if(mutation.type === 'attributes') {
+                        let tagName = mutation.target.tagName;
+                        if(tagName === 'IMG') {
+                            if(mutation.attributeName !== 'src') continue;
+                            let img = mutation.target;
+                            tryReplaceImage(img);
+                        }
+                        else if(tagName === 'A') {
+                            if(!mutation.target.href.startsWith("javascript:")) continue;
+                            mutation.target.addEventListener('auxclick', scriptLink);
+                        }
                     }
-                    else if(tagName === 'A') {
-                        if(!mutation.target.href.startsWith("javascript:")) continue;
-                        mutation.target.addEventListener('auxclick', scriptLink);
+                    else {
+                        let addedNode = mutation.addedNodes[0];
+                        if(addedNode == null || addedNode.getElementsByTagName == null) continue;
+
+                        let replaceImages = Patcher.Images;
+                        for(let img of addedNode.getElementsByTagName('img')) {
+                            tryReplaceImage(img);
+                        }
+
+                        for(let a of addedNode.getElementsByTagName('a')) {
+                            if(!a.href.startsWith("javascript:")) continue;
+                            a.addEventListener('auxclick', scriptLink);
+                        }
                     }
                 }
-                else {
-                    let addedNode = mutation.addedNodes[0];
-                    if(addedNode == null || addedNode.getElementsByTagName == null) continue;
-
-                    let replaceImages = Patcher.Images;
-                    for(let img of addedNode.getElementsByTagName('img')) {
-                        tryReplaceImage(img);
-                    }
-
-                    for(let a of addedNode.getElementsByTagName('a')) {
-                        if(!a.href.startsWith("javascript:")) continue;
-                        a.addEventListener('auxclick', scriptLink);
-                    }
-                }
-             }
-        }),
-        Images: []
-    };
-    Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true })
+            }),
+            Images: []
+        };
+        Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true });
+    }
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
@@ -2958,7 +2973,7 @@ function Unload()
 
     //Discord.MessageCache.prototype._merge = Discord.original__merge;
 
-    Patcher.observer.disconnect();
+    if(Patcher != null) Patcher.observer.disconnect();
 
     Style.Remove();
     UnlockWindow.Remove();
