@@ -1,4 +1,22 @@
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
+
+
+$startMenuPath = $env:APPDATA+'\Microsoft\Windows\Start Menu\Programs\Discord Inc\'
+$discordPath = $env:LOCALAPPDATA+'\Discord'
+$discordDataPath = $env:APPDATA+'\discord'
+$discordResourcesPath = $discordPath+'\app-*\resources'
+$discordIconPath = $startMenuPath+'Discord.lnk'
+$discordPtbPath = $env:LOCALAPPDATA+'\DiscordPTB'
+$discordPtbDataPath = $env:APPDATA+'\discordptb'
+$discordPtbResourcesPath = $discordPtbPath+'\app-*\resources'
+$discordPtbIconPath = $startMenuPath+'Discord PTB.lnk'
+$discordCanaryPath = $env:LOCALAPPDATA+'\DiscordCanary'
+$discordCanaryDataPath = $env:APPDATA+'\discordcanary'
+$discordCanaryResourcesPath = $discordCanaryPath+'\app-*\resources'
+$discordCanaryIconPath = $startMenuPath+'Discord Canary.lnk'
+$pluginPath = $env:LOCALAPPDATA+'\SimpleDiscordCrypt'
+$startupRegistry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+
 
 function RootElectron([string]$electonAsarPath) {
 	'rooting'
@@ -19,7 +37,7 @@ function AddExtension([string]$electonDataPath) {
 	'adding extension'
 	$extensionListPath = "$electonDataPath\DevTools Extensions"
 	if(Test-Path $extensionListPath) {
-		$extensionList = ConvertFrom-Json (Get-Content $extensionListPath)
+		$extensionList = ConvertFrom-Json ([string](Get-Content $extensionListPath))
 		$extensionList = @($extensionList | ? { $_ -notmatch '(?:^|[\\\/])SimpleDiscordcrypt[\\\/]?$' })
 		if($extensionList.Length -ne 0) {
 			$extensionList += '../../SimpleDiscordCrypt'
@@ -43,16 +61,12 @@ function StopProcesses([string]$name, [string]$root) {
 	} while($targets.Length -gt 0)
 }
 
-$discordPath = $env:LOCALAPPDATA+'\Discord'
-$discordDataPath = $env:APPDATA+'\discord'
-$discordResourcesPath = $discordPath+'\app-*\resources'
-$discordPtbPath = $env:LOCALAPPDATA+'\DiscordPTB'
-$discordPtbDataPath = $env:APPDATA+'\discordptb'
-$discordPtbResourcesPath = $discordPtbPath+'\app-*\resources'
-$discordCanaryPath = $env:LOCALAPPDATA+'\DiscordCanary'
-$discordCanaryDataPath = $env:APPDATA+'\discordcanary'
-$discordCanaryResourcesPath = $discordCanaryPath+'\app-*\resources'
-$pluginPath = $env:LOCALAPPDATA+'\SimpleDiscordCrypt'
+function ReplaceStartup([string]$registryKey, [string]$newPath) {
+	if((Get-ItemProperty -Path $startupRegistry -Name $registryKey -ErrorAction SilentlyContinue).$registryKey -ne $null) {
+		'replacing startup'
+		Set-ItemProperty -Path $startupRegistry -Name $registryKey -Value $newPath
+	}
+}
 
 
 $install = $false
@@ -72,6 +86,8 @@ if(Test-Path $discordPath) {
 
 	AddExtension $discordDataPath
 
+	ReplaceStartup 'Discord' $discordIconPath
+	
 	$install = $true
 }
 
@@ -87,6 +103,8 @@ if(Test-Path $discordPtbPath) {
 	}
 
 	AddExtension $discordPtbDataPath
+	
+	ReplaceStartup 'DiscordPTB' $discordPtbIconPath
 
 	$install = $true
 }
@@ -103,6 +121,8 @@ if(Test-Path $discordCanaryPath) {
 	}
 
 	AddExtension $discordCanaryDataPath
+	
+	ReplaceStartup 'DiscordCanary' $discordCanaryIconPath
 
 	$install = $true
 }
@@ -114,12 +134,35 @@ if($install) {
 	[void](New-Item "$pluginPath\manifest.json" -Type File -Force -Value @'
 {
 	"name": "SimpleDiscordCrypt",
+	"background": {
+	  "page": "background.html"
+	},
 	"content_scripts": [ {
 		"js": [ "SimpleDiscordCryptLoader.js" ],
 		"matches": [ "*" ],
 		"run_at": "document_start"
 	} ]
 }
+'@)
+	
+	[void](New-Item "$pluginPath\background.html" -Type File -Force -Value @'
+<script>
+const require = chrome.require;
+
+const onHeadersReceived = (details, callback) => {
+	let response = { cancel: false };
+	let responseHeaders = details.responseHeaders;
+	if(responseHeaders['content-security-policy']) {
+		responseHeaders['content-security-policy'] = [""];
+		response.responseHeaders = responseHeaders;
+	}
+	callback(response);
+};
+
+require('electron').remote.require('electron').app.on('browser-window-created', (event, browserWindow) => {
+	browserWindow.webContents.session.webRequest.onHeadersReceived(onHeadersReceived);
+});
+</script>
 '@)
 
 	[void](New-Item "$pluginPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
@@ -131,6 +174,8 @@ if(require == null) {
 	alert("Uh-oh, looks like this version of electron isn't rooted yet");
 	return;
 }
+
+const CspDisarmed = true;
 
 require('https').get("https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js", (response) => {
 	let data = "";
