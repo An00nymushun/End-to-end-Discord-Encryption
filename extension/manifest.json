@@ -29,7 +29,7 @@
 		"run_at": "document_start"
 	} ],
 	"icons": {
-      "64": "logo.png"
+        "64": "logo.png"
     },
 	"manifest_version": 2
 }
