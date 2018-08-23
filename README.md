@@ -6,6 +6,7 @@
 Discord message encryption plugin, it gives end-to-end client side encryption for your messages and files with automatic key exchange, works without BetterDiscord<br>
 <br>
 ~~Install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else~~ this solution is outdated<br> 
+For Chrome (and similar) use the [extension](https://chrome.google.com/webstore/detail/simplediscordcrypt/hbplgmpfdabobhnadbfpknppljdfkiia)
 If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (Alt+click to download, right click on the downloaded file and Run with PowerShell)<br>
 For mobile you should try Yandex Browser, it's Chromium based and supports extensions<br>
 Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931
@@ -19,6 +20,8 @@ If you would like to download an encrypted image, middle click on the image or o
 You can toggle the encryption with the lock icon, but you can also use the :ENC: or ENC prefix at the start of your message to force the encryption<br>
 To send non encrypted messages in a channel where encryption is turned on, use the NOENC prefix<br>
 <br>
+If you want to change from one installation to another, export and import your database<br>
+If you would like to use the plugin on multiple devices; choose a main one, export the database from that and click on secondary when importing to others, after new key exchanges you'll have to repeat these steps
 <br>
 ECDH P-521 is used for the key exchange and AES256-CBC for the messages offering the equivalent security of 256-bits<br>
 <br>
