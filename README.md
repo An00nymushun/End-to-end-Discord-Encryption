@@ -5,11 +5,11 @@
 
 Discord message encryption plugin, it gives end-to-end client side encryption for your messages and files with automatic key exchange, works without BetterDiscord<br>
 <br>
-~~Install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else~~ this solution is outdated<br> 
-For Chrome (and similar) use the [extension](https://chrome.google.com/webstore/detail/simplediscordcrypt/hbplgmpfdabobhnadbfpknppljdfkiia)
+For Chrome (and similar) use the [extension](https://chrome.google.com/webstore/detail/simplediscordcrypt/hbplgmpfdabobhnadbfpknppljdfkiia)<br>
 If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (Alt+click to download, right click on the downloaded file and Run with PowerShell)<br>
 For mobile you should try Yandex Browser, it's Chromium based and supports extensions<br>
-Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931
+Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931<br>
+If nothing works, install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else
 <br>
 <br>
 <br>
