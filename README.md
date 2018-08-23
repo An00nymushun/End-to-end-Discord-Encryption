@@ -9,7 +9,7 @@ For Chrome (and similar) use the [extension](https://chrome.google.com/webstore/
 If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (Alt+click to download, right click on the downloaded file and Run with PowerShell)<br>
 For mobile you should try Yandex Browser, it's Chromium based and supports extensions<br>
 Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931<br>
-If nothing works, install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else
+If nothing works, install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else<br>
 <br>
 <br>
 <br>
@@ -21,14 +21,14 @@ You can toggle the encryption with the lock icon, but you can also use the :ENC:
 To send non encrypted messages in a channel where encryption is turned on, use the NOENC prefix<br>
 <br>
 If you want to change from one installation to another, export and import your database<br>
-If you would like to use the plugin on multiple devices; choose a main one, export the database from that and click on secondary when importing to others, after new key exchanges you'll have to repeat these steps
+If you would like to use the plugin on multiple devices; choose a main one, export the database from that and click on secondary when importing to others, after new key exchanges you'll have to repeat these steps<br>
 <br>
 ECDH P-521 is used for the key exchange and AES256-CBC for the messages offering the equivalent security of 256-bits<br>
 <br>
 I hope this is actually simple as the name suggests<br>
 <br>
 <br>
-Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt) for BetterDiscord users
+Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt) for BetterDiscord users<br>
 <br>
 <br>
 <br>
