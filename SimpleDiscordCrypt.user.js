@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.4
+// @version      1.1.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2240,7 +2240,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         Discord.dispatch({type: 'MESSAGE_UPDATE', message});
 
         if(message.channel_id !== Cache.channelId) return;
-        let messageContainer = document.getElementsByClassName('messages')[0];
+        let messageContainer = document.querySelector(`.scroller[class^="messages"]`);
         if(messageContainer != null) {
             if(messageContainer.scrollTop + 1 >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
 
