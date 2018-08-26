@@ -2719,8 +2719,10 @@ async function handleUpload(channelId, file, message) {
 
     try {
         let encryptedFilename;
+        let filenameBytes = Utils.StringToUtf8Bytes(filename);
+        if(filenameBytes.byteLength > filenameLimit) filenameBytes = Utils.StringToUtf8Bytes("file" + filenameParts[2]);
         do {
-            encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncryptString(key, filename));
+            encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncrypt(key, filenameBytes));
         } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
