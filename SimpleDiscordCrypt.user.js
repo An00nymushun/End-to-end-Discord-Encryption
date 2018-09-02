@@ -3008,6 +3008,8 @@ function TryInit()
 };
 
 
+Utils.Log("injected");
+
 //window.addEventListener('load', TryInit);
 TryInit();
 
