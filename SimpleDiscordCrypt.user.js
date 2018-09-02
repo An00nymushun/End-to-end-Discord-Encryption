@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.6
+// @version      1.1.7
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2606,7 +2606,7 @@ async function processSystemMessage(message, sysmsg) {
     message.content = invalidSystemMessage;
 }
 
-const descriptionRegex = /^[\u{2800}-\u{28FF}]{33,}$/u;
+const descriptionRegex = /^[\u{2800}-\u{28FF}]{16,}$/u;
 async function processEmbeds(message) {
     if(message.embeds.length !== 1) return;
     let embed = message.embeds[0];
