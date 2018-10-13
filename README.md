@@ -11,6 +11,7 @@ For mobile you should try Yandex Browser, it's Chromium based and supports exten
 Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931<br>
 If nothing works, install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else<br>
 <br>
+Please do not download this plugin from untrusted sources, for example there is one in chrome store with the same name<br>
 <br>
 <br>
 Right click on the lock icon to open the menu<br>
@@ -36,5 +37,10 @@ Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/Discord
 <br>
 If you have any questions come to my [Discord server](https://discord.gg/6yjzhAm)<br>
 If you want a server blacklisted or you would like users to not use embeds, do tell<br>
+<br>
+List of servers that use the plugin:<br>
+<br>
+Feel free to tell me if you have one<br>
+<br>
 <br>
 𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵
