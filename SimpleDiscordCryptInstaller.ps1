@@ -20,7 +20,10 @@ $startupRegistry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 
 function RootElectron([string]$electonAsarPath) {
 	'rooting'
-	$electronAsar = [IO.File]::ReadAllText($electonAsarPath)
+	
+	$encoding = [Text.Encoding]::GetEncoding('iso-8859-1')
+	
+	$electronAsar = [IO.File]::ReadAllText($electonAsarPath, $encoding)
 
 	$electronAsar = (New-Object Regex('^(?:\s*\/\/.*\r?\n\s*|\s*)?(exports\.injectTo)\s*?(=)\s*?((?:function)\s*\(.*context.*\)|\(.*context.*\)\s*=>)\s*({)(?=\r?\n)', [Text.RegularExpressions.RegexOptions]::MultiLine)).Replace($electronAsar, {param($m)
 		$s = ''
@@ -30,19 +33,22 @@ function RootElectron([string]$electonAsarPath) {
 	}, 1)
 
 
-	[IO.File]::WriteAllText($electonAsarPath, $electronAsar)
+	[IO.File]::WriteAllText($electonAsarPath, $electronAsar, $encoding)
 }
 
 function AddExtension([string]$electonDataPath) {
 	'adding extension'
 	$extensionListPath = "$electonDataPath\DevTools Extensions"
 	if(Test-Path $extensionListPath) {
-		$extensionList = ConvertFrom-Json ([string](Get-Content $extensionListPath))
-		$extensionList = @($extensionList | ? { $_ -notmatch '(?:^|[\\\/])SimpleDiscordcrypt[\\\/]?$' })
-		if($extensionList.Length -ne 0) {
-			$extensionList += '../../SimpleDiscordCrypt'
-			Set-Content $extensionListPath (ConvertTo-Json $extensionList)
-			return
+		[string]$s = Get-Content $extensionListPath
+		if($s.Length -ne 0) {
+			$extensionList = ConvertFrom-Json $s
+			$extensionList = @($extensionList | ? { $_ -notmatch '(?:^|[\\\/])SimpleDiscordcrypt[\\\/]?$' })
+			if($extensionList.Length -ne 0) {
+				$extensionList += '../../SimpleDiscordCrypt'
+				Set-Content $extensionListPath (ConvertTo-Json $extensionList)
+				return
+			}
 		}
 	}
 	Set-Content $extensionListPath '["../../SimpleDiscordCrypt"]'
@@ -51,9 +57,9 @@ function AddExtension([string]$electonDataPath) {
 function StopProcesses([string]$name, [string]$root) {
 	$targets = Get-Process | ? { $_.Name -eq $name -or ($_.Path -and $_.Path.StartsWith($root)) }
 	if($targets.Length -eq 0) { return }
-    try {
-    	$targets | Stop-Process
-    } catch { "PLEASE CLOSE $name!" }
+	try {
+		$targets | Stop-Process
+	} catch { "PLEASE CLOSE $name!" }
 	"waiting for $name to close"
 	do {
 		sleep 1
