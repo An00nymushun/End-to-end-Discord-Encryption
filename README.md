@@ -70,7 +70,10 @@ In order to share a key you need to establish a secure connection with an initia
 You can manually share keys by using the 'Share Keys' menu option.<br>
 During a key share, the sharing party will suggest you channels to use so it's advised to not set anything for the channel (or toggle encryption) before you have the key for it.<br>
 <br>
-
+<br>
+<br>
+To uninstall, just delete it from %localappdata%.<br>
+<br>
 
 [gl](https://github.com/An00nymushun/End-to-end-Discord-Encryption)
 
