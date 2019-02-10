@@ -8,7 +8,7 @@ Discord message encryption plugin, it gives end-to-end client side encryption fo
 For Chrome (and similar) use the [extension](https://chrome.google.com/webstore/detail/simplediscordcrypt/hbplgmpfdabobhnadbfpknppljdfkiia)<br>
 If you have Discord installed, use the [installer](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCryptInstaller.ps1) (Alt+click to download, right click on the downloaded file and Run with PowerShell)<br>
 For mobile you should try Yandex Browser, it's Chromium based and supports extensions<br>
-Firefox isn't supported due to https://bugzilla.mozilla.org/show_bug.cgi?id=1048931<br>
+Firefox is kind of supported but there is incompatibility because of https://bugzilla.mozilla.org/show_bug.cgi?id=1048931<br>
 If nothing works, install it as a [userscript](https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js) (with [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) or include the js file somehow else<br>
 <br>
 Please do not download this plugin from untrusted sources, for example there is one in chrome store with the same name<br>
