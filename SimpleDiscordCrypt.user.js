@@ -1758,13 +1758,13 @@ function Init(nonInvasive)
             DataBase.dhPublicKey = this.BytesToBase64(dhPublicKeyBytes);
             this.FastSaveDb();
         },
-        ReadDhKeys: async function() {
-            let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
+        ReadDhKey: async function() {
+            let dhPrivateKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
             if(DataBase.isEncrypted)
-                dhPrivateKeyBytes = await Utils.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
+                dhPrivateKeyBytes = await this.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
             
             if(DataBase.dhPrivateKeyFallback) {
-                let dhPrivateKey = await Utils.DhImportPrivateKeyFallback(dhPrivateKeyBytes);
+                let dhPrivateKey = await this.DhImportPrivateKeyFallback(dhPrivateKeyBytes);
                 try {
                     dhPrivateKeyBytes = await this.DhExportPrivateKey(dhPrivateKey);
                     if(DataBase.isEncrypted)
@@ -1777,7 +1777,7 @@ function Init(nonInvasive)
                 
                 return dhPrivateKey;
             }
-            else return await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
+            else return await this.DhImportPrivateKey(dhPrivateKeyBytes);
         },
         ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor.replace(/[`\r\n]/g, "").substr(0, 250); this.FastSaveDb() },
         ChangeKeyHidden: function(hash, hidden) { DataBase.keys[hash].h = hidden; this.FastSaveDb() },
@@ -2494,10 +2494,7 @@ async function processSystemMessage(message, sysmsg) {
                 let dhRemoteKeyBytes = Utils.PayloadDecode(dhKeyPayload);
                 let dhRemoteKey = await Utils.DhImportPublicKey(dhRemoteKeyBytes);
 
-                let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
-                if(DataBase.isEncrypted)
-                    dhPrivateKeyBytes = await Utils.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
-                let dhPrivateKey = await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
+                let dhPrivateKey = await Utils.ReadDhKey();
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
@@ -2529,10 +2526,7 @@ async function processSystemMessage(message, sysmsg) {
                 let dhRemoteKeyBytes = Utils.PayloadDecode(dhKeyPayload);
                 let dhRemoteKey = await Utils.DhImportPublicKey(dhRemoteKeyBytes);
 
-                let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
-                if(DataBase.isEncrypted)
-                    dhPrivateKeyBytes = await Utils.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
-                let dhPrivateKey = await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
+                let dhPrivateKey = await Utils.ReadDhKey();
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
