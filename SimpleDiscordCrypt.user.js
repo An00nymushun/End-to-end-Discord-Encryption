@@ -1478,8 +1478,10 @@ function Init(nonInvasive)
         DhGenerateKeys: async () => await crypto.subtle.generateKey({name:'ECDH', namedCurve:'P-521'}, true, ['deriveBits']),
         DhImportPublicKey: async (buffer) => await crypto.subtle.importKey('raw', buffer, {name:'ECDH', namedCurve:'P-521'}, false, []),
         DhImportPrivateKey: async (buffer) => await crypto.subtle.importKey('pkcs8', buffer, {name:'ECDH', namedCurve:'P-521'}, false, ['deriveBits']),
+        DhImportPrivateKeyFallback: async function(buffer) { return await crypto.subtle.importKey('jwk', JSON.parse(this.Utf8BytesToString(buffer)), {name:'ECDH', namedCurve:'P-521'}, false, ['deriveBits']) },
         DhExportPublicKey: async (key) => await crypto.subtle.exportKey('raw', key),
         DhExportPrivateKey: async (key) => await crypto.subtle.exportKey('pkcs8', key),
+        DhExportPrivateKeyFallback: async function(key) { return this.StringToUtf8Bytes(JSON.stringify(await crypto.subtle.exportKey('jwk', key))) },
         DhGetSecret: async (privateKey, publicKey) => await crypto.subtle.deriveBits({name:'ECDH', namedCurve:'P-521', public:publicKey}, privateKey, 256),
 
         utf8encoder: new TextEncoder(),
@@ -1735,15 +1737,47 @@ function Init(nonInvasive)
         },
         NewDhKeys: async function() {
             let dhKeys = await this.DhGenerateKeys();
-            let dhPrivateKeyBytes = await this.DhExportPrivateKey(dhKeys.privateKey);
+            let dhPrivateKeyBytes;
+            let dhPrivateKeyFallback = false;
+            try {
+                dhPrivateKeyBytes = await this.DhExportPrivateKey(dhKeys.privateKey);
+            }
+            catch(e) {
+                dhPrivateKeyBytes = await this.DhExportPrivateKeyFallback(dhKeys.privateKey);
+                dhPrivateKeyFallback = true;
+            }
+            
             let dhPublicKeyBytes = await this.DhExportPublicKey(dhKeys.publicKey);
 
             if(DataBase.isEncrypted)
                 dhPrivateKeyBytes = await this.AesEncrypt(Cache.dbKey, dhPrivateKeyBytes);
 
+            if(dhPrivateKeyFallback) DataBase.dhPrivateKeyFallback = true;
+            else delete DataBase.dhPrivateKeyFallback;
             DataBase.dhPrivateKey = this.BytesToBase64(dhPrivateKeyBytes);
             DataBase.dhPublicKey = this.BytesToBase64(dhPublicKeyBytes);
             this.FastSaveDb();
+        },
+        ReadDhKeys: async function() {
+            let dhPrivateKeyBytes = Utils.Base64ToBytes(DataBase.dhPrivateKey);
+            if(DataBase.isEncrypted)
+                dhPrivateKeyBytes = await Utils.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
+            
+            if(DataBase.dhPrivateKeyFallback) {
+                let dhPrivateKey = await Utils.DhImportPrivateKeyFallback(dhPrivateKeyBytes);
+                try {
+                    dhPrivateKeyBytes = await this.DhExportPrivateKey(dhPrivateKey);
+                    if(DataBase.isEncrypted)
+                        dhPrivateKeyBytes = await this.AesEncrypt(Cache.dbKey, dhPrivateKeyBytes);
+                        
+                    delete DataBase.dhPrivateKeyFallback;
+                    DataBase.dhPrivateKey = this.BytesToBase64(dhPrivateKeyBytes);
+                }
+                catch(e) { }
+                
+                return dhPrivateKey;
+            }
+            else return await Utils.DhImportPrivateKey(dhPrivateKeyBytes);
         },
         ChangeKeyDescriptor: function(hash, descriptor) { DataBase.keys[hash].d = descriptor.replace(/[`\r\n]/g, "").substr(0, 250); this.FastSaveDb() },
         ChangeKeyHidden: function(hash, hidden) { DataBase.keys[hash].h = hidden; this.FastSaveDb() },
