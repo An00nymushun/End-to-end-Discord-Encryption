@@ -7,8 +7,26 @@ const onHeadersReceived = (details) => {
 };
 
 const filter = {
-  urls: ["https://discordapp.com/*","https://ptb.discordapp.com/*","https://canary.discordapp.com/*"],
-  types: ["main_frame"]
+	urls: ["https://discordapp.com/*","https://ptb.discordapp.com/*","https://canary.discordapp.com/*"],
+	types: ["main_frame"]
 };
 
 chrome.webRequest.onHeadersReceived.addListener(onHeadersReceived, filter, ["blocking", "responseHeaders"]);
+
+chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	if(data.type !== 'XMLHttpRequest') return;
+	
+	let request = data.request;
+	
+	let xhr = new XMLHttpRequest();
+	if(request.responseType) xhr.responseType = request.responseType;
+	
+	xhr.onload = () => { sendResponse((xhr.responseType === 'arraybuffer') ? { bloburl: URL.createObjectURL(new Blob([xhr.response])) } : { response: xhr.response }) };
+	xhr.onerror = () => { sendResponse(null) };
+	
+	xhr.open(request.method || 'GET', request.url);
+	xhr.withCredentials = true;
+	xhr.send();
+	
+	return true;
+});
