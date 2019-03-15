@@ -3,23 +3,26 @@ script.textContent = `window.localStorageBackup = window.localStorage`;
 (document.head||document.documentElement).appendChild(script);
 script.remove();
 
+
+const makeRequest = (data, responseCallback) => {
+	chrome.runtime.sendMessage(data, (result) => {
+		if(result.bloburl !== undefined) {
+			fetch(result.bloburl).then((response) => response.arrayBuffer()).then((response) => {
+				responseCallback({ response });
+				URL.revokeObjectURL(result.bloburl);
+			});
+		}
+		else responseCallback(result);
+	});
+};
+
 window.addEventListener('message', (event) => {
-	if (event.source !== window && event.data.type !== 'XMLHttpRequest' || event.ports[0] == null) return;
+	if(event.source !== window && event.data.type !== 'XMLHttpRequest' || event.ports[0] == null) return;
 	
-	let data = event.data.request;
-	
-	let xhr = new XMLHttpRequest();
-	if(data.responseType) xhr.responseType = data.responseType;
-	
-	xhr.onload = () => event.ports[0].postMessage({	response: xhr.response });
-	xhr.onerror = () => event.ports[0].postMessage(null);
-	
-	xhr.open(data.method || 'GET', data.url);
-	xhr.withCredentials = true;
-	xhr.send();
+	makeRequest(event.data, (result) => { event.ports[0].postMessage(result) });
 });
 
-fetch("https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js").then((response) => response.text()).then((code) => {
+chrome.runtime.sendMessage({ type: 'XMLHttpRequest', request: { url: "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js" } }, (result) => {
 	let script = document.createElement('script');
 	script.textContent = `
 (()=>{
@@ -40,7 +43,7 @@ const GM_xmlhttpRequest = (requestObject) => {
 };
 const localStorage = window.localStorageBackup;
 const CspDisarmed = true;
-${code}})()`;
+${result.response}})()`;
 	(document.head||document.documentElement).appendChild(script);
 	script.remove();
 });
