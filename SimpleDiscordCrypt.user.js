@@ -1357,9 +1357,12 @@ function Init(nonInvasive)
         DownloadBlob: (filename, blob) => {
             let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
+            a.style = "display:none";
+            document.body.appendChild(a);
             a.href = url;
             a.download = filename;
             a.click();
+            a.remove();
             URL.revokeObjectURL(url);
         },
 
@@ -2059,9 +2062,12 @@ function Init(nonInvasive)
 
     Discord.window.SdcDownloadUrl = (filename, url) => {
         let a = document.createElement('a');
+        a.style = "display:none";
+        document.body.appendChild(a);
         a.href = url;
         a.download = filename;
         a.click();
+        a.remove();
     };
     Discord.window.SdcDecryptDl = async (filename, keyHash, url) => {
         let encryptedFileBuffer = await Utils.DownloadFile(url);
@@ -2108,8 +2114,6 @@ function Init(nonInvasive)
     if(modules.PrivateChannelManager.ensurePrivateChannel == null) { Utils.Error("ensurePrivateChannel() not found."); return -1; }
     mirrorFunction('PrivateChannelManager', 'ensurePrivateChannel');
 
-    //if(modules.MessageCache.prototype._merge == null) { Utils.Error("_merge not found."); return -1; }
-    //Discord.original__merge = modules.MessageCache.prototype._merge;
 
     Style.Inject();
 
@@ -2827,6 +2831,14 @@ var dbSaveInterval;
 function Load()
 {
     let modules = Discord.modules;
+    const mirrorFunction = (moduleName, functionName) => {
+        Discord[`original_${functionName}`] = modules[moduleName][functionName];
+        Discord[functionName] = function() { return Discord[`original_${functionName}`].apply(Discord.modules[moduleName], arguments) };
+    };
+    //Mirror again to allow other plugins to apply their hooks
+    mirrorFunction('MessageQueue', 'enqueue');
+    mirrorFunction('MessageDispatcher', 'dispatch');
+    mirrorFunction('FileUploader', 'upload');
 
     Utils.RefreshCache();
 
@@ -2851,16 +2863,6 @@ function Load()
         Discord.original_upload.apply(this, arguments);
     })()};
 
-    /*modules.MessageCache.prototype._merge = function(messages) {
-        console.log(messages);
-
-        messages.forEach((message) => {
-            if(message.state !== "SENT") return;
-            //message.contentParsed = null;
-        });
-
-        Discord.original__merge.apply(this, arguments);
-    };*/
 
     MenuBar.Show(() => Utils.GetCurrentChannelEncrypt(),
                  () => { Utils.ToggleCurrentChannelEncrypt(); MenuBar.Update(); },
@@ -3018,7 +3020,6 @@ function Unload()
     restoreFunction('MessageDispatcher', 'dispatch');
     restoreFunction('FileUploader', 'upload');
 
-    //Discord.MessageCache.prototype._merge = Discord.original__merge;
 
     if(Patcher != null) Patcher.observer.disconnect();
 
