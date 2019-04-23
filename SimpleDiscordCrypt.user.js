@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.13
+// @version      1.1.14
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -44,6 +44,8 @@ const Style = {
 /*old fixes*/
 .headerBar-UHpsPw, .title-CZQTru { overflow: visible !important }
 .topic-2QX7LI { width: 0 }
+/*new fixes*/
+.title-3qD0b-, .children-19S4PO { overflow: visible !important }
 /*style*/
 .sdc * {
 	font-family: Whitney,Helvetica Neue,Helvetica,Arial,sans-serif;
