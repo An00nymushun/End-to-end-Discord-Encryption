@@ -41,7 +41,7 @@ function HtmlEscape(string) { return string.replace(/[<>&]/g, x => htmlEscapeCha
 
 const Style = {
     css: `
-/*fixes*/
+/*old fixes*/
 .headerBar-UHpsPw, .title-CZQTru { overflow: visible !important }
 .topic-2QX7LI { width: 0 }
 /*style*/
@@ -811,7 +811,8 @@ const MenuBar = {
         menuFocus.onblur = () => { menu.style.visibility = 'hidden' };
 
         this.Update = function(isRetry) {
-            let titleElement = document.body.getElementsByClassName('titleText-3X-zRE')[0];
+            let titleElement = document.body.getElementsByClassName('title-29uC1r')[0];
+            if(titleElement == null) titleElement = document.body.getElementsByClassName('titleText-3X-zRE')[0]; //remove when it gets outdated
             if(titleElement == null) {
                 if(!isRetry) this.retries = 0;
                 if(this.retries < 10) {
