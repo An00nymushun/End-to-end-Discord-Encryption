@@ -2171,7 +2171,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
     let mediaType;
     if(match != null) mediaType = mediaTypes[match[1].toLowerCase()];
     if(mediaType == null) {
-        attachment.url = `javascript:SdcDecryptDl('${filename}','${keyHash}','${encryptedUrl}')`;
+        attachment.url = `javascript:SdcDecryptDl(${JSON.stringify(filename)},'${keyHash}','${encryptedUrl}')`;
         delete attachment.proxy_url;
         message.attachments.push(attachment);
         return;
@@ -2207,7 +2207,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
         let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
         let url;
-        let downloadUrl = `javascript:SdcDownloadUrl('${filename}','${bloburl}')`;
+        let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(filename)},'${bloburl}')`;
 
         let width;
         let height;
