@@ -995,18 +995,18 @@ function drawSky() {
 	drawRectangle(color, 0, 0, 1000, 1000);
 }
 
-const airObjects = "\u{2600}\u{FE0F}|\u{1F311}|\u{2601}\u{FE0F}|\u{1F329}\u{FE0F}|\u{1F328}\u{FE0F}|\u{1F409}|\u{1F987}|\u{1F985}|\u{1F54A}\u{FE0F}|\u{1F41D}|\u{1F98B}|\u{1F343}|\u{1F681}|\u{2708}\u{FE0F}|\u{1F6E9}\u{FE0F}|\u{1F680}|\u{1F6F8}|\u{1F6F0}\u{FE0F}|\u{1F31C}|\u{2604}\u{FE0F}|\u{1F31F}|\u{2744}\u{FE0F}|\u{26A1}|\u{2728}|\u{1F388}|\u{1F47E}|\u{1F47B}".split("|");
+const airObjects = "☀️|🌑|☁️|🌩️|🌨️|🐉|🦇|🦅|🕊️|🐝|🦋|🍃|🚁|✈️|🛩️|🚀|🛸|🛰️|🌜|☄️|🌟|❄️|⚡|✨|🎈|👾|👻".split("|");
 function drawAirObject(x, y, size, rotation) {
 	if(popBits(1)) return;
 
 	drawEmoji(airObjects[popBits(5) % 27], x, y, size, rotation); //32-27 first 5 have double probability
 }
-const handEmojis = "\u{1F44C}|\u{1F595}|\u{270C}|\u{1F44A}|\u{1F44D}|\u{1F44E}|\u{1F44B}|\u{1F448}|\u{1F449}|\u{261D}|\u{1F446}|\u{1F447}|\u{1F91E}|\u{1F596}|\u{1F91F}|\u{1F919}|\u{1F590}|\u{270B}|\u{270D}|\u{1F4B0}|\u{1F480}|\u{1F4A9}|\u{1F4A3}|\u{1F94A}|\u{1F3A8}|\u{1F3BA}|\u{1F4F7}|\u{1F3A5}|\u{1F526}|\u{1F4BC}|\u{1F50E}|\u{1F4D5}|\u{2709}\u{FE0F}|\u{270F}\u{FE0F}|\u{1F4CF}|\u{1F52B}|\u{1F528}|\u{1F527}|\u{1F489}|\u{1F6AC}|\u{1F5DD}\u{FE0F}|\u{1F4DE}|\u{1F3AE}|\u{1F393}|\u{1F346}".split("|");
+const handEmojis = "👌|🖕|✌|👊|👍|👎|👋|👈|👉|☝|👆|👇|🤞|🖖|🤟|🤙|🖐|✋|✍|💰|💀|💩|💣|🥊|🎨|🎺|📷|🎥|🔦|💼|🔎|📕|✉️|✏️|📏|🔫|🔨|🔧|💉|🚬|🗝️|📞|🎮|🎓|🍆".split("|");
 function drawHandEmoji(x, y, size, rotation) {
 	drawEmoji(handEmojis[popBits(6) % 45], x, y, size, rotation);
 }
-const bodyEmojis = "\u{1F454}|\u{1F455}|\u{1F94B}|\u{1F3BD}|\u{1F9E5}|\u{1F457}|\u{1F458}|\u{1F459}|\u{1F45A}".split("|");
-const headEmojis = "\u{1F914}|\u{1F602}|\u{1F624}|\u{1F62D}|\u{1F60B}|\u{1F917}|\u{1F60F}|\u{1F633}|\u{1F606}|\u{1F928}|\u{1F60E}|\u{1F644}|\u{1F611}|\u{1F60D}|\u{1F618}|\u{1F642}|\u{1F929}|\u{1F636}|\u{1F623}|\u{1F62E}|\u{1F910}|\u{1F62B}|\u{1F634}|\u{1F61C}|\u{1F924}|\u{1F612}|\u{1F643}|\u{1F911}|\u{2639}\u{FE0F}|\u{1F601}|\u{1F616}|\u{1F631}|\u{1F92F}|\u{1F62C}|\u{1F92A}|\u{1F635}|\u{1F621}|\u{1F912}|\u{1F922}|\u{1F92E}|\u{1F927}|\u{1F607}|\u{1F920}|\u{1F921}|\u{1F925}|\u{1F923}|\u{1F92B}|\u{1F9D0}|\u{1F913}|\u{1F608}|\u{1F4A9}|\u{1F916}|\u{1F47D}|\u{1F480}|\u{1F47A}|\u{1F476}|\u{1F469}|\u{1F468}|\u{1F474}|\u{1F475}|\u{1F934}|\u{1F473}|\u{1F472}|\u{1F9D4}|\u{1F471}|\u{1F385}|\u{1F435}|\u{1F436}|\u{1F43A}|\u{1F98A}|\u{1F431}|\u{1F981}|\u{1F42F}|\u{1F434}|\u{1F984}|\u{1F993}|\u{1F42E}|\u{1F437}|\u{1F417}|\u{1F42D}|\u{1F439}|\u{1F430}|\u{1F43B}|\u{1F438}|\u{1F432}|\u{1F414}|\u{1F383}".split("|");
+const bodyEmojis = "👔|👕|🥋|🎽|🧥|👗|👘|👙|👚".split("|");
+const headEmojis = "🤔|😂|😤|😭|😋|🤗|😏|😳|😆|🤨|😎|🙄|😑|😍|😘|🙂|🤩|😶|😣|😮|🤐|😫|😴|😜|🤤|😒|🙃|🤑|☹️|😁|😖|😱|🤯|😬|🤪|😵|😡|🤒|🤢|🤮|🤧|😇|🤠|🤡|🤥|🤣|🤫|🧐|🤓|😈|💩|🤖|👽|💀|👺|👶|👩|👨|👴|👵|🤴|👳|👲|🧔|👱|🎅|🐵|🐶|🐺|🦊|🐱|🦁|🐯|🐴|🦄|🦓|🐮|🐷|🐗|🐭|🐹|🐰|🐻|🐸|🐲|🐔|🎃".split("|");
 function drawPerson(x, y, size) {
 	ctx.save();
 	ctx.translate(x, y);
@@ -1047,12 +1047,12 @@ function drawPerson(x, y, size) {
 	drawEmoji(bodyEmojis[popBits(4) % 9], 0, -5, 28); //chest
 	drawEmoji(headEmojis[popBits(12) % 87], 0, -35, 25); //face 4096 % 87 = first 7 have increased chance
 
-	if(popBits(1)) drawEmoji("\u{1F45F}", -13, 35, 15); //left foot
-	if(popBits(1)) drawEmoji("\u{1F45F}", 19, 35, 15); //right foot
+	if(popBits(1)) drawEmoji("👟", -13, 35, 15); //left foot
+	if(popBits(1)) drawEmoji("👟", 19, 35, 15); //right foot
 
 	ctx.restore();
 }
-const tableObjects = "\u{1F35E}|\u{1F453}|\u{1F6CD}\u{FE0F}|\u{1F48E}|\u{1F34E}|\u{1F347}|\u{1F349}|\u{1F34A}|\u{1F34B}|\u{1F34C}|\u{1F34F}|\u{1F350}|\u{1F351}|\u{1F352}|\u{1F353}|\u{1F95D}|\u{1F345}|\u{1F965}|\u{1F954}|\u{1F955}|\u{1F33D}|\u{1F336}\u{FE0F}|\u{1F952}|\u{1F966}|\u{1F344}|\u{1F95C}|\u{1F950}|\u{1F968}|\u{1F95E}|\u{1F9C0}|\u{1F356}|\u{1F357}|\u{1F969}|\u{1F953}|\u{1F354}|\u{1F35F}|\u{1F355}|\u{1F32D}|\u{1F96A}|\u{1F32E}|\u{1F95A}|\u{1F372}|\u{1F963}|\u{1F957}|\u{1F37F}|\u{1F96B}|\u{1F371}|\u{1F359}|\u{1F363}|\u{1F961}|\u{1F366}|\u{1F369}|\u{1F382}|\u{1F967}|\u{1F36B}|\u{1F36E}|\u{1F36F}|\u{1F37C}|\u{2615}|\u{1F377}|\u{1F378}|\u{1F37A}|\u{1F52A}|\u{1F3FA}|\u{1F6CE}\u{FE0F}|\u{23F0}|\u{231B}|\u{1F302}|\u{1F381}|\u{1F3C6}|\u{26BD}|\u{1F3B3}|\u{1F52E}|\u{1F579}\u{FE0F}|\u{1F3B2}|\u{1F4E2}|\u{1F4FB}|\u{1F3A7}|\u{1F3A4}|\u{260E}\u{FE0F}|\u{1F4BB}|\u{1F5A8}\u{FE0F}|\u{1F4FA}|\u{1F56F}\u{FE0F}|\u{1F4E6}|\u{1F52D}|\u{2697}\u{FE0F}|\u{1F52C}|\u{2696}\u{FE0F}|\u{1F964}|\u{1F4DA}".split("|");
+const tableObjects = "🍞|👓|🛍️|💎|🍎|🍇|🍉|🍊|🍋|🍌|🍏|🍐|🍑|🍒|🍓|🥝|🍅|🥥|🥔|🥕|🌽|🌶️|🥒|🥦|🍄|🥜|🥐|🥨|🥞|🧀|🍖|🍗|🥩|🥓|🍔|🍟|🍕|🌭|🥪|🌮|🥚|🍲|🥣|🥗|🍿|🥫|🍱|🍙|🍣|🥡|🍦|🍩|🎂|🥧|🍫|🍮|🍯|🍼|☕|🍷|🍸|🍺|🔪|🏺|🛎️|⏰|⌛|🌂|🎁|🏆|⚽|🎳|🔮|🕹️|🎲|📢|📻|🎧|🎤|☎️|💻|🖨️|📺|🕯️|📦|🔭|⚗️|🔬|⚖️|🥤|📚".split("|");
 function drawTableObject(x, y, size, rotation) {
 	if(popBits(1)) return;
 
@@ -1073,7 +1073,7 @@ function drawTable(x, y, size, rotation) {
 
 	ctx.restore();
 }
-const groundObjects = "\u{1F409}|\u{1F4A9}|\u{1F46F}|\u{1F46B}|\u{1F6B6}\u{1F3FB}|\u{1F3C3}\u{1F3FB}|\u{1F483}\u{1F3FB}|\u{1F57A}\u{1F3FB}|\u{1F9D8}\u{1F3FB}|\u{1F574}\u{1F3FB}|\u{1F93A}|\u{1F3C7}\u{1F3FB}|\u{1F3CC}\u{1F3FB}|\u{26F9}\u{1F3FB}|\u{1F3CB}\u{1F3FB}|\u{1F6B4}\u{1F3FB}|\u{1F938}\u{1F3FB}|\u{1F93C}|\u{1F93E}\u{1F3FB}|\u{1F412}|\u{1F98D}|\u{1F415}|\u{1F429}|\u{1F408}|\u{1F405}|\u{1F406}|\u{1F40E}|\u{1F98C}|\u{1F402}|\u{1F404}|\u{1F416}|\u{1F411}|\u{1F410}|\u{1F42A}|\u{1F418}|\u{1F98F}|\u{1F401}|\u{1F400}|\u{1F407}|\u{1F43F}\u{FE0F}|\u{1F994}|\u{1F983}|\u{1F413}|\u{1F427}|\u{1F424}|\u{1F426}|\u{1F986}|\u{1F989}|\u{1F40A}|\u{1F422}|\u{1F98E}|\u{1F40D}|\u{1F995}|\u{1F996}|\u{1F40C}|\u{1F41B}|\u{1F41C}|\u{1F339}|\u{1F940}|\u{1F33B}|\u{1F33C}|\u{1F337}|\u{1F331}|\u{1F332}|\u{1F333}|\u{1F334}|\u{1F335}|\u{1F33E}|\u{1F340}|\u{26E9}\u{FE0F}|\u{26F2}|\u{1F3AA}|\u{1F6E2}\u{FE0F}|\u{1F6F5}|\u{1F6B2}|\u{1F6F4}|\u{1F38F}|\u{1F945}|\u{1F5D1}\u{FE0F}|\u{1F5FF}|\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}|\u{1F6A9}|\u{1F3C1}|\u{1F3F4}|\u{1F3F3}\u{FE0F}".split("|");
+const groundObjects = "🐉|💩|👯|👫|🚶🏻|🏃🏻|💃🏻|🕺🏻|🧘🏻|🕴🏻|🤺|🏇🏻|🏌🏻|⛹🏻|🏋🏻|🚴🏻|🤸🏻|🤼|🤾🏻|🐒|🦍|🐕|🐩|🐈|🐅|🐆|🐎|🦌|🐂|🐄|🐖|🐑|🐐|🐪|🐘|🦏|🐁|🐀|🐇|🐿️|🦔|🦃|🐓|🐧|🐤|🐦|🦆|🦉|🐊|🐢|🦎|🐍|🦕|🦖|🐌|🐛|🐜|🌹|🥀|🌻|🌼|🌷|🌱|🌲|🌳|🌴|🌵|🌾|🍀|⛩️|⛲|🎪|🛢️|🛵|🚲|🛴|🎏|🥅|🗑️|🗿|🏳️‍🌈|🚩|🏁|🏴|🏳️".split("|");
 function drawGroundObject(x, y, size, rotation) {
 	switch(popBits(2)) {
 	case 0:
@@ -1121,7 +1121,7 @@ switch(popBits(2)) {
 	case 2: { //campfire
 		drawSky();
 		drawRectangle("#49be3d", 0, 50, 200, 100);
-		drawEmoji('\u{1F525}', 0, 10, 20);
+		drawEmoji("🔥", 0, 10, 20);
 		drawRectangle("#333", 0, 20, 15, 5);
 		drawAirObject(-42, -20, 8);
 		drawAirObject(-25, -25, 10);
@@ -1910,7 +1910,7 @@ function Init(nonInvasive)
                         },
                         description: sysmsg,
                         footer: {
-                            text: "SimpleDiscordCrypt", //"\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}",
+                            text: "SimpleDiscordCrypt",
                             icon_url: "https://i.imgur.com/zWXtTpX.png",
                         }
                     }
@@ -2133,9 +2133,9 @@ async function handleSearch(event) {
             await processMessage(message);
 }
 
-const messageRegex = /^([\u{2800}-\u{28FF}]{16,}) `(?:SimpleDiscordCrypt|\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635})`$/u;
+const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
-const invalidMessage = "```diff\n-\u2063----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
+const invalidMessage = "```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message) {
 
     let match = messageRegex.exec(message.content);
@@ -2402,7 +2402,7 @@ async function decryptMessage(message, payload) {
     message.embeds = []; //remove embeds in case of edit and in case of the payload is from the embed
 
     if(payloadBuffer.byteLength === 16) {
-        message.content = "<:ENC:465534298662109185>\u2063"; //invisible separator at the end to make the emoji smaller
+        message.content = "<:ENC:465534298662109185>⁣"; //invisible separator at the end to make the emoji smaller
     }
     else {
         let content;
@@ -2441,7 +2441,7 @@ function getSystemMessageProperty(propertyName, sysmsg) {
 
 
 const unknownKeySystemMessage = "```fix\n-----SYSTEM MESSAGE WITH UNKNOWN KEY-----\n```";
-const invalidSystemMessage = "```diff\n-\u2063----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```";
+const invalidSystemMessage = "```diff\n-⁣----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```";
 const blockedSystemMessage = "```fix\n-----SYSTEM MESSAGE BLOCKED-----\n```";
 var keyExchangeWhitelist = {};
 async function processSystemMessage(message, sysmsg) {
@@ -2485,7 +2485,7 @@ async function processSystemMessage(message, sysmsg) {
 
     switch(messageType) {
         case 'DH KEY': {
-            message.content = "\u{1F4BB} H-hi I would like to know you better";
+            message.content = "💻 H-hi I would like to know you better";
             if(oldMessage) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
@@ -2515,7 +2515,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'DH RESPONSE': {
-            message.content = "\u{1F4BB} I like you :3, you can have my number";
+            message.content = "💻 I like you :3, you can have my number";
             if(oldMessage) return;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
@@ -2548,7 +2548,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'PERSONAL KEY': {
-            message.content = "\u{1F4BB} Here is my number, now we can talk any time!!";
+            message.content = "💻 Here is my number, now we can talk any time!!";
             if(oldMessage) return;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
@@ -2574,7 +2574,7 @@ async function processSystemMessage(message, sysmsg) {
             catch(e) { break }
         } return;
         case 'KEY REQUEST': {
-            message.content = "\u{1F4BB} Hey, can you tell me what this means?";
+            message.content = "💻 Hey, can you tell me what this means?";
             if(oldMessage) return;
 
             let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
@@ -2589,9 +2589,9 @@ async function processSystemMessage(message, sysmsg) {
         case 'KEY SHARE': {
             let status = getSystemMessageProperty('status', sysmsg);
             const statusMsgs = {
-                'OK': "\u{1F4BB} There you go, take good care of it!",
-                'DENIED': "\u{1F4BB} That's a secret!!!",
-                'NOT FOUND': "\u{1F4BB} Huh? I don't know"
+                'OK': "💻 There you go, take good care of it!",
+                'DENIED': "💻 That's a secret!!!",
+                'NOT FOUND': "💻 Huh? I don't know"
             };
             let statusMsg = statusMsgs[status];
             if(statusMsg == null) break;
@@ -2640,11 +2640,11 @@ async function processSystemMessage(message, sysmsg) {
     message.content = invalidSystemMessage;
 }
 
-const descriptionRegex = /^[\u{2800}-\u{28FF}]{16,}$/u;
+const descriptionRegex = /^[⠀-⣿]{16,}$/;
 async function processEmbeds(message) {
     if(message.embeds.length !== 1) return;
     let embed = message.embeds[0];
-    if(embed.footer == null || (embed.footer.text !== "SimpleDiscordCrypt" && embed.footer.text !== "\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}")) return;
+    if(embed.footer == null || (embed.footer.text !== "SimpleDiscordCrypt" && embed.footer.text !== "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵")) return;
 
     if(embed.author == null) return;
 
@@ -2720,7 +2720,7 @@ async function handleSend(channelId, message, forceSimple) {
 
     let channel = Discord.getChannel(channelId);
     if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(0x4000/*EMBED_LINKS*/, Discord.getCurrentUser(), channel))) {
-       message.content = payload + " `SimpleDiscordCrypt`"; //" `\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}`";
+       message.content = payload + " `SimpleDiscordCrypt`";
     }
     else {
         message.content = "";
@@ -2733,7 +2733,7 @@ async function handleSend(channelId, message, forceSimple) {
             },
             description: payload,
             footer: {
-                text: "SimpleDiscordCrypt", //"\u{1D61A}\u{1D62A}\u{1D62E}\u{1D631}\u{1D62D}\u{1D626}\u{1D60B}\u{1D62A}\u{1D634}\u{1D624}\u{1D630}\u{1D633}\u{1D625}\u{1D60A}\u{1D633}\u{1D63A}\u{1D631}\u{1D635}",
+                text: "SimpleDiscordCrypt",
                 icon_url: "https://i.imgur.com/zWXtTpX.png",
             }
         };
