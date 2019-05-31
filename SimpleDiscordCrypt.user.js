@@ -1359,7 +1359,10 @@ function Init(nonInvasive)
             let a = document.createElement('a');
             a.href = url;
             a.download = filename;
-            a.click();
+    		a.style = "display:none"; 
+    		document.body.appendChild(a);
+    		a.click();
+    		document.body.removeChild(a);
             URL.revokeObjectURL(url);
         },
 
@@ -2061,7 +2064,10 @@ function Init(nonInvasive)
         let a = document.createElement('a');
         a.href = url;
         a.download = filename;
-        a.click();
+		a.style = "display:none"; 
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
     };
     Discord.window.SdcDecryptDl = async (filename, keyHash, url) => {
         let encryptedFileBuffer = await Utils.DownloadFile(url);
