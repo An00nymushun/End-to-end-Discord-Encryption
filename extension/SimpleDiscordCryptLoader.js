@@ -22,7 +22,7 @@ window.addEventListener('message', (event) => {
 	makeRequest(event.data, (result) => { event.ports[0].postMessage(result) });
 });
 
-chrome.runtime.sendMessage({ type: 'XMLHttpRequest', request: { url: "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js" } }, (result) => {
+chrome.runtime.sendMessage({ type: 'XMLHttpRequest', request: { url: "https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js" } }, (result) => { //or chrome.runtime.getURL("SimpleDiscordCrypt.user.js")
 	let script = document.createElement('script');
 	script.textContent = `
 (()=>{
