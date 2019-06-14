@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.16
+// @version      1.1.17
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2679,8 +2679,9 @@ async function handleChannelSelect(event) {
         Cache.channelId = channelId;
         Cache.channelConfig = Utils.GetChannelConfig(channelId);
 
-        MenuBar.Update();
-        PopupManager.Update();
+        setTimeout(() => { MenuBar.Update() }, 0);
+		setTimeout(() => { PopupManager.Update() }, 0);
+		//Update after event is processed by Discord
     }
 }
 
