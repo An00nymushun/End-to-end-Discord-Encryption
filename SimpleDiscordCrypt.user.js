@@ -811,7 +811,7 @@ const MenuBar = {
         menuFocus.onblur = () => { menu.style.visibility = 'hidden' };
 
         this.Update = function(isRetry) {
-            let titleElement = document.querySelector(`.title-3qD0b- .title-29uC1r`);
+            let titleElement = document.querySelector(`.title-3qD0b- .title-29uC1r, .title-3qD0b- .channelName-qsg_a_`);
             if(titleElement == null) {
                 if(!isRetry) this.retries = 0;
                 if(this.retries < 10) {
