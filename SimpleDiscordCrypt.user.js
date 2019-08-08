@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.1.17
+// @version      1.2.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -822,6 +822,9 @@ const MenuBar = {
             }
             clearTimeout(this.retryTimeout);
 
+			if(this.mutationObserver != null) this.mutationObserver.disconnect();
+			else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) { this.Update(); break; }});
+			
             let styleEnabled = document.head.contains(this.toggledOnStyle);
             let keySelectEnabled = document.body.contains(this.keySelect);
             let toggleOnEnabled = document.body.contains(this.toggleOnButton);
@@ -850,6 +853,9 @@ const MenuBar = {
                 menuDmGroup.style.display = 'none';
                 menuNondmGroup.style.display = null;
             }
+			
+			let randomChangesNode = document.getElementsByClassName('base-3dtUhz')[0];
+			if(randomChangesNode != null) this.mutationObserver.observe(randomChangesNode, { childList: true, subtree: true });
         };
         this.Update();
     },
@@ -912,7 +918,8 @@ const PopupManager = {
                 cancelTimeout = setTimeout(() => { this.domElement.removeChild(popup); resolve(false); }, timeout);
             }
             else {
-                this.New(message, () => resolve(true), () => resolve(false));
+                let popup = this.New(message, () => resolve(true), () => resolve(false));
+				if(typeof timeout === 'object') { timeout.cancel = () => { this.domElement.removeChild(popup); resolve(false); } };
             }
         });
     },
@@ -1444,6 +1451,22 @@ function Init(nonInvasive)
             return `${date === dateNow ? "Today at" : date} ${time}`;
         },
 
+		Intersect: (a, b) => {
+			let ai = 0,	bi = 0;
+			let alen = a.length, blen = b.length;
+			let result = [];
+			while(ai < alen && bi < blen) {
+				if(a[ai] < b[bi]) ai++;
+				else if(a[ai] > b[bi]) bi++;
+				else {
+					result.push(a[ai]);
+					ai++;
+					bi++;
+				}
+			}
+			return result;
+		},
+		
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
         Sha512_128str: async function(string) { return await this.Sha512_128(this.StringToUtf8Bytes(string)) },
@@ -1594,7 +1617,7 @@ function Init(nonInvasive)
 
         dbChanged: false,
         LoadDb: function(callback, failCallback, reload) { (async () => {
-            if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');
+            if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');Discord.window.DataBase = DataBase;
             if(DataBase != null) {
                 Cache = { keys: {} };
 
@@ -1876,7 +1899,7 @@ function Init(nonInvasive)
                 Cache.channelConfig = this.NewChannelConfig(Cache.channelId, hash, null, false);
             else {
                 let oldKeyHash = Cache.channelConfig.k;
-                if(hash == oldKeyHash) return;
+                if(hash === oldKeyHash) return;
                 //if(DataBase.keys[oldKeyHash].t/*type*/ === 2/*conversation*/) delete DataBase.keys[oldKeyHash];
                 Cache.channelConfig.k = hash;
                 this.dbChanged = true;
@@ -1935,14 +1958,39 @@ function Init(nonInvasive)
             delete channelConfig.w;
             this.dbChanged = true;
         },
+		messageDeleteListeners: {},
+		AddMessageDeleteListener: function(messageId, listener) {
+			let listeners = this.messageDeleteListeners[messageId];
+			if(listeners == null) this.messageDeleteListeners[messageId] = [listener];
+			else listeners.push(listener);
+		},
+		RemoveMessageDeleteListener: function(messageId, listener) {
+			let listeners = this.messageDeleteListeners[messageId];
+			if(listeners == null) return;
+			let index = listeners.indexOf(listener);
+			if(index === -1) return;
+			if(listeners.length === 1) { delete this.messageDeleteListeners[messageId]; return; }
+			listeners.splice(index, 1);
+		},
+		MessageDeleteEvent: function(messageId) {
+			let listeners = this.messageDeleteListeners[messageId];
+			if(listeners == null) return;
+			for(let listener of listeners) listener();
+		},
+		MessageDeleteBulkEvent: function(messageIdList) {
+			let listenerIds = Object.keys(this.messageDeleteListeners);
+			if(listenerIds.length === 0) return;
+			let foundIds = this.Intersect(messageIdList.sort(), listenerIds.sort());
+			for(let messageId of foundIds) this.MessageDeleteEvent();
+		},
         ongoingKeyExchanges: {},
-        InitKeyExchange: async function(userId, auto) {
+        InitKeyExchange: async function(userId, autoOnMessage) {
             let currentUserId = Discord.getCurrentUser().id;
             if(userId === currentUserId) return;
 
             let channelId = Discord.getDMFromUserId(userId);
             let channelConfig;
-            if(auto) {
+            if(autoOnMessage) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && (channelConfig.s/*systemMessageTime*/ > 0 || channelConfig.w/*waitingForSystemMessage*/))
                     return;
@@ -1951,8 +1999,10 @@ function Init(nonInvasive)
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyExchanges[userId] = true;
                     let user = Discord.getUser(userId);
-                    let force = await PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`);
-                    //delete this.ongoingKeyExchanges[userId];
+					let popupOverride = {};
+					let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, popupOverride);
+					this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); });
+                    let force = await popup;
                     if(!force) return;
                 }
             }
@@ -1972,7 +2022,7 @@ function Init(nonInvasive)
             this.dbChanged = true;
         },
         ongoingKeyRequests: {},
-        RequestKey: async function(keyHash, userId, auto) {
+        RequestKey: async function(keyHash, userId, autoOnMessage) {
             if(DataBase.keys[keyHash] != null) return;
 
             let channelId = Discord.getDMFromUserId(userId);
@@ -1980,7 +2030,7 @@ function Init(nonInvasive)
 
             let channelConfig;
             let requestId = keyHash + userId;
-            if(auto) {
+            if(autoOnMessage) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && channelConfig.w/*waitingForSystemMessage*/)
                     return;
@@ -1990,7 +2040,10 @@ function Init(nonInvasive)
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyRequests[requestId] = true;
                     let user = Discord.getUser(userId);
-                    if(!await PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`)) return;
+					let popupOverride = {};
+					let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, popupOverride);
+					this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); });
+                    if(!await popup) return;
                 }
             }
             delete this.ongoingKeyRequests[requestId];
@@ -2074,7 +2127,21 @@ function Init(nonInvasive)
         let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
         Utils.DownloadBlob(filename, new File([fileBuffer], filename));
     };
-
+	Discord.window.SdcClearKeys = (filterFunc) => {
+		const typeLookup = [null, 'GROUP', 'CONVERSATION', 'PERSONAL'];
+		for(let [hash, keyObj] of Object.entries(DataBase.keys)) {
+			if(filterFunc({ type: typeLookup[keyObj.t], lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: !!keyObj.h, registered: keyObj.r }))
+				Utils.DeleteKey(hash);
+		}
+	};
+	Discord.window.SdcClearChannels = (filterFunc) => {
+		for(let [hash, channelObj] of Object.entries(DataBase.channels)) {
+			if(filterFunc({ lastseen: channelObj.l, descriptor: Utils.FormatDescriptor(channelObj.d), encrypted: !!channelObj.e }))
+				Utils.DeleteChannelConfig(hash);
+		}
+	};
+	
+	
     const mirrorFunction = (moduleName, functionName) => {
         Discord[`original_${functionName}`] = modules[moduleName][functionName];
         Discord[functionName] = function() { return Discord[`original_${functionName}`].apply(Discord.modules[moduleName], arguments) };
@@ -2127,7 +2194,7 @@ function Init(nonInvasive)
 
 
 async function handleMessage(event) {
-    await processMessage(event.message);
+    return await processMessage(event.message);
 }
 async function handleMessages(event) {
     for(let message of event.messages.slice()) //in case they reverse the array
@@ -2146,12 +2213,10 @@ async function processMessage(message) {
 
     let match = messageRegex.exec(message.content);
     if(match != null) { //simple messsage
-        let key = await decryptMessage(message, match[1]);
-
-        return;
+        return await decryptMessage(message, match[1]);
     }
 
-    await processEmbeds(message);
+    return await processEmbeds(message);
 }
 
 var mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img' };
@@ -2386,16 +2451,22 @@ async function decryptMessage(message, payload) {
 
     if(key == null) {
         if(!DataBase.isSecondary) {
-            if(message.author != null) Utils.InitKeyExchange(message.author.id, true);
+            if(message.author != null) Utils.InitKeyExchange(message.author.id, message.id);
+
+			let messageDeleted = false;
+			let messageDeleteException = new Promise((resolve) => Utils.AddMessageDeleteListener(message.id, () => { messageDeleted = true; resolve(); }));
 
             for(let i = 1; i <= 10; i++) {
-                await Utils.Sleep(i * 200);
+                await Promise.race([Utils.Sleep(i * 200), messageDeleteException]);
+				if(messageDeleted) return true;
 
                 key = await Utils.GetKeyByHash(keyHashBase64);
                 if(key != null) break;
 
-                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author.id, true);
+                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author.id, message.id);
             }
+			
+			Utils.RemoveMessageDeleteListener(message.id);
         }
         if(key == null) {
             message.content = unknownKeyMessage;
@@ -2505,6 +2576,10 @@ async function processSystemMessage(message, sysmsg) {
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
+                if(message.channel_id === Cache.channelId) {
+                    Cache.channelConfig = channelConfig; //in case it's a new config
+                    MenuBar.Update();
+                }
 
                 let dhPublicKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(DataBase.dhPublicKey));
 
@@ -2538,8 +2613,8 @@ async function processSystemMessage(message, sysmsg) {
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
                 channelConfig.k/*keyHash*/ = keyHash;
                 Utils.dbChanged = true;
-                if(message.channel_id == Cache.channelId) {
-                    Cache.channelConfig = channelConfig; //in case it's a new config
+                if(message.channel_id === Cache.channelId) {
+                    Cache.channelConfig = channelConfig;
                     MenuBar.Update();
                 }
 
@@ -2656,7 +2731,7 @@ async function processEmbeds(message) {
 
     if(embed.author.name === "-----ENCRYPTED MESSAGE-----") {
         if(!descriptionRegex.test(embed.description)) return;
-        await decryptMessage(message, embed.description);
+        return await decryptMessage(message, embed.description);
     }
     else if(embed.author.name === "-----SYSTEM MESSAGE-----") {
         processSystemMessage(message, embed.description);
@@ -2684,6 +2759,14 @@ async function handleChannelSelect(event) {
 		//Update after event is processed by Discord
     }
 }
+
+async function handleDelete(event) {
+	Utils.MessageDeleteEvent(event.id);
+}
+async function handleDeletes(event) {
+	Utils.MessageDeleteBulkEvent(event.ids);
+}
+
 
 const prefixRegex = /^(?::?ENC(?::|\b)|<:ENC:\d{1,20}>)\s*/;
 const noencprefixRegex = /^(?::?NOENC:?|<:NOENC:\d{1,20}>)\s*/; //not really expecting an emoji
@@ -2783,7 +2866,9 @@ const eventHandlers = {
     'LOAD_RECENT_MENTIONS_SUCCESS': handleMessages,
     'SEARCH_FINISH': handleSearch,
     'MESSAGE_CREATE': handleMessage,
-    'MESSAGE_UPDATE': handleMessage
+    'MESSAGE_UPDATE': handleMessage,
+	'MESSAGE_DELETE': handleDelete,
+	'MESSAGE_DELETE_BULK': handleDeletes
 }
 
 var messageLocks = [];
@@ -2846,7 +2931,10 @@ function Load()
 
     modules.MessageDispatcher.dispatch = function(event){(async () => {
         let handler = eventHandlers[event.type];
-        if(handler) await handler(event);
+        if(handler) {
+			let suppress = await handler(event);
+			if(suppress) return;
+		}
 
         Discord.original_dispatch.apply(this, arguments);
     })()};
