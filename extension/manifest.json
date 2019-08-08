@@ -19,12 +19,12 @@
 	"content_scripts": [ {
 		"js": ["SimpleDiscordCryptLoader.js"],
 		"matches": [
-			"https://discordapp.com/channels/*",
-			"https://discordapp.com/activity",
-			"https://ptb.discordapp.com/channels/*",
-			"https://ptb.discordapp.com/activity",
-			"https://canary.discordapp.com/channels/*",
-			"https://canary.discordapp.com/activity"
+			"https://*.discordapp.com/channels/*",
+			"https://*.discordapp.com/activity",
+			"https://*.discordapp.com/login",
+			"https://*.discordapp.com/app",
+			"https://*.discordapp.com/library",
+			"https://*.discordapp.com/store"
 		],
 		"run_at": "document_start"
 	} ],
