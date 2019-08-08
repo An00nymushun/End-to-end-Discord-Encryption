@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.0
+// @version      1.2.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -46,192 +46,192 @@ const Style = {
 .status-1XNdyw { margin-left: 10px }
 /*style*/
 .sdc * {
-	font-family: Whitney,Helvetica Neue,Helvetica,Arial,sans-serif;
-	font-size: 16px;
-	font-weight: normal;
-	line-height: 1;
-	text-rendering: optimizeLegibility;
-	color: #f6f6f7;
-	user-select: none;
-	display: flex;
-	padding: 0;
-	margin: 0;
+    font-family: Whitney,Helvetica Neue,Helvetica,Arial,sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 1;
+    text-rendering: optimizeLegibility;
+    color: #f6f6f7;
+    user-select: none;
+    display: flex;
+    padding: 0;
+    margin: 0;
 }
 .sdc-overlay,.sdc-cover {
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	top: 0;
-	z-index: 1000;
-	align-items: center;
-	justify-content: center;
-	pointer-events: none;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 .sdc-cover {
-	background: rgba(0,0,0,.85);
-	pointer-events: auto;
+    background: rgba(0,0,0,.85);
+    pointer-events: auto;
 }
 .sdc-window {
-	background-color: #36393f;
-	flex-direction: column;
-	border-radius: 5px;
-	pointer-events: auto;
-	position: relative;
+    background-color: #36393f;
+    flex-direction: column;
+    border-radius: 5px;
+    pointer-events: auto;
+    position: relative;
 }
 .sdc-window > * { margin: 0 20px }
 .sdc-footer {
-	margin: 0;
-	padding: 20px;
-	background-color: #2f3136;
-	box-shadow: inset 0 1px 0 rgba(47,49,54,.6);
-	border-radius: 0 0 5px 5px;
-	justify-content: flex-end;
+    margin: 0;
+    padding: 20px;
+    background-color: #2f3136;
+    box-shadow: inset 0 1px 0 rgba(47,49,54,.6);
+    border-radius: 0 0 5px 5px;
+    justify-content: flex-end;
 }
 .sdc h4,.sdc h4 * {
-	text-transform: uppercase;
-	letter-spacing: .3px;
-	font-weight: 600;
-	line-height: 20px;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    font-weight: 600;
+    line-height: 20px;
 }
 .sdc h5,.sdc h5 * {
-	color: #b9bbbe;
-	text-transform: uppercase;
-	letter-spacing: .5px;
-	font-weight: 600;
-	font-size: 12px;
-	line-height: 16px;
+    color: #b9bbbe;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
 }
 .sdc input {
-	background: rgba(0,0,0,.1);
-	border: solid 1px rgba(0,0,0,.3);
-	border-radius: 3px;
-	height: 38px;
-	padding: 0 10px;
-	outline: 0;
-	transition: border .15s ease;
+    background: rgba(0,0,0,.1);
+    border: solid 1px rgba(0,0,0,.3);
+    border-radius: 3px;
+    height: 38px;
+    padding: 0 10px;
+    outline: 0;
+    transition: border .15s ease;
 }
 .sdc input:focus { border-color: #72dac7 }
 .sdc button {
-	min-height: 38px;
-	border-radius: 3px;
-	justify-content: center;
-	padding: 2px 16px;
-	cursor: pointer;
+    min-height: 38px;
+    border-radius: 3px;
+    justify-content: center;
+    padding: 2px 16px;
+    cursor: pointer;
 }
 .sdc button,.sdc button * {
-	font-size: 14px;
-	font-weight: 500;
-	line-height: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16px;
 }
 .sdc-btn {
-	border: 0;
-	color: #fff;
-	background-color: #72dac7;
-	transition: background-color .17s ease;
+    border: 0;
+    color: #fff;
+    background-color: #72dac7;
+    transition: background-color .17s ease;
 }
 .sdc-btn:hover { background-color: #67c4b3 }
 .sdc-lnkbtn {
-	border: 0;
-	color: #fff;
-	background-color: transparent;
+    border: 0;
+    color: #fff;
+    background-color: transparent;
 }
 .sdc-lnkbtn:hover > * { background-image: linear-gradient(0,transparent,transparent 1px,#fff 0,#fff 2px,transparent 0); }
 .sdc-rbtn {
-	color: #f04747;
-	border: solid 1px rgba(240,71,71,.3);
-	transition: border-color .17s ease;
-	background-color: transparent;
+    color: #f04747;
+    border: solid 1px rgba(240,71,71,.3);
+    transition: border-color .17s ease;
+    background-color: transparent;
 }
 .sdc-rbtn:hover { border-color: rgba(240,71,71,.6) }
 .sdc-rbtn:disabled {
-	color: #8b8181;
-	border-color: rgba(130,126,126,.6);
-	cursor: default;
+    color: #8b8181;
+    border-color: rgba(130,126,126,.6);
+    cursor: default;
 }
 .sdc-wbtn {
-	color: #f6f6f7;
-	border: solid 1px rgba(240,240,242,.3);
-	transition: border-color .17s ease;
-	background-color: transparent;
+    color: #f6f6f7;
+    border: solid 1px rgba(240,240,242,.3);
+    transition: border-color .17s ease;
+    background-color: transparent;
 }
 .sdc-wbtn:hover { border-color: rgba(240,240,242,.6) }
 .sdc-wbtn:disabled {
-	color: #a6a6a7;
-	border-color: rgba(126,126,126,.6);
-	cursor: default;
+    color: #a6a6a7;
+    border-color: rgba(126,126,126,.6);
+    cursor: default;
 }
 .sdc-select {
-	background: rgba(0,0,0,.1);
-	border-radius: 4px;
-	position: relative;
-	transition: border-color .15s ease;
+    background: rgba(0,0,0,.1);
+    border-radius: 4px;
+    position: relative;
+    transition: border-color .15s ease;
 }
 .sdc-select:hover { border-color: #040405; }
 .sdc-select input + * {
-	margin-right: 17px;
-	width: 100%;
-	align-items: center;
+    margin-right: 17px;
+    width: 100%;
+    align-items: center;
 }
 .sdc-select input + *::after {
-	content: '';
-	border-color: #999 transparent transparent;
-	border-style: solid;
-	border-width: 5px 5px 2.5px;
-	position: absolute;
-	right: 10px;
-	margin-top: 2px;
+    content: '';
+    border-color: #999 transparent transparent;
+    border-style: solid;
+    border-width: 5px 5px 2.5px;
+    position: absolute;
+    right: 10px;
+    margin-top: 2px;
 }
 .sdc-select:hover input + *::after { border-color: #f6f6f7 transparent transparent }
 .sdc-select input:checked + *::after {
-	border-color: transparent transparent #f6f6f7;
-	border-width: 0 5px 5px;
+    border-color: transparent transparent #f6f6f7;
+    border-width: 0 5px 5px;
 }
 .sdc-select, .sdc-select > div {
-	border: solid 1px rgba(0,0,0,.3);
-	flex-direction: column;
+    border: solid 1px rgba(0,0,0,.3);
+    flex-direction: column;
 }
 .sdc-select > div {
-	background: #303237;
-	position: absolute;
-	top: 100%;
-	width: 100%;
-	margin: -1px;
-	margin-top: -2px;
-	border-radius: 0 0 4px 4px;
-	box-shadow: 0 1px 5px rgba(0,0,0,.3);
-	z-index: 1;
+    background: #303237;
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    margin: -1px;
+    margin-top: -2px;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.3);
+    z-index: 1;
 }
 .sdc-select > label,.sdc-select > div > * {
-	height: 38px;
-	padding: 0 10px;
-	align-items: center;
+    height: 38px;
+    padding: 0 10px;
+    align-items: center;
 }
 .sdc-select > div > a:hover { background: rgba(0,0,0,.1) }
 
 .sdc-tooltip {
-	visibility: hidden;
-	width: 124px;
-	background-color: black;
-	font-size: 15px;
-	justify-content: center;
-	border-radius: 6px;
-	padding: 6px 0;
-	position: absolute;
-	z-index: 1;
-	top: 150%;
-	left: 50%;
-	margin-left: -62px;
+    visibility: hidden;
+    width: 124px;
+    background-color: black;
+    font-size: 15px;
+    justify-content: center;
+    border-radius: 6px;
+    padding: 6px 0;
+    position: absolute;
+    z-index: 1;
+    top: 150%;
+    left: 50%;
+    margin-left: -62px;
 }
 .sdc-tooltip::after {
-	content: '';
-	position: absolute;
-	bottom: 100%;
-	left: 50%;
-	margin-left: -5px;
-	border-width: 5px;
-	border-style: solid;
-	border-color: transparent transparent black transparent;
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
 }
 :hover > .sdc-tooltip { visibility: visible }
 
@@ -240,34 +240,34 @@ const Style = {
     min-width: 170px;
     z-index: 1005;
     border-radius: 5px;
-	background: #282b30;
-	box-shadow: 0 0 1px rgba(0,0,0,.82), 0 1px 4px rgba(0,0,0,.1);
+    background: #282b30;
+    box-shadow: 0 0 1px rgba(0,0,0,.82), 0 1px 4px rgba(0,0,0,.1);
 }
 .sdc-menu a {
-	font-size: 13px;
-	font-weight: 500;
+    font-size: 13px;
+    font-weight: 500;
     line-height: 16px;
     margin: 2px 0;
-	padding: 6px 10px;
+    padding: 6px 10px;
     overflow: hidden;
-	color: #fff;
-	opacity: .6;
+    color: #fff;
+    opacity: .6;
     border-radius: 5px;
 
     transition: none;
     cursor: default;
 }
 .sdc-menu a:hover {
-	background: #25282d;
-	opacity: 1;
+    background: #25282d;
+    opacity: 1;
 }
 .sdc-menu > div {
-	border-bottom: solid 1px hsla(0,0%,96%,.08);
-	flex-direction: column;
+    border-bottom: solid 1px hsla(0,0%,96%,.08);
+    flex-direction: column;
 }
 .sdc-menu > div:last-child { border: 0 }
 .sdc-hidden {
-	width: 0;
+    width: 0;
     height: 0;
     padding: 0;
     border: 0;
@@ -276,122 +276,122 @@ const Style = {
     margin: 0;
 }
 .sdc-scroll {
-	display: block;
-	overflow-x: hidden;
-	overflow-y: auto;
-	margin: 0;
-	padding: 0 12px 0 20px;
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0 12px 0 20px;
 }
 .sdc-scroll::-webkit-scrollbar {
-	width: 8px;
+    width: 8px;
 }
 .sdc-scroll::-webkit-scrollbar-thumb {
-	background-color: rgba(32,34,37,.6);
-	border: 2px solid transparent;
-	border-radius: 4px;
-	background-clip: padding-box;
+    background-color: rgba(32,34,37,.6);
+    border: 2px solid transparent;
+    border-radius: 4px;
+    background-clip: padding-box;
 }
 .sdc-list { flex-direction: column }
 .sdc-list > div {
-	border: solid 1px rgba(32,34,37,.6);
-	border-radius: 5px;
-	margin: 4px 0;
+    border: solid 1px rgba(32,34,37,.6);
+    border-radius: 5px;
+    margin: 4px 0;
 }
 .sdc-list > div:hover {
-	background-color: rgba(32,34,37,.1);
+    background-color: rgba(32,34,37,.1);
 }
 .sdc-list > div > div:first-child {
-	margin-right: auto;
-	padding: 12px 0 8px 20px;
-	flex-direction: column;
+    margin-right: auto;
+    padding: 12px 0 8px 20px;
+    flex-direction: column;
 }
 .sdc-list h6 {
-	font-weight: 600;
-	line-height: 20px;
-	word-break: break-all; /*FF*/
-	word-break: break-word;
+    font-weight: 600;
+    line-height: 20px;
+    word-break: break-all; /*FF*/
+    word-break: break-word;
     max-width: 400px;
 }
 .sdc-list p {
-	line-height: 16px;
-	font-size: 12px;
-	font-weight: 400;
-	color: #b9bbbe;
+    line-height: 16px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #b9bbbe;
 }
 .sdc-edit {
-	background: url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="%23F6F6F7" viewBox="0 0 36 36"%3E%3Cpath d="M1,35.9L8.2,35l7-9l-5-5l-9,7l-0.9,7.1L3.4,32c-0.2-0.3-0.3-0.6-0.3-1c0-1.1,0.9-2,2-2s2,0.9,2,2s-0.9,2-2,2c-0.4,0-0.7-0.1-1-0.3L1,35.9z"/%3E%3Cpath d="M9.5,18.3l13-13c0,0,0,0,0,0c0,0,0.6-0.6,0.8-0.8l3.4-3.4l0,0c1.2-1.1,3-1.1,4.1,0L35,5.3c1.1,1.1,1.1,3,0,4.1l0,0l0,0c0,0,0,0,0,0l-4.2,4.2c0,0,0,0,0,0l-13,13c-1.1,1.2-3,1.2-4.2,0l-4.2-4.2C8.4,21.3,8.4,19.5,9.5,18.3z"/%3E%3C/svg>');
-	background-size: cover;
-	width: 20px;
-	height: 20px;
-	cursor: pointer;
-	margin: -2px 0 0 6px;
-	opacity: .6;
+    background: url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="%23F6F6F7" viewBox="0 0 36 36"%3E%3Cpath d="M1,35.9L8.2,35l7-9l-5-5l-9,7l-0.9,7.1L3.4,32c-0.2-0.3-0.3-0.6-0.3-1c0-1.1,0.9-2,2-2s2,0.9,2,2s-0.9,2-2,2c-0.4,0-0.7-0.1-1-0.3L1,35.9z"/%3E%3Cpath d="M9.5,18.3l13-13c0,0,0,0,0,0c0,0,0.6-0.6,0.8-0.8l3.4-3.4l0,0c1.2-1.1,3-1.1,4.1,0L35,5.3c1.1,1.1,1.1,3,0,4.1l0,0l0,0c0,0,0,0,0,0l-4.2,4.2c0,0,0,0,0,0l-13,13c-1.1,1.2-3,1.2-4.2,0l-4.2-4.2C8.4,21.3,8.4,19.5,9.5,18.3z"/%3E%3C/svg>');
+    background-size: cover;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin: -2px 0 0 6px;
+    opacity: .6;
 }
 .sdc-edit:hover { opacity: 1 }
 .sdc-listbox {
-	width: 76px;
-	align-items: center;
+    width: 76px;
+    align-items: center;
     justify-content: center;
 }
 .sdc-listbox::before {
-	content: '';
-	width: 1px;
-	height: 30px;
-	background: rgba(32,34,37,.5);
+    content: '';
+    width: 1px;
+    height: 30px;
+    background: rgba(32,34,37,.5);
 }
 .sdc-listbox > * { margin: auto }
 .sdc-listcheckbox > label { height: 24px }
 .sdc-listcheckbox input + *::after {
-	content: '';
-	border: solid 1px #62666d;
-	border-radius: 3px;
-	width: 24px;
-	box-sizing: border-box;
-	transition: background .17s ease,border-color .17s ease;
+    content: '';
+    border: solid 1px #62666d;
+    border-radius: 3px;
+    width: 24px;
+    box-sizing: border-box;
+    transition: background .17s ease,border-color .17s ease;
 }
 .sdc-listcheckbox input:enabled + * { cursor: pointer }
 .sdc-listcheckbox input:enabled:hover + *::after { border-color: #72767d }
 .sdc-listcheckbox input:checked + *::after {
-	content: url('data:image/svg+xml,%3Csvg stroke="%23FFF" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"%3E%3Cpolyline stroke-width="2" fill="none" points="3.5 9.5 7 13 15 5"%3E%3C/polyline%3E%3C/svg%3E');
-	border: 0;
-	padding: 3px;
-	background: #72dac7;
+    content: url('data:image/svg+xml,%3Csvg stroke="%23FFF" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"%3E%3Cpolyline stroke-width="2" fill="none" points="3.5 9.5 7 13 15 5"%3E%3C/polyline%3E%3C/svg%3E');
+    border: 0;
+    padding: 3px;
+    background: #72dac7;
 }
 .sdc-listcheckbox input:enabled:checked:hover + *::after { background-color: #67c4b3 }
 .sdc-listcheckbox input:disabled + *::after {
-	background: #72767d;
-	border: 0;
-	opacity: .5;
+    background: #72767d;
+    border: 0;
+    opacity: .5;
 }
 .sdc-listbox:last-child {
-	background: rgba(0,0,0,.1);
-	padding: 9px;
+    background: rgba(0,0,0,.1);
+    padding: 9px;
 }
 .sdc-listbox:last-child::before { display: none }
 .sdc-list > h5 > p {
-	font-size: 10px;
-	font-weight: 700;
-	color: #dcddde;;
-	padding: 0 8px 1px 8px;
-	box-sizing: border-box;
-	justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #dcddde;;
+    padding: 0 8px 1px 8px;
+    box-sizing: border-box;
+    justify-content: center;
 }
 .sdc-close {
-	content: url('data:image/svg+xml;utf8,%3Csvg fill="%23DCDDDE" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M9.5 3.205L8.795 2.5 6 5.295 3.205 2.5l-.705.705L5.295 6 2.5 8.795l.705.705L6 6.705 8.795 9.5l.705-.705L6.705 6"%3E%3C/path%3E%3C/svg%3E');
-	width: 18px;
-	height: 18px;
-	cursor: pointer;
-	border-radius: 3px;
-	margin: 0;
-	padding: 4px;
-	position: absolute;
-	right: 16px;
-	top: 16px;
-	opacity: .5;
+    content: url('data:image/svg+xml;utf8,%3Csvg fill="%23DCDDDE" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M9.5 3.205L8.795 2.5 6 5.295 3.205 2.5l-.705.705L5.295 6 2.5 8.795l.705.705L6 6.705 8.795 9.5l.705-.705L6.705 6"%3E%3C/path%3E%3C/svg%3E');
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 0;
+    padding: 4px;
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    opacity: .5;
 }
 .sdc-close:hover {
-	opacity: 1;
-	background-color: hsla(210,3%,87%,.05);
+    opacity: 1;
+    background-color: hsla(210,3%,87%,.05);
 }`,
     Inject: function() {
         let style = document.createElement('style');
@@ -408,14 +408,14 @@ const UnlockWindow = {
     html: `<div class="sdc">
 <div class="SDC_CANCEL sdc-cover"></div>
 <div class="sdc-overlay">
-	<form class="SDC_UNBLOCK sdc-window" style="min-width: 480px">
-		<div style="margin-top:20px">
-			<h4>Unlock Database</h4>
-		</div>
-		<h5 style="margin-top:20px">Password</h5>
-		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_NEWDB sdc-rbtn" style="margin:0 4px">New DB</button><button type="submit" class="sdc-btn" style="min-width:96px">Unlock</button></div>
-	</form>
+    <form class="SDC_UNBLOCK sdc-window" style="min-width: 480px">
+        <div style="margin-top:20px">
+            <h4>Unlock Database</h4>
+        </div>
+        <h5 style="margin-top:20px">Password</h5>
+        <input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
+        <div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_NEWDB sdc-rbtn" style="margin:0 4px">New DB</button><button type="submit" class="sdc-btn" style="min-width:96px">Unlock</button></div>
+    </form>
 </div>
 </div>`,
     Show: function(passwordCallback, newdbCallback, cancelCallback) {
@@ -448,14 +448,14 @@ const NewdbWindow = {
     html: `<div class="sdc">
 <div class="SDC_CANCEL sdc-cover"></div>
 <div class="sdc-overlay">
-	<form class="SDC_CREATEDB sdc-window" style="min-width: 480px">
-		<div style="margin-top:20px">
-			<h4>Create Database</h4>
-		</div>
-		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
-		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_IMPORT sdc-lnkbtn"><p>Import</p></button><button type="button" class="SDC_SECONDARY sdc-lnkbtn" style="padding-right:22px"><p>Secondary</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
-	</form>
+    <form class="SDC_CREATEDB sdc-window" style="min-width: 480px">
+        <div style="margin-top:20px">
+            <h4>Create Database</h4>
+        </div>
+        <h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
+        <input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
+        <div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn"><p>Cancel</p></button><button type="button" class="SDC_IMPORT sdc-lnkbtn"><p>Import</p></button><button type="button" class="SDC_SECONDARY sdc-lnkbtn" style="padding-right:22px"><p>Secondary</p></button><button type="submit" class="sdc-btn" style="min-width:96px">Create</button></div>
+    </form>
 </div>
 </div>`,
     Show: function(newdbCallback, importCallback, secondaryCallback, cancelCallback) {
@@ -490,14 +490,14 @@ const NewPasswordWindow = {
     html: `<div class="sdc">
 <div class="SDC_CANCEL sdc-cover"></div>
 <div class="sdc-overlay">
-	<form class="SDC_CHANGEPASSWORD sdc-window" style="min-width: 480px">
-		<div style="margin-top:20px">
-			<h4>Change Database Password</h4>
-		</div>
-		<h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
-		<input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
-		<div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p><button type="submit" class="sdc-btn" style="min-width:96px">Change</button></div>
-	</form>
+    <form class="SDC_CHANGEPASSWORD sdc-window" style="min-width: 480px">
+        <div style="margin-top:20px">
+            <h4>Change Database Password</h4>
+        </div>
+        <h5 style="margin-top:20px">Password <p style="margin-left:5px;opacity:.6">(optional)</p></h5>
+        <input class="SDC_PASSWORD" style="margin-top:8px;margin-bottom:20px" type="password" name="sdc-password">
+        <div class="sdc-footer"><button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p><button type="submit" class="sdc-btn" style="min-width:96px">Change</button></div>
+    </form>
 </div>
 </div>`,
     Show: function(newPasswordCallback, cancelCallback) {
@@ -526,21 +526,21 @@ const KeyManagerWindow = {
     html: `<div class="sdc">
 <div class="SDC_CLOSE sdc-cover"></div>
 <div class="sdc-overlay">
-	<div class="sdc-window" style="min-width: 580px">
-		<div style="margin:20px">
-			<h4>Key Manager</h4>
-		</div>
-		<a class="SDC_CLOSE sdc-close"></a>
-		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
-		<div class="SDC_LIST sdc-list">
-			<h5><p>Key</p><p style="margin-left:auto;width:76px">Hidden</p><p style="width:94px">Delete</p></h5>
+    <div class="sdc-window" style="min-width: 580px">
+        <div style="margin:20px">
+            <h4>Key Manager</h4>
+        </div>
+        <a class="SDC_CLOSE sdc-close"></a>
+        <div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+        <div class="SDC_LIST sdc-list">
+            <h5><p>Key</p><p style="margin-left:auto;width:76px">Hidden</p><p style="width:94px">Delete</p></h5>
 
-		</div>
-		</div>
-		<div class="sdc-footer">
-			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
-		</div>
-	</div>
+        </div>
+        </div>
+        <div class="sdc-footer">
+            <button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+        </div>
+    </div>
 </div>
 </div>`,
     Show: function(keys, setKeyDescriptor, setKeyHidden, deleteKey) {
@@ -555,11 +555,11 @@ const KeyManagerWindow = {
         for(let key of keys) {
             let listItem = document.createElement('div');
             listItem.innerHTML = `<div>
-					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a></h6>
-					<p>${Utils.FormatTime(key.lastseen)}</p>
-				</div>
-				<div class="sdc-listbox sdc-listcheckbox"><label><input type="checkbox" class="SDC_SETHIDDEN" style="display:none"${key.hidden?' checked':''}${key.type!=='GROUP'?' disabled':''}><p></p></label></div>
-				<div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px"${key.protected?' disabled':''}>Delete</button></div>`;
+                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a></h6>
+                    <p>${Utils.FormatTime(key.lastseen)}</p>
+                </div>
+                <div class="sdc-listbox sdc-listcheckbox"><label><input type="checkbox" class="SDC_SETHIDDEN" style="display:none"${key.hidden?' checked':''}${key.type!=='GROUP'?' disabled':''}><p></p></label></div>
+                <div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px"${key.protected?' disabled':''}>Delete</button></div>`;
             const editDescriptor = (e) => {
                 let descriptorElement = listItem.getElementsByClassName('SDC_DESCRIPTOR')[0];
                 descriptorElement.innerHTML = `<input type="text" class="SDC_DESCRIPTORINPUT" style="width:320px"></input>`;
@@ -604,21 +604,21 @@ const ChannelManagerWindow = {
     html: `<div class="sdc">
 <div class="SDC_CLOSE sdc-cover"></div>
 <div class="sdc-overlay">
-	<div class="sdc-window" style="min-width: 580px">
-		<div style="margin:20px">
-			<h4>Channel Manager</h4>
-		</div>
-		<a class="SDC_CLOSE sdc-close"></a>
-		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
-		<div class="SDC_LIST sdc-list">
-			<h5><p>Config</p><p style="margin-left:auto;width:94px">Delete</p></h5>
+    <div class="sdc-window" style="min-width: 580px">
+        <div style="margin:20px">
+            <h4>Channel Manager</h4>
+        </div>
+        <a class="SDC_CLOSE sdc-close"></a>
+        <div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+        <div class="SDC_LIST sdc-list">
+            <h5><p>Config</p><p style="margin-left:auto;width:94px">Delete</p></h5>
 
-		</div>
-		</div>
-		<div class="sdc-footer">
-			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
-		</div>
-	</div>
+        </div>
+        </div>
+        <div class="sdc-footer">
+            <button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+        </div>
+    </div>
 </div>
 </div>`,
     Show: function(channels, deleteChannel) {
@@ -633,10 +633,10 @@ const ChannelManagerWindow = {
         for(let channel of channels) {
             let listItem = document.createElement('div');
             listItem.innerHTML = `<div>
-					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(channel.descriptor)}</h6>
-					<p>${Utils.FormatTime(channel.lastseen)}</p>
-				</div>
-				<div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px">Delete</button></div>`;
+                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(channel.descriptor)}</h6>
+                    <p>${Utils.FormatTime(channel.lastseen)}</p>
+                </div>
+                <div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px">Delete</button></div>`;
             Utils.AttachEventToClass(listItem, 'SDC_DELETE', 'click', () => {
                 deleteChannel(channel);
                 list.removeChild(listItem);
@@ -657,21 +657,21 @@ const ShareKeyWindow = {
     html: `<div class="sdc">
 <div class="SDC_CLOSE sdc-cover"></div>
 <div class="sdc-overlay">
-	<div class="sdc-window" style="min-width: 580px">
-		<div style="margin:20px">
-			<h4>Share Keys</h4>
-		</div>
-		<a class="SDC_CLOSE sdc-close"></a>
-		<div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
-		<div class="SDC_LIST sdc-list">
-			<h5><p>Key</p><p style="margin-left:auto;width:94px">Share</p></h5>
+    <div class="sdc-window" style="min-width: 580px">
+        <div style="margin:20px">
+            <h4>Share Keys</h4>
+        </div>
+        <a class="SDC_CLOSE sdc-close"></a>
+        <div class="sdc-scroll" onscroll="this.style.boxShadow=this.scrollTop?'inset 0 1px 0 0 rgba(24,25,28,.3),inset 0 1px 2px 0 rgba(24,25,28,.3)':null" style="max-height:60vh">
+        <div class="SDC_LIST sdc-list">
+            <h5><p>Key</p><p style="margin-left:auto;width:94px">Share</p></h5>
 
-		</div>
-		</div>
-		<div class="sdc-footer">
-			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
-		</div>
-	</div>
+        </div>
+        </div>
+        <div class="sdc-footer">
+            <button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Done</button>
+        </div>
+    </div>
 </div>
 </div>`,
     Show: function(keys, shareKey) {
@@ -686,10 +686,10 @@ const ShareKeyWindow = {
         for(let key of keys) {
             let listItem = document.createElement('div');
             listItem.innerHTML = `<div>
-					<h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)}</h6>
-					<p>${Utils.FormatTime(key.lastseen)}</p>
-				</div>
-				<div class="sdc-listbox"><button type="button" class="SDC_SHARE sdc-wbtn" style="margin:0 4px">Share</button></div>`;
+                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)}</h6>
+                    <p>${Utils.FormatTime(key.lastseen)}</p>
+                </div>
+                <div class="sdc-listbox"><button type="button" class="SDC_SHARE sdc-wbtn" style="margin:0 4px">Share</button></div>`;
             Utils.AttachEventToClass(listItem, 'SDC_SHARE', 'click', function() {
                 shareKey(key);
                 this.disabled = true;
@@ -714,23 +714,23 @@ const MenuBar = {
     toggledOnCss: `.inner-zqa7da{box-shadow:0 0 0 1px ${BaseColor} !important}`,
     menuHtml: `<button type="button" class="SDC_FOCUS sdc-hidden"></button>
 <div class="sdc sdc-menu SDC_MENU" style="visibility:hidden">
-	<div class="SDC_DMMENU">
-		<a class="SDC_KEYART">Visualize Key</a>
-		<a class="SDC_KEYEXCHANGE">Start Key Exchange</a>
-		<a class="SDC_KEYSHARE">Share Keys</a>
-	</div>
-	<div class="SDC_GROUPMENU">
-		<a class="SDC_NEWKEY">Create Group Key</a>
-	</div>
-	<div>
-		<a class="SDC_KEYMANAGER">Key Manager</a>
-		<a class="SDC_CHMANAGER">Channel Manager</a>
-	</div>
-	<div>
-		<a class="SDC_EXPORTDB">Export Database</a>
-		<a class="SDC_NEWDBKEY">Change Database Key</a>
-		<a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
-	</div>
+    <div class="SDC_DMMENU">
+        <a class="SDC_KEYART">Visualize Key</a>
+        <a class="SDC_KEYEXCHANGE">Start Key Exchange</a>
+        <a class="SDC_KEYSHARE">Share Keys</a>
+    </div>
+    <div class="SDC_GROUPMENU">
+        <a class="SDC_NEWKEY">Create Group Key</a>
+    </div>
+    <div>
+        <a class="SDC_KEYMANAGER">Key Manager</a>
+        <a class="SDC_CHMANAGER">Channel Manager</a>
+    </div>
+    <div>
+        <a class="SDC_EXPORTDB">Export Database</a>
+        <a class="SDC_NEWDBKEY">Change Database Key</a>
+        <a class="SDC_NEWDB" style="color:#ff4031">New Database</a>
+    </div>
 </div>`,
     Show: function(getToggleStatus, toggle, getCurrentKeyDescriptor, getKeys, selectKey, getIsDmChannel, exportDb, exportDbRaw, newDb, newDbKey, keyExchange, groupKey, keyManager, channelManager, keyVisualizer, keyShare) {
         this.toggledOnStyle = document.createElement('style');
@@ -822,9 +822,9 @@ const MenuBar = {
             }
             clearTimeout(this.retryTimeout);
 
-			if(this.mutationObserver != null) this.mutationObserver.disconnect();
-			else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) { this.Update(); break; }});
-			
+            if(this.mutationObserver != null) this.mutationObserver.disconnect();
+            else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) { this.Update(); break; }});
+            
             let styleEnabled = document.head.contains(this.toggledOnStyle);
             let keySelectEnabled = document.body.contains(this.keySelect);
             let toggleOnEnabled = document.body.contains(this.toggleOnButton);
@@ -853,9 +853,9 @@ const MenuBar = {
                 menuDmGroup.style.display = 'none';
                 menuNondmGroup.style.display = null;
             }
-			
-			let randomChangesNode = document.getElementsByClassName('base-3dtUhz')[0];
-			if(randomChangesNode != null) this.mutationObserver.observe(randomChangesNode, { childList: true, subtree: true });
+            
+            let randomChangesNode = document.getElementsByClassName('base-3dtUhz')[0];
+            if(randomChangesNode != null) this.mutationObserver.observe(randomChangesNode, { childList: true, subtree: true });
         };
         this.Update();
     },
@@ -886,13 +886,13 @@ const PopupManager = {
     New: function(message, okCallback, cancelCallback) {
         let popup = document.createElement('div');
         popup.innerHTML = `<div class="sdc sdc-window" style="width:280px;position:fixed;right:50px;bottom:60px">
-	<div style="margin:20px;word-break:break-all;word-break:break-word">
-		${HtmlEscape(message)}
-	</div>
-	<div class="sdc-footer" style="padding:10px">
-		<button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p></button>
-		<button type="button" class="SDC_OK sdc-btn" style="min-width:96px">OK</button>
-	</div>
+    <div style="margin:20px;word-break:break-all;word-break:break-word">
+        ${HtmlEscape(message)}
+    </div>
+    <div class="sdc-footer" style="padding:10px">
+        <button type="button" class="SDC_CANCEL sdc-lnkbtn" style="min-width:96px"><p>Cancel</p></button>
+        <button type="button" class="SDC_OK sdc-btn" style="min-width:96px">OK</button>
+    </div>
 </div>
 <button type="button" class="SDC_FOCUS sdc-hidden"></button>`;
         Utils.AttachEventToClass(popup, 'SDC_OK', 'click', () => {
@@ -919,7 +919,7 @@ const PopupManager = {
             }
             else {
                 let popup = this.New(message, () => resolve(true), () => resolve(false));
-				if(typeof timeout === 'object') { timeout.cancel = () => { this.domElement.removeChild(popup); resolve(false); } };
+                if(typeof timeout === 'object') { timeout.cancel = () => { this.domElement.removeChild(popup); resolve(false); } };
             }
         });
     },
@@ -933,42 +933,42 @@ const KeyVisualizerWindow = {
 var ctx;
 
 function drawEmoji(emoji, x, y, size, rotation) {
-	ctx.save();
-	ctx.translate(x, y);
-	if(rotation) ctx.rotate(rotation * Math.PI / 180);
-	ctx.scale(size, size);
-	ctx.fillText(emoji, 0, 0);
-	ctx.restore();
+    ctx.save();
+    ctx.translate(x, y);
+    if(rotation) ctx.rotate(rotation * Math.PI / 180);
+    ctx.scale(size, size);
+    ctx.fillText(emoji, 0, 0);
+    ctx.restore();
 }
 function drawRectangle(color, x, y, width, height, rotation) {
-	ctx.save();
-	ctx.translate(x, y);
-	if(rotation) ctx.rotate(rotation * Math.PI / 180);
-	ctx.fillStyle = color;
-	ctx.fillRect(-width/2, -height/2, width, height);
-	ctx.restore();
+    ctx.save();
+    ctx.translate(x, y);
+    if(rotation) ctx.rotate(rotation * Math.PI / 180);
+    ctx.fillStyle = color;
+    ctx.fillRect(-width/2, -height/2, width, height);
+    ctx.restore();
 }
 var uintOffset = 0;
 var inUintOffset = 0;
 var uints = new DataView(hashBuffer);
 function popBits(count) { //max 32
-	let bits;
-	let newInUintOffset = inUintOffset + count;
-	if(newInUintOffset > 31) {
-		bits = uints.getUint32(uintOffset) & ~(~0 << (32 - inUintOffset));
-		inUintOffset = newInUintOffset - 32;
-		uintOffset += 4;
-		if(uintOffset === hashBuffer.byteLength) uintOffset = 0;
-		if(inUintOffset !== 0) {
-			bits = (bits << inUintOffset) | (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
-		}
-	}
-	else {
-		bits = (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) & ~(~0 << count);
-		inUintOffset = newInUintOffset;
-	}
+    let bits;
+    let newInUintOffset = inUintOffset + count;
+    if(newInUintOffset > 31) {
+        bits = uints.getUint32(uintOffset) & ~(~0 << (32 - inUintOffset));
+        inUintOffset = newInUintOffset - 32;
+        uintOffset += 4;
+        if(uintOffset === hashBuffer.byteLength) uintOffset = 0;
+        if(inUintOffset !== 0) {
+            bits = (bits << inUintOffset) | (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
+        }
+    }
+    else {
+        bits = (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) & ~(~0 << count);
+        inUintOffset = newInUintOffset;
+    }
 
-	return bits;
+    return bits;
 }
 
 ctx = canvas.getContext('2d');
@@ -981,196 +981,196 @@ ctx.scale(scale, scale);
 
 
 function drawSky() {
-	let color;
-	switch(popBits(3)) {
-	case 0: //purple
-		color = "#a254d3";
-	break;
-	case 1: //rose
-		color = "#f6c4df";
-	break;
-	case 2: //blue
-		color = "#2b7cb3";
-	break;
-	case 3: //darkblue
-		color = "#154167";
-	break;
-	default: //lightblue
-		color = "#9bcfea";
-	}
+    let color;
+    switch(popBits(3)) {
+    case 0: //purple
+        color = "#a254d3";
+    break;
+    case 1: //rose
+        color = "#f6c4df";
+    break;
+    case 2: //blue
+        color = "#2b7cb3";
+    break;
+    case 3: //darkblue
+        color = "#154167";
+    break;
+    default: //lightblue
+        color = "#9bcfea";
+    }
 
-	drawRectangle(color, 0, 0, 1000, 1000);
+    drawRectangle(color, 0, 0, 1000, 1000);
 }
 
 const airObjects = "☀️|🌑|☁️|🌩️|🌨️|🐉|🦇|🦅|🕊️|🐝|🦋|🍃|🚁|✈️|🛩️|🚀|🛸|🛰️|🌜|☄️|🌟|❄️|⚡|✨|🎈|👾|👻".split("|");
 function drawAirObject(x, y, size, rotation) {
-	if(popBits(1)) return;
+    if(popBits(1)) return;
 
-	drawEmoji(airObjects[popBits(5) % 27], x, y, size, rotation); //32-27 first 5 have double probability
+    drawEmoji(airObjects[popBits(5) % 27], x, y, size, rotation); //32-27 first 5 have double probability
 }
 const handEmojis = "👌|🖕|✌|👊|👍|👎|👋|👈|👉|☝|👆|👇|🤞|🖖|🤟|🤙|🖐|✋|✍|💰|💀|💩|💣|🥊|🎨|🎺|📷|🎥|🔦|💼|🔎|📕|✉️|✏️|📏|🔫|🔨|🔧|💉|🚬|🗝️|📞|🎮|🎓|🍆".split("|");
 function drawHandEmoji(x, y, size, rotation) {
-	drawEmoji(handEmojis[popBits(6) % 45], x, y, size, rotation);
+    drawEmoji(handEmojis[popBits(6) % 45], x, y, size, rotation);
 }
 const bodyEmojis = "👔|👕|🥋|🎽|🧥|👗|👘|👙|👚".split("|");
 const headEmojis = "🤔|😂|😤|😭|😋|🤗|😏|😳|😆|🤨|😎|🙄|😑|😍|😘|🙂|🤩|😶|😣|😮|🤐|😫|😴|😜|🤤|😒|🙃|🤑|☹️|😁|😖|😱|🤯|😬|🤪|😵|😡|🤒|🤢|🤮|🤧|😇|🤠|🤡|🤥|🤣|🤫|🧐|🤓|😈|💩|🤖|👽|💀|👺|👶|👩|👨|👴|👵|🤴|👳|👲|🧔|👱|🎅|🐵|🐶|🐺|🦊|🐱|🦁|🐯|🐴|🦄|🦓|🐮|🐷|🐗|🐭|🐹|🐰|🐻|🐸|🐲|🐔|🎃".split("|");
 function drawPerson(x, y, size) {
-	ctx.save();
-	ctx.translate(x, y);
-	let scale = size / 100;
-	ctx.scale(scale, scale);
+    ctx.save();
+    ctx.translate(x, y);
+    let scale = size / 100;
+    ctx.scale(scale, scale);
 
-	drawRectangle("#000", 0, -10, 4, 50); //body
-	drawRectangle("#000", -9, 26, 4, 30, 35); //legs
-	drawRectangle("#000", 9, 26, 4, 30, -35);
+    drawRectangle("#000", 0, -10, 4, 50); //body
+    drawRectangle("#000", -9, 26, 4, 30, 35); //legs
+    drawRectangle("#000", 9, 26, 4, 30, -35);
 
-	switch(popBits(2)) { //left arm
-	case 0: //up
-		drawRectangle("#000", -12, -23, 4, 30, -55);
-		drawHandEmoji(-26, -34, 15);
-	break;
-	case 1: //middle
-		drawRectangle("#000", -15, -15, 30, 4);
-		drawHandEmoji(-30, -18, 15);
-	break;
-	default: //down
-		drawRectangle("#000", -12, -8, 4, 30, 55);
-		drawHandEmoji(-26, -4, 15);
-	}
-	switch(popBits(2)) { //right arm
-	case 0: //up
-		drawRectangle("#000", 12, -23, 4, 30, 55);
-		drawHandEmoji(26, -34, 15);
-	break;
-	case 1: //middle
-		drawRectangle("#000", 15, -15, 30, 4);
-		drawHandEmoji(30, -18, 15);
-	break;
-	default: //down
-		drawRectangle("#000", 12, -8, 4, 30, -55);
-		drawHandEmoji(26, -4, 15);
-	}
+    switch(popBits(2)) { //left arm
+    case 0: //up
+        drawRectangle("#000", -12, -23, 4, 30, -55);
+        drawHandEmoji(-26, -34, 15);
+    break;
+    case 1: //middle
+        drawRectangle("#000", -15, -15, 30, 4);
+        drawHandEmoji(-30, -18, 15);
+    break;
+    default: //down
+        drawRectangle("#000", -12, -8, 4, 30, 55);
+        drawHandEmoji(-26, -4, 15);
+    }
+    switch(popBits(2)) { //right arm
+    case 0: //up
+        drawRectangle("#000", 12, -23, 4, 30, 55);
+        drawHandEmoji(26, -34, 15);
+    break;
+    case 1: //middle
+        drawRectangle("#000", 15, -15, 30, 4);
+        drawHandEmoji(30, -18, 15);
+    break;
+    default: //down
+        drawRectangle("#000", 12, -8, 4, 30, -55);
+        drawHandEmoji(26, -4, 15);
+    }
 
-	drawEmoji(bodyEmojis[popBits(4) % 9], 0, -5, 28); //chest
-	drawEmoji(headEmojis[popBits(12) % 87], 0, -35, 25); //face 4096 % 87 = first 7 have increased chance
+    drawEmoji(bodyEmojis[popBits(4) % 9], 0, -5, 28); //chest
+    drawEmoji(headEmojis[popBits(12) % 87], 0, -35, 25); //face 4096 % 87 = first 7 have increased chance
 
-	if(popBits(1)) drawEmoji("👟", -13, 35, 15); //left foot
-	if(popBits(1)) drawEmoji("👟", 19, 35, 15); //right foot
+    if(popBits(1)) drawEmoji("👟", -13, 35, 15); //left foot
+    if(popBits(1)) drawEmoji("👟", 19, 35, 15); //right foot
 
-	ctx.restore();
+    ctx.restore();
 }
 const tableObjects = "🍞|👓|🛍️|💎|🍎|🍇|🍉|🍊|🍋|🍌|🍏|🍐|🍑|🍒|🍓|🥝|🍅|🥥|🥔|🥕|🌽|🌶️|🥒|🥦|🍄|🥜|🥐|🥨|🥞|🧀|🍖|🍗|🥩|🥓|🍔|🍟|🍕|🌭|🥪|🌮|🥚|🍲|🥣|🥗|🍿|🥫|🍱|🍙|🍣|🥡|🍦|🍩|🎂|🥧|🍫|🍮|🍯|🍼|☕|🍷|🍸|🍺|🔪|🏺|🛎️|⏰|⌛|🌂|🎁|🏆|⚽|🎳|🔮|🕹️|🎲|📢|📻|🎧|🎤|☎️|💻|🖨️|📺|🕯️|📦|🔭|⚗️|🔬|⚖️|🥤|📚".split("|");
 function drawTableObject(x, y, size, rotation) {
-	if(popBits(1)) return;
+    if(popBits(1)) return;
 
-	drawEmoji(tableObjects[popBits(12) % 91], x, y, size, rotation);
+    drawEmoji(tableObjects[popBits(12) % 91], x, y, size, rotation);
 }
 function drawTable(x, y, size, rotation) {
-	ctx.save();
-	ctx.translate(x, y);
-	let scale = size / 100;
-	ctx.scale(scale, scale);
+    ctx.save();
+    ctx.translate(x, y);
+    let scale = size / 100;
+    ctx.scale(scale, scale);
 
-	drawRectangle("#999", 0, 33, 4, 34);
-	drawRectangle("#f00", 0, 14, 70, 4);
+    drawRectangle("#999", 0, 33, 4, 34);
+    drawRectangle("#f00", 0, 14, 70, 4);
 
-	drawTableObject(-25, 2, 20);
-	drawTableObject(-3, 2, 20);
-	drawTableObject(25, 2, 20);
+    drawTableObject(-25, 2, 20);
+    drawTableObject(-3, 2, 20);
+    drawTableObject(25, 2, 20);
 
-	ctx.restore();
+    ctx.restore();
 }
 const groundObjects = "🐉|💩|👯|👫|🚶🏻|🏃🏻|💃🏻|🕺🏻|🧘🏻|🕴🏻|🤺|🏇🏻|🏌🏻|⛹🏻|🏋🏻|🚴🏻|🤸🏻|🤼|🤾🏻|🐒|🦍|🐕|🐩|🐈|🐅|🐆|🐎|🦌|🐂|🐄|🐖|🐑|🐐|🐪|🐘|🦏|🐁|🐀|🐇|🐿️|🦔|🦃|🐓|🐧|🐤|🐦|🦆|🦉|🐊|🐢|🦎|🐍|🦕|🦖|🐌|🐛|🐜|🌹|🥀|🌻|🌼|🌷|🌱|🌲|🌳|🌴|🌵|🌾|🍀|⛩️|⛲|🎪|🛢️|🛵|🚲|🛴|🎏|🥅|🗑️|🗿|🏳️‍🌈|🚩|🏁|🏴|🏳️".split("|");
 function drawGroundObject(x, y, size, rotation) {
-	switch(popBits(2)) {
-	case 0:
-		drawPerson(x, y, size, rotation);
-	break;
-	case 1:
-		drawTable(x, y, size, rotation);
-	break;
-	case 2:
-		drawEmoji(groundObjects[popBits(8) % 85], x, y, size / 2, rotation);
-	break;
-	}
+    switch(popBits(2)) {
+    case 0:
+        drawPerson(x, y, size, rotation);
+    break;
+    case 1:
+        drawTable(x, y, size, rotation);
+    break;
+    case 2:
+        drawEmoji(groundObjects[popBits(8) % 85], x, y, size / 2, rotation);
+    break;
+    }
 }
 
 
 switch(popBits(2)) {
-	case 0: { //park
-		drawSky();
-		drawRectangle("#5ce64e", 0, 50, 200, 100, 1);
-		drawAirObject(-40, -27, 8);
-		drawAirObject(-16, -30, 10);
-		drawAirObject(17, -28, 9);
-		drawAirObject(41, -20, 10);
-		drawGroundObject(-37, 20, 30);
-		drawGroundObject(-10, 10, 23);
-		drawGroundObject(10, 0, 20);
-		drawGroundObject(15, 25, 20);
-		drawGroundObject(35, 20, 26);
-	} break;
-	case 1: { //beach
-		drawSky();
-		drawRectangle("#e5e886", 0, 50, 200, 100);
-		drawRectangle("#3cc", 0, 0, 200, 10, -.5);
-		drawAirObject(-40, -27, 8);
-		drawAirObject(-16, -30, 10);
-		drawAirObject(17, -28, 9);
-		drawAirObject(41, -20, 10);
-		drawGroundObject(-37, 20, 30);
-		drawGroundObject(-10, 10, 23);
-		drawGroundObject(10, 0, 20);
-		drawGroundObject(15, 25, 20);
-		drawGroundObject(35, 20, 26);
+    case 0: { //park
+        drawSky();
+        drawRectangle("#5ce64e", 0, 50, 200, 100, 1);
+        drawAirObject(-40, -27, 8);
+        drawAirObject(-16, -30, 10);
+        drawAirObject(17, -28, 9);
+        drawAirObject(41, -20, 10);
+        drawGroundObject(-37, 20, 30);
+        drawGroundObject(-10, 10, 23);
+        drawGroundObject(10, 0, 20);
+        drawGroundObject(15, 25, 20);
+        drawGroundObject(35, 20, 26);
+    } break;
+    case 1: { //beach
+        drawSky();
+        drawRectangle("#e5e886", 0, 50, 200, 100);
+        drawRectangle("#3cc", 0, 0, 200, 10, -.5);
+        drawAirObject(-40, -27, 8);
+        drawAirObject(-16, -30, 10);
+        drawAirObject(17, -28, 9);
+        drawAirObject(41, -20, 10);
+        drawGroundObject(-37, 20, 30);
+        drawGroundObject(-10, 10, 23);
+        drawGroundObject(10, 0, 20);
+        drawGroundObject(15, 25, 20);
+        drawGroundObject(35, 20, 26);
 
-	} break;
-	case 2: { //campfire
-		drawSky();
-		drawRectangle("#49be3d", 0, 50, 200, 100);
-		drawEmoji("🔥", 0, 10, 20);
-		drawRectangle("#333", 0, 20, 15, 5);
-		drawAirObject(-42, -20, 8);
-		drawAirObject(-25, -25, 10);
-		drawAirObject(22, -28, 9);
-		drawAirObject(41, -20, 10);
-		drawGroundObject(-37, 20, 30);
-		drawGroundObject(-13, 20, 23);
-		drawGroundObject(-35, -5, 20);
-		drawGroundObject(15, 25, 20);
-		drawGroundObject(35, 20, 26);
+    } break;
+    case 2: { //campfire
+        drawSky();
+        drawRectangle("#49be3d", 0, 50, 200, 100);
+        drawEmoji("🔥", 0, 10, 20);
+        drawRectangle("#333", 0, 20, 15, 5);
+        drawAirObject(-42, -20, 8);
+        drawAirObject(-25, -25, 10);
+        drawAirObject(22, -28, 9);
+        drawAirObject(41, -20, 10);
+        drawGroundObject(-37, 20, 30);
+        drawGroundObject(-13, 20, 23);
+        drawGroundObject(-35, -5, 20);
+        drawGroundObject(15, 25, 20);
+        drawGroundObject(35, 20, 26);
 
-	} break;
-	case 3: { //mountainslide
-		drawSky();
-		drawRectangle("#eff", 0, 50, 200, 100, -30);
-		drawAirObject(-42, -10, 8);
-		drawAirObject(-40, -25, 10);
-		drawAirObject(-15, -30, 9);
-		drawAirObject(15, -30, 10);
-		drawGroundObject(-37, 20, 30);
-		drawGroundObject(-10, 10, 23);
-		drawGroundObject(20, 0, 20);
-		drawGroundObject(15, 25, 20);
-		drawGroundObject(35, 20, 26);
+    } break;
+    case 3: { //mountainslide
+        drawSky();
+        drawRectangle("#eff", 0, 50, 200, 100, -30);
+        drawAirObject(-42, -10, 8);
+        drawAirObject(-40, -25, 10);
+        drawAirObject(-15, -30, 9);
+        drawAirObject(15, -30, 10);
+        drawGroundObject(-37, 20, 30);
+        drawGroundObject(-10, 10, 23);
+        drawGroundObject(20, 0, 20);
+        drawGroundObject(15, 25, 20);
+        drawGroundObject(35, 20, 26);
 
-	} break;
+    } break;
 }
 
 },
     html: `<div class="sdc">
 <div class="SDC_CLOSE sdc-cover"></div>
 <div class="sdc-overlay">
-	<div class="sdc-window">
-		<div style="margin:20px">
-			<h4>Key Visualizer v1.1</h4>
-		</div>
-		<a class="SDC_CLOSE sdc-close"></a>
-		<canvas class="SDC_ART" width="600" height="450"></canvas>
-		<div class="sdc-footer">
-			<button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Close</button>
-		</div>
-	</div>
+    <div class="sdc-window">
+        <div style="margin:20px">
+            <h4>Key Visualizer v1.1</h4>
+        </div>
+        <a class="SDC_CLOSE sdc-close"></a>
+        <canvas class="SDC_ART" width="600" height="450"></canvas>
+        <div class="sdc-footer">
+            <button type="button" class="SDC_CLOSE sdc-btn" style="min-width:96px">Close</button>
+        </div>
+    </div>
 </div>
 </div>`,
     Show: function(buffer) {
@@ -1366,10 +1366,10 @@ function Init(nonInvasive)
             let a = document.createElement('a');
             a.href = url;
             a.download = filename;
-    		a.style = "display:none"; 
-    		document.body.appendChild(a);
-    		a.click();
-    		document.body.removeChild(a);
+            a.style = "display:none"; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
         },
 
@@ -1451,22 +1451,22 @@ function Init(nonInvasive)
             return `${date === dateNow ? "Today at" : date} ${time}`;
         },
 
-		Intersect: (a, b) => {
-			let ai = 0,	bi = 0;
-			let alen = a.length, blen = b.length;
-			let result = [];
-			while(ai < alen && bi < blen) {
-				if(a[ai] < b[bi]) ai++;
-				else if(a[ai] > b[bi]) bi++;
-				else {
-					result.push(a[ai]);
-					ai++;
-					bi++;
-				}
-			}
-			return result;
-		},
-		
+        Intersect: (a, b) => {
+            let ai = 0,    bi = 0;
+            let alen = a.length, blen = b.length;
+            let result = [];
+            while(ai < alen && bi < blen) {
+                if(a[ai] < b[bi]) ai++;
+                else if(a[ai] > b[bi]) bi++;
+                else {
+                    result.push(a[ai]);
+                    ai++;
+                    bi++;
+                }
+            }
+            return result;
+        },
+        
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
         Sha512_128str: async function(string) { return await this.Sha512_128(this.StringToUtf8Bytes(string)) },
@@ -1958,31 +1958,31 @@ function Init(nonInvasive)
             delete channelConfig.w;
             this.dbChanged = true;
         },
-		messageDeleteListeners: {},
-		AddMessageDeleteListener: function(messageId, listener) {
-			let listeners = this.messageDeleteListeners[messageId];
-			if(listeners == null) this.messageDeleteListeners[messageId] = [listener];
-			else listeners.push(listener);
-		},
-		RemoveMessageDeleteListener: function(messageId, listener) {
-			let listeners = this.messageDeleteListeners[messageId];
-			if(listeners == null) return;
-			let index = listeners.indexOf(listener);
-			if(index === -1) return;
-			if(listeners.length === 1) { delete this.messageDeleteListeners[messageId]; return; }
-			listeners.splice(index, 1);
-		},
-		MessageDeleteEvent: function(messageId) {
-			let listeners = this.messageDeleteListeners[messageId];
-			if(listeners == null) return;
-			for(let listener of listeners) listener();
-		},
-		MessageDeleteBulkEvent: function(messageIdList) {
-			let listenerIds = Object.keys(this.messageDeleteListeners);
-			if(listenerIds.length === 0) return;
-			let foundIds = this.Intersect(messageIdList.sort(), listenerIds.sort());
-			for(let messageId of foundIds) this.MessageDeleteEvent();
-		},
+        messageDeleteListeners: {},
+        AddMessageDeleteListener: function(messageId, listener) {
+            let listeners = this.messageDeleteListeners[messageId];
+            if(listeners == null) this.messageDeleteListeners[messageId] = [listener];
+            else listeners.push(listener);
+        },
+        RemoveMessageDeleteListener: function(messageId, listener) {
+            let listeners = this.messageDeleteListeners[messageId];
+            if(listeners == null) return;
+            let index = listeners.indexOf(listener);
+            if(index === -1) return;
+            if(listeners.length === 1) { delete this.messageDeleteListeners[messageId]; return; }
+            listeners.splice(index, 1);
+        },
+        MessageDeleteEvent: function(messageId) {
+            let listeners = this.messageDeleteListeners[messageId];
+            if(listeners == null) return;
+            for(let listener of listeners) listener();
+        },
+        MessageDeleteBulkEvent: function(messageIdList) {
+            let listenerIds = Object.keys(this.messageDeleteListeners);
+            if(listenerIds.length === 0) return;
+            let foundIds = this.Intersect(messageIdList.sort(), listenerIds.sort());
+            for(let messageId of foundIds) this.MessageDeleteEvent();
+        },
         ongoingKeyExchanges: {},
         InitKeyExchange: async function(userId, autoOnMessage) {
             let currentUserId = Discord.getCurrentUser().id;
@@ -1999,10 +1999,11 @@ function Init(nonInvasive)
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyExchanges[userId] = true;
                     let user = Discord.getUser(userId);
-					let popupOverride = {};
-					let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, popupOverride);
-					this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); });
+                    let popupOverride = {};
+                    let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, popupOverride);
+                    this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); });
                     let force = await popup;
+                    this.RemoveMessageDeleteListener(autoOnMessage);
                     if(!force) return;
                 }
             }
@@ -2040,10 +2041,12 @@ function Init(nonInvasive)
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyRequests[requestId] = true;
                     let user = Discord.getUser(userId);
-					let popupOverride = {};
-					let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, popupOverride);
-					this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); });
-                    if(!await popup) return;
+                    let popupOverride = {};
+                    let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, popupOverride);
+                    this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); });
+                    let force = await popup;
+                    this.RemoveMessageDeleteListener(autoOnMessage);
+                    if(!force) return;
                 }
             }
             delete this.ongoingKeyRequests[requestId];
@@ -2117,31 +2120,31 @@ function Init(nonInvasive)
         let a = document.createElement('a');
         a.href = url;
         a.download = filename;
-		a.style = "display:none"; 
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
+        a.style = "display:none"; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     };
     Discord.window.SdcDecryptDl = async (filename, keyHash, url) => {
         let encryptedFileBuffer = await Utils.DownloadFile(url);
         let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
         Utils.DownloadBlob(filename, new File([fileBuffer], filename));
     };
-	Discord.window.SdcClearKeys = (filterFunc) => {
-		const typeLookup = [null, 'GROUP', 'CONVERSATION', 'PERSONAL'];
-		for(let [hash, keyObj] of Object.entries(DataBase.keys)) {
-			if(filterFunc({ type: typeLookup[keyObj.t], lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: !!keyObj.h, registered: keyObj.r }))
-				Utils.DeleteKey(hash);
-		}
-	};
-	Discord.window.SdcClearChannels = (filterFunc) => {
-		for(let [hash, channelObj] of Object.entries(DataBase.channels)) {
-			if(filterFunc({ lastseen: channelObj.l, descriptor: Utils.FormatDescriptor(channelObj.d), encrypted: !!channelObj.e }))
-				Utils.DeleteChannelConfig(hash);
-		}
-	};
-	
-	
+    Discord.window.SdcClearKeys = (filterFunc) => {
+        const typeLookup = [null, 'GROUP', 'CONVERSATION', 'PERSONAL'];
+        for(let [hash, keyObj] of Object.entries(DataBase.keys)) {
+            if(filterFunc({ type: typeLookup[keyObj.t], lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: !!keyObj.h, registered: keyObj.r }))
+                Utils.DeleteKey(hash);
+        }
+    };
+    Discord.window.SdcClearChannels = (filterFunc) => {
+        for(let [hash, channelObj] of Object.entries(DataBase.channels)) {
+            if(filterFunc({ lastseen: channelObj.l, descriptor: Utils.FormatDescriptor(channelObj.d), encrypted: !!channelObj.e }))
+                Utils.DeleteChannelConfig(hash);
+        }
+    };
+    
+    
     const mirrorFunction = (moduleName, functionName) => {
         Discord[`original_${functionName}`] = modules[moduleName][functionName];
         Discord[functionName] = function() { return Discord[`original_${functionName}`].apply(Discord.modules[moduleName], arguments) };
@@ -2453,20 +2456,20 @@ async function decryptMessage(message, payload) {
         if(!DataBase.isSecondary) {
             if(message.author != null) Utils.InitKeyExchange(message.author.id, message.id);
 
-			let messageDeleted = false;
-			let messageDeleteException = new Promise((resolve) => Utils.AddMessageDeleteListener(message.id, () => { messageDeleted = true; resolve(); }));
+            let messageDeleted = false;
+            let messageDeleteException = new Promise((resolve) => Utils.AddMessageDeleteListener(message.id, () => { messageDeleted = true; resolve(); }));
 
             for(let i = 1; i <= 10; i++) {
                 await Promise.race([Utils.Sleep(i * 200), messageDeleteException]);
-				if(messageDeleted) return true;
+                if(messageDeleted) return true;
 
                 key = await Utils.GetKeyByHash(keyHashBase64);
                 if(key != null) break;
 
                 if(message.author != null) Utils.RequestKey(keyHashBase64, message.author.id, message.id);
             }
-			
-			Utils.RemoveMessageDeleteListener(message.id);
+            
+            Utils.RemoveMessageDeleteListener(message.id);
         }
         if(key == null) {
             message.content = unknownKeyMessage;
@@ -2755,16 +2758,16 @@ async function handleChannelSelect(event) {
         Cache.channelConfig = Utils.GetChannelConfig(channelId);
 
         setTimeout(() => { MenuBar.Update() }, 0);
-		setTimeout(() => { PopupManager.Update() }, 0);
-		//Update after event is processed by Discord
+        setTimeout(() => { PopupManager.Update() }, 0);
+        //Update after event is processed by Discord
     }
 }
 
 async function handleDelete(event) {
-	Utils.MessageDeleteEvent(event.id);
+    Utils.MessageDeleteEvent(event.id);
 }
 async function handleDeletes(event) {
-	Utils.MessageDeleteBulkEvent(event.ids);
+    Utils.MessageDeleteBulkEvent(event.ids);
 }
 
 
@@ -2867,8 +2870,8 @@ const eventHandlers = {
     'SEARCH_FINISH': handleSearch,
     'MESSAGE_CREATE': handleMessage,
     'MESSAGE_UPDATE': handleMessage,
-	'MESSAGE_DELETE': handleDelete,
-	'MESSAGE_DELETE_BULK': handleDeletes
+    'MESSAGE_DELETE': handleDelete,
+    'MESSAGE_DELETE_BULK': handleDeletes
 }
 
 var messageLocks = [];
@@ -2932,9 +2935,9 @@ function Load()
     modules.MessageDispatcher.dispatch = function(event){(async () => {
         let handler = eventHandlers[event.type];
         if(handler) {
-			let suppress = await handler(event);
-			if(suppress) return;
-		}
+            let suppress = await handler(event);
+            if(suppress) return;
+        }
 
         Discord.original_dispatch.apply(this, arguments);
     })()};
