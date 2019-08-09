@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.3
+// @version      1.2.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -883,7 +883,7 @@ const PopupManager = {
         if(!document.body.contains(this.domElement))
             document.body.appendChild(this.domElement);
     },
-    New: function(message, okCallback, cancelCallback) {
+    New: function(message, okCallback, cancelCallback, ontop) {
         let popup = document.createElement('div');
         popup.innerHTML = `<div class="sdc sdc-window" style="width:280px;position:fixed;right:50px;bottom:60px">
     <div style="margin:20px;word-break:break-all;word-break:break-word">
@@ -903,22 +903,23 @@ const PopupManager = {
             this.domElement.removeChild(popup);
             if(cancelCallback) cancelCallback();
         });
-        this.domElement.prepend(popup);
+        if(ontop) this.domElement.appendChild(popup);
+        else this.domElement.prepend(popup);
         return popup;
     },
-    NewPromise: function(message, timeout) {
+    NewPromise: function(message, ontop, timeout) {
         return new Promise((resolve) => {
             if(timeout > 0) {
                 let cancelTimeout;
                 let popup = this.New(message,
                                      () => { clearTimeout(cancelTimeout); resolve(true); },
-                                     () => { clearTimeout(cancelTimeout); resolve(false); }
-                                     );
+                                     () => { clearTimeout(cancelTimeout); resolve(false); },
+                                     ontop);
 
                 cancelTimeout = setTimeout(() => { this.domElement.removeChild(popup); resolve(false); }, timeout);
             }
             else {
-                let popup = this.New(message, () => resolve(true), () => resolve(false));
+                let popup = this.New(message, () => resolve(true), () => resolve(false), ontop);
                 if(typeof timeout === 'object') { timeout.cancel = () => { this.domElement.removeChild(popup); resolve(false); } };
             }
         });
@@ -2020,13 +2021,13 @@ function Init(nonInvasive)
                     this.ongoingKeyExchanges[userId] = true;
                     if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
-                    let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, popupOverride);
+                    let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, false, popupOverride);
                     const autoCancel = () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); };
                     this.AddMessageDeleteListener(autoOnMessage, autoCancel);
                     this.AddKeyShareListener(autoOnKey, autoCancel);
                     let force = await popup;
                     this.RemoveMessageDeleteListener(autoOnMessage, autoCancel);
-                    this.AddKeyShareListener(autoOnKey, autoCancel);
+                    this.RemoveKeyShareListener(autoOnKey, autoCancel);
                     if(!force) return;
                 }
             }
@@ -2066,7 +2067,7 @@ function Init(nonInvasive)
                     this.ongoingKeyRequests[requestId] = true;
                     if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
-                    let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, popupOverride);
+                    let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, true, popupOverride);
                     const autoCancel = () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); };
                     this.AddMessageDeleteListener(autoOnMessage, autoCancel);
                     this.AddKeyShareListener(keyHash, autoCancel);
@@ -2095,7 +2096,7 @@ function Init(nonInvasive)
             }
             if(nonForced != null && (nonForced || keyObj.h/*hidden*/)) {
                 if(user.username == null) user = Discord.getUser(user.id);
-                if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) {
+                if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`, true)) {
                     this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
                     return;
                 }
@@ -2628,7 +2629,7 @@ async function processSystemMessage(message, sysmsg) {
             if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
                 if(!keyExchangeWhitelist[userId]) {
                     //let user = Discord.getUser(userId);
-                    if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${message.author.username}#${message.author.discriminator}`)) return false;
+                    if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${message.author.username}#${message.author.discriminator}`, true)) return false;
                     keyExchangeWhitelist[userId] = true;
                 }
             }
