@@ -2047,7 +2047,7 @@ function Init(nonInvasive)
         },
         ongoingKeyRequests: {},
         RequestKey: async function(keyHash, user, autoOnMessage) {
-			let userId = user.id;
+            let userId = user.id;
             if(DataBase.keys[keyHash] != null) return;
 
             let channelId = Discord.getDMFromUserId(userId);
