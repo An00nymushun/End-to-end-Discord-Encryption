@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.1
+// @version      1.2.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -903,7 +903,7 @@ const PopupManager = {
             this.domElement.removeChild(popup);
             if(cancelCallback) cancelCallback();
         });
-        this.domElement.appendChild(popup);
+        this.domElement.prepend(popup);
         return popup;
     },
     NewPromise: function(message, timeout) {
@@ -1617,7 +1617,7 @@ function Init(nonInvasive)
 
         dbChanged: false,
         LoadDb: function(callback, failCallback, reload) { (async () => {
-            if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');Discord.window.DataBase = DataBase;
+            if(!reload) DataBase = await this.StorageLoad('SimpleDiscordCrypt');
             if(DataBase != null) {
                 Cache = { keys: {} };
 
@@ -1983,8 +1983,28 @@ function Init(nonInvasive)
             let foundIds = this.Intersect(messageIdList.sort(), listenerIds.sort());
             for(let messageId of foundIds) this.MessageDeleteEvent();
         },
+        keyShareListeners: {},
+        AddKeyShareListener: function(keyHash, listener) {
+            let listeners = this.keyShareListeners[keyHash];
+            if(listeners == null) this.keyShareListeners[keyHash] = [listener];
+            else listeners.push(listener);
+        },
+        RemoveKeyShareListener: function(keyHash, listener) {
+            let listeners = this.keyShareListeners[keyHash];
+            if(listeners == null) return;
+            let index = listeners.indexOf(listener);
+            if(index === -1) return;
+            if(listeners.length === 1) { delete this.keyShareListeners[keyHash]; return; }
+            listeners.splice(index, 1);
+        },
+        KeyShareEvent: function(keyHash) {
+            let listeners = this.keyShareListeners[keyHash];
+            if(listeners == null) return;
+            for(let listener of listeners) listener();
+        },
         ongoingKeyExchanges: {},
-        InitKeyExchange: async function(userId, autoOnMessage) {
+        InitKeyExchange: async function(user, autoOnMessage, autoOnKey) {
+            let userId = user.id;
             let currentUserId = Discord.getCurrentUser().id;
             if(userId === currentUserId) return;
 
@@ -1998,12 +2018,15 @@ function Init(nonInvasive)
                 if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyExchanges[userId] = true;
-                    let user = Discord.getUser(userId);
+                    if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
                     let popup = PopupManager.NewPromise(`Would you like to initiate key exchange with ${user.username}#${user.discriminator}?`, popupOverride);
-                    this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); });
+                    const autoCancel = () => { delete this.ongoingKeyExchanges[userId]; popupOverride.cancel(); };
+                    this.AddMessageDeleteListener(autoOnMessage, autoCancel);
+                    this.AddKeyShareListener(autoOnKey, autoCancel);
                     let force = await popup;
-                    this.RemoveMessageDeleteListener(autoOnMessage);
+                    this.RemoveMessageDeleteListener(autoOnMessage, autoCancel);
+                    this.AddKeyShareListener(autoOnKey, autoCancel);
                     if(!force) return;
                 }
             }
@@ -2023,7 +2046,8 @@ function Init(nonInvasive)
             this.dbChanged = true;
         },
         ongoingKeyRequests: {},
-        RequestKey: async function(keyHash, userId, autoOnMessage) {
+        RequestKey: async function(keyHash, user, autoOnMessage) {
+			let userId = user.id;
             if(DataBase.keys[keyHash] != null) return;
 
             let channelId = Discord.getDMFromUserId(userId);
@@ -2040,12 +2064,15 @@ function Init(nonInvasive)
                     if(this.ongoingKeyRequests[requestId]) return;
                     if(this.ongoingKeyExchanges[userId]) return;
                     this.ongoingKeyRequests[requestId] = true;
-                    let user = Discord.getUser(userId);
+                    if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
                     let popup = PopupManager.NewPromise(`Would you like to request key from ${user.username}#${user.discriminator}`, popupOverride);
-                    this.AddMessageDeleteListener(autoOnMessage, () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); });
+                    const autoCancel = () => { delete this.ongoingKeyRequests[requestId]; popupOverride.cancel(); };
+                    this.AddMessageDeleteListener(autoOnMessage, autoCancel);
+                    this.AddKeyShareListener(keyHash, autoCancel);
                     let force = await popup;
-                    this.RemoveMessageDeleteListener(autoOnMessage);
+                    this.RemoveMessageDeleteListener(autoOnMessage, autoCancel);
+                    this.RemoveKeyShareListener(keyHash, autoCancel);
                     if(!force) return;
                 }
             }
@@ -2060,14 +2087,14 @@ function Init(nonInvasive)
             channelConfig.w = 1;
             this.dbChanged = true;
         },
-        ShareKey: async function(keyHash, channelId, nonForced, userId) {
+        ShareKey: async function(keyHash, channelId, nonForced, user) {
             let keyObj = DataBase.keys[keyHash];
             if(keyObj == null) {
                 this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
                 return;
             }
             if(nonForced != null && (nonForced || keyObj.h/*hidden*/)) {
-                let user = Discord.getUser(userId);
+                if(user.username == null) user = Discord.getUser(user.id);
                 if(!await PopupManager.NewPromise(`Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${user.discriminator}`)) {
                     this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
                     return;
@@ -2109,6 +2136,10 @@ function Init(nonInvasive)
 
             delete channelConfig.w;
             this.dbChanged = true;
+        },
+        UpdateMessageContent: (message) => {
+            if(message.edited_timestamp == null) message.edited_timestamp = message.timestamp;
+            Discord.dispatch({type: 'MESSAGE_UPDATE', message});
         }
     });
 //Discord.window.SdcUtils = Utils;
@@ -2251,7 +2282,16 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         return;
     }
 
-    let placeholder = {
+    let spoiler = filename.startsWith('SPOILER_');
+    
+    let placeholder = (spoiler && mediaType === 'img') ? {
+        type: 'rich',
+        thumbnail: {
+            url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+            width: 1,
+            height: 80
+        }
+    } : {
         type: 'image',
         thumbnail: {
             url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
@@ -2279,7 +2319,6 @@ async function decryptAttachment(key, keyHash, message, attachment) {
         let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
         let blob = new File([fileBuffer], filename);
         let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
-        let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
         let url;
         let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(filename)},'${bloburl}')`;
 
@@ -2290,8 +2329,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             let tmpMedia = document.createElement(mediaType);
             if(mediaType === 'video') {
                 await (new Promise((resolve) => {
-                    //tmpMedia.onloadedmetadata = resolve;
-                    tmpMedia.onloadeddata = resolve; //wait more so we can make a cover image
+                    tmpMedia.onloadeddata = () => { tmpMedia.ontimeupdate = resolve; tmpMedia.currentTime = 0; };
                     tmpMedia.src = url;
                 }));
                 width = tmpMedia.videoWidth;
@@ -2300,6 +2338,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                 canvas.width = width;
                 canvas.height = height;
                 let ctx = canvas.getContext('2d');
+                if(spoiler) ctx.filter = "blur(50px)";
                 ctx.drawImage(tmpMedia, 0, 0);
 
                 Object.assign(placeholder, {
@@ -2320,7 +2359,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                 height = tmpMedia.height;
 
                 Object.assign(placeholder, {
-                    type: 'image',
+                    type: spoiler ? 'rich' : 'image',
                     url: downloadUrl,
                     thumbnail: {
                         url: downloadUrl,
@@ -2328,10 +2367,11 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                         width,
                         height
                     }
-            });
+                });
             }
         }
         else {
+            let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
             url = `https://media.discordapp.net/attachments/479272118538862592/479272171944804377/keylogo.png#${id}`;
             let bitmap = await createImageBitmap(blob);
             width = bitmap.width;
@@ -2340,7 +2380,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             Patcher.Images[id] = blob;
 
             Object.assign(placeholder, {
-                type: 'image',
+                type: spoiler ? 'rich' : 'image',
                 url: downloadUrl,
                 thumbnail: {
                     url: downloadUrl,
@@ -2359,16 +2399,29 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             if(messageContainer.scrollTop + 1 >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
 
             let displayHeight = height;
-            if(width > 400 || height > 300) { //image will be resized
-                if(width / 400 > height / 300) { //scale by with
-                    displayHeight = Math.round(height / (width / 400));
+            if(!spoiler) {
+                if(width > 400 || height > 300) { //image will be resized
+                    if(width / 400 > height / 300) { //scale by with
+                        displayHeight = Math.round(height / (width / 400));
+                    }
+                    else { //scale by height
+                        displayHeight = 300;
+                    }
                 }
-                else { //scale by height
-                    displayHeight = 300;
+                if(displayHeight != 300) messageContainer.scrollTop += 300 - displayHeight;
+            }
+            else {
+                if(width > 80 || height > 80) { //image will be resized
+                    if(width > height) {
+                        displayHeight = Math.round(height / (width / 80));
+                    }
+                    else {
+                        displayHeight = 80;
+                    }
                 }
+                if(displayHeight != 80) messageContainer.scrollTop += 80 - displayHeight;
             }
 
-            if(displayHeight != 300) messageContainer.scrollTop += 300 - displayHeight;
         }
     })();
 }
@@ -2446,6 +2499,16 @@ function postProcessMessage(message, content) {
     urlRegex.lastIndex = 0;
 }
 
+let keywaitingMessages = {};
+async function decryptWaitingMessages(keyHash) {
+    let waitingMessages = keywaitingMessages[keyHash];
+    if(waitingMessages == null) return;
+    for(let [message, payload, originalRef] of waitingMessages) {
+        decryptMessage(Object.assign(originalRef, message), payload).then(() => Utils.UpdateMessageContent(originalRef));
+    }
+    delete keywaitingMessages[keyHash];
+}
+
 async function decryptMessage(message, payload) {
     let payloadBuffer = Utils.PayloadDecode(payload).buffer;
     let keyHashBytes = payloadBuffer.slice(0, 16);
@@ -2453,29 +2516,38 @@ async function decryptMessage(message, payload) {
     let key = await Utils.GetKeyByHash(keyHashBase64);
 
     if(key == null) {
+        let messageDeleted = false;
         if(!DataBase.isSecondary) {
-            if(message.author != null) Utils.InitKeyExchange(message.author.id, message.id);
+            if(message.author != null) Utils.InitKeyExchange(message.author, message.id, keyHashBase64);
 
-            let messageDeleted = false;
-            let messageDeleteException = new Promise((resolve) => Utils.AddMessageDeleteListener(message.id, () => { messageDeleted = true; resolve(); }));
+            let onMessageDelete;
+            let messageDeleteException = new Promise((resolve) => {
+                onMessageDelete = () => { messageDeleted = true; resolve(); };
+                Utils.AddMessageDeleteListener(message.id, onMessageDelete);
+            });
 
-            for(let i = 1; i <= 10; i++) {
+            for(let i = 1; i <= 5; i++) {
                 await Promise.race([Utils.Sleep(i * 200), messageDeleteException]);
-                if(messageDeleted) return true;
+                if(messageDeleted) break;
 
                 key = await Utils.GetKeyByHash(keyHashBase64);
                 if(key != null) break;
 
-                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author.id, message.id);
+                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author, message.id);
             }
             
-            Utils.RemoveMessageDeleteListener(message.id);
+            Utils.RemoveMessageDeleteListener(message.id, onMessageDelete);
         }
         if(key == null) {
+            if(!messageDeleted) {
+                let waitingMessages = keywaitingMessages[keyHashBase64];
+                if(waitingMessages == null) keywaitingMessages[keyHashBase64] = waitingMessages = [];
+                waitingMessages.push([Object.assign({}, message), payload, message]);
+            }
             message.content = unknownKeyMessage;
             message.embeds = [];
             message.attachments = [];
-            return;
+            return messageDeleted;
         }
     }
 
@@ -2493,25 +2565,26 @@ async function decryptMessage(message, payload) {
         catch(e) {
             message.content = invalidMessage;
             message.attachments = [];
-            return;
+            return false;
         }
         message.content = "<:ENC:465534298662109185>" + content;
         //message.content = content.replace(/^/gm, "<:ENC:465534298662109185>"); //bad for code blocks
         postProcessMessage(message, content);
     }
 
-    if(message.attachments == null) return;
-
-    let attachments = message.attachments;
-    message.attachments = [];
-    for(let attachment of attachments) {
-        try {
-            await decryptAttachment(key, keyHashBase64, message, attachment);
-        }
-        catch(e) {
-            attachment.filename = "-----ENCRYPTED FILE FAILED TO DECRYPT-----";
+    if(message.attachments.length !== 0) {
+        let attachments = message.attachments;
+        message.attachments = [];
+        for(let attachment of attachments) {
+            try {
+                await decryptAttachment(key, keyHashBase64, message, attachment);
+            }
+            catch(e) {
+                attachment.filename = "-----ENCRYPTED FILE FAILED TO DECRYPT-----";
+            }
         }
     }
+    return false;
 }
 
 function getSystemMessageProperty(propertyName, sysmsg) {
@@ -2526,7 +2599,7 @@ const blockedSystemMessage = "```fix\n-----SYSTEM MESSAGE BLOCKED-----\n```";
 var keyExchangeWhitelist = {};
 async function processSystemMessage(message, sysmsg) {
     let channel = Discord.getChannel(message.channel_id);
-    if(channel.type !== 1/*DM*/) return;
+    if(channel.type !== 1/*DM*/) return false;
 
     message.embeds = [];
     let timestamp = new Date(message.timestamp).getTime();
@@ -2554,8 +2627,8 @@ async function processSystemMessage(message, sysmsg) {
         if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
             if(messageType === 'DH KEY' || messageType === 'DH RESPONSE' || messageType === 'PERSONAL KEY' || messageType === 'KEY SHARE') {
                 if(!keyExchangeWhitelist[userId]) {
-                    let user = Discord.getUser(userId);
-                    if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${user.username}#${user.discriminator}`)) return;
+                    //let user = Discord.getUser(userId);
+                    if(!await PopupManager.NewPromise(`Would you like to accept key exchange from ${message.author.username}#${message.author.discriminator}`)) return false;
                     keyExchangeWhitelist[userId] = true;
                 }
             }
@@ -2566,7 +2639,7 @@ async function processSystemMessage(message, sysmsg) {
     switch(messageType) {
         case 'DH KEY': {
             message.content = "💻 H-hi I would like to know you better";
-            if(oldMessage) return;
+            if(oldMessage) return false;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
             if(dhKeyPayload == null) break;
@@ -2595,12 +2668,13 @@ async function processSystemMessage(message, sysmsg) {
 
                 channelConfig.w = 1; //waitingForSystemMessage
                 Utils.dbChanged = true;
+                decryptWaitingMessages(keyHash);
             }
             catch(e) { break }
-        } return;
+        } return true;
         case 'DH RESPONSE': {
             message.content = "💻 I like you :3, you can have my number";
-            if(oldMessage) return;
+            if(oldMessage) return false;
 
             let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
             if(dhKeyPayload == null) break;
@@ -2625,15 +2699,18 @@ async function processSystemMessage(message, sysmsg) {
 
                 let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
                 if(remotePersonalKey.byteLength !== 32) break;
-                await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
+                let remotePersonalKeyHash = await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
 
                 await Utils.SendPersonalKey(message.channel_id);
+                
+                decryptWaitingMessages(keyHash);
+                decryptWaitingMessages(remotePersonalKeyHash);
             }
             catch(e) { break }
-        } return;
+        } return true;
         case 'PERSONAL KEY': {
             message.content = "💻 Here is my number, now we can talk any time!!";
-            if(oldMessage) return;
+            if(oldMessage) return false;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
             if(keyHashPayload == null) break;
@@ -2644,32 +2721,33 @@ async function processSystemMessage(message, sysmsg) {
                 let key = await Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
-                    return;
+                    return true;
                 }
 
                 let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
                 if(remotePersonalKey.byteLength !== 32) break;
-                await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
+                let remotePersonalKeyHash = await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
                 delete keyExchangeWhitelist[userId];
+                decryptWaitingMessages(remotePersonalKeyHash);
             }
             catch(e) { break }
-        } return;
+        } return true;
         case 'KEY REQUEST': {
             message.content = "💻 Hey, can you tell me what this means?";
-            if(oldMessage) return;
+            if(oldMessage) return false;
 
             let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
             if(requestedKeyPayload == null) break;
             try {
                 let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
 
-                Utils.ShareKey(keyHash, message.channel_id, nonForced, userId); //no need to wait
+                Utils.ShareKey(keyHash, message.channel_id, nonForced, message.author); //no need to wait
             }
             catch(e) { break }
-        } return;
+        } return true;
         case 'KEY SHARE': {
             let status = getSystemMessageProperty('status', sysmsg);
             const statusMsgs = {
@@ -2680,7 +2758,7 @@ async function processSystemMessage(message, sysmsg) {
             let statusMsg = statusMsgs[status];
             if(statusMsg == null) break;
             message.content = statusMsg;
-            if(oldMessage || status !== 'OK') return;
+            if(oldMessage || status !== 'OK') return false;
 
             let keyHashPayload = getSystemMessageProperty('key', sysmsg);
             if(keyHashPayload == null) break;
@@ -2695,7 +2773,7 @@ async function processSystemMessage(message, sysmsg) {
                 let key = await Utils.GetKeyByHash(keyHash);
                 if(key == null) {
                     message.content = unknownKeySystemMessage;
-                    return;
+                    return true;
                 }
 
                 let sharedKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
@@ -2705,23 +2783,33 @@ async function processSystemMessage(message, sysmsg) {
                 if(keyType == null) break;
 
                 let sharedKeyHash = await Utils.SaveKey(sharedKey, keyType, keyDescriptor);
+                Utils.KeyShareEvent(sharedKeyHash);
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
                 delete keyExchangeWhitelist[userId];
 
                 let sharedChannelsJson = getSystemMessageProperty('sharedChannels', sysmsg);
-                if(sharedChannelsJson == null) return;
+                if(sharedChannelsJson == null) return true;
                 let sharedChannels = JSON.parse(sharedChannelsJson);
                 for(let channelId of sharedChannels) {
                     if(DataBase.channels[channelId] != null) continue;
-                    Utils.NewChannelConfig(channelId, sharedKeyHash);
+                    let sharedChannelConfig = Utils.NewChannelConfig(channelId, sharedKeyHash);
+                    if(channelId === Cache.channelId) {
+                        Cache.channelConfig = sharedChannelConfig;
+                        MenuBar.Update();
+                    }
                 }
+                decryptWaitingMessages(sharedKeyHash);
             }
             catch(e) { break }
-        } return;
+        } return true;
+        default:
+            message.content = invalidSystemMessage;
+            return false;
     }
     message.content = invalidSystemMessage;
+    return true;
 }
 
 const descriptionRegex = /^[⠀-⣿]{16,}$/;
@@ -2737,7 +2825,7 @@ async function processEmbeds(message) {
         return await decryptMessage(message, embed.description);
     }
     else if(embed.author.name === "-----SYSTEM MESSAGE-----") {
-        processSystemMessage(message, embed.description);
+        processSystemMessage(message, embed.description).then((delayed) => { if(delayed) Utils.UpdateMessageContent(message); } );
     }
 }
 
@@ -2836,13 +2924,18 @@ async function handleSend(channelId, message, forceSimple) {
 
 const filenameLimit = 47;
 const filenameRegex = /^(.*?)((?:\.[^.]*)?)$/;
-async function handleUpload(channelId, file, message) {
+async function handleUpload(channelId, file, message, spoiler) {
     let key = await handleSend(channelId, message, true);
-    if(key == null) return file;
+    if(key == null) return arguments;
 
-    let filenameParts = filenameRegex.exec(file.name);
+    let filename = file.name;
+    if(spoiler) {
+        arguments[3] = false;
+        if(!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
+    }
+    let filenameParts = filenameRegex.exec(filename);
     let filenameMax = filenameLimit - filenameParts[2].length;
-    let filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
+    filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
 
     try {
         let encryptedFilename;
@@ -2853,11 +2946,12 @@ async function handleUpload(channelId, file, message) {
         } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
-        return new File([encryptedBuffer], encryptedFilename);
+        arguments[1] = new File([encryptedBuffer], encryptedFilename);
     }
     catch(e) {
-        return null;
+        arguments[1] = null;
     }
+    return arguments;
 }
 
 const eventHandlers = {
@@ -2942,11 +3036,11 @@ function Load()
         Discord.original_dispatch.apply(this, arguments);
     })()};
 
-    modules.FileUploader.upload = function(channelId, file, message){(async () => {
+    modules.FileUploader.upload = function(){(async () => {
 
-        arguments[1] = await handleUpload(channelId, file, message);
+        let argumentsOverride = await handleUpload.apply(null, arguments);
 
-        Discord.original_upload.apply(this, arguments);
+        Discord.original_upload.apply(this, argumentsOverride);
     })()};
 
     /*modules.MessageCache.prototype._merge = function(messages) {
@@ -2991,7 +3085,7 @@ function Load()
                  () => Utils.DownloadDb(true),
                  () => Utils.NewDb(() => { Utils.RefreshCache(); MenuBar.Update(); }),
                  () => Utils.NewDbPassword(),
-                 () => Utils.InitKeyExchange(Utils.GetCurrentDmUserId()),
+                 () => Utils.InitKeyExchange({id:Utils.GetCurrentDmUserId()}),
                  async () => { Utils.SetCurrentChannelKey(await Utils.SaveKey(Utils.GetRandomBytes(32), 1/*group*/, `Group <#${Cache.channelId}>`)); MenuBar.Update(); },
                  () => {
         let personalKeyHash = DataBase.personalKeyHash;
@@ -3084,7 +3178,6 @@ function Load()
                         let addedNode = mutation.addedNodes[0];
                         if(addedNode == null || addedNode.getElementsByTagName == null) continue;
 
-                        let replaceImages = Patcher.Images;
                         for(let img of addedNode.getElementsByTagName('img')) {
                             tryReplaceImage(img);
                         }
