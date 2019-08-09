@@ -50,6 +50,43 @@ The database password is optional but the database isn't! The database stores st
 You should only have one database as having multiple will mess things up. In order to manage this, you should keep backups by exporting your database.<br>
 If you are using multiple devices with the same account, select one as the main and import its database as secondary to the other(s).<br>
 If you import the database as secondary you can still export it and import it normally again. The difference is that a client with the secondary setting will ignore key exchanges, which means you have to update your secondary devices with the new database.<br>
+##### Cleaning the database <sub>You can paste these into the Ctrl+Shift+I console</sub>
+<details><summary>SdcClearChannels(filterFunc)</summary>
+
+```js
+deleteBefore = (now = new Date()).setMonth(now.getMonth() - 6);
+SdcClearChannels((channel) => (
+    //Number(channel.lastseen) ms precision unix timestamp
+    //String(channel.descriptor) descriptor from the channel manager
+    //Boolean(channel.encrypted) is the encryption toggled on
+
+    channel.lastseen < deleteBefore && //not seen in 6 months
+    /^DM with \d{17,20}$/.test(channel.descriptor) //name resolution failed
+
+    //'true' return value deletes the record
+));
+```
+</details>
+<details><summary>SdcClearKeys(filterFunc)</summary>
+
+```js
+deleteBefore = (now = new Date()).setMonth(now.getMonth() - 6);
+SdcClearKeys((key) => (
+    //Number(key.lastseen) ms precision unix timestamp
+    //String(key.descriptor) descriptor from the key manager
+    //Boolean(key.hidden) is the key hidden
+    //String(key.type) one of ['GROUP', 'CONVERSATION'/*DM*/, 'PERSONAL']
+    //Number(key.registered) when the key was added to the database
+
+    key.lastseen < deleteBefore && //not seen in 6 months
+    /^(?:DM key with \d{17,20}|\d{17,20}'s personal key)$/.test(key.descriptor)
+    //name resolution failed if the id is used as name
+
+    //'true' return value deletes the record
+));
+```
+</details>
+
 # Keys
 The things you use to encrypt messages (plus there is the database key for encrypting the plugin's local database)<br>
 You can select which key to use for the channel at the top, besides the lock icon.<br>
