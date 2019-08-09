@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.2
+// @version      1.2.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2408,7 +2408,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                         displayHeight = 300;
                     }
                 }
-                if(displayHeight != 300) messageContainer.scrollTop += 300 - displayHeight;
+                if(displayHeight !== 300) messageContainer.scrollTop += 300 - displayHeight;
             }
             else {
                 if(width > 80 || height > 80) { //image will be resized
@@ -2419,7 +2419,7 @@ async function decryptAttachment(key, keyHash, message, attachment) {
                         displayHeight = 80;
                     }
                 }
-                if(displayHeight != 80) messageContainer.scrollTop += 80 - displayHeight;
+                if(displayHeight !== 80) messageContainer.scrollTop += 80 - displayHeight;
             }
 
         }
@@ -2572,7 +2572,7 @@ async function decryptMessage(message, payload) {
         postProcessMessage(message, content);
     }
 
-    if(message.attachments.length !== 0) {
+    if(message.attachments != null && message.attachments.length !== 0) {
         let attachments = message.attachments;
         message.attachments = [];
         for(let attachment of attachments) {
@@ -2890,7 +2890,7 @@ async function handleSend(channelId, message, forceSimple) {
     let key = await Utils.GetKeyByHash(channelConfig.k);
     let keyHashBytes = Utils.Base64ToBytes(channelConfig.k);
     let messageBytes;
-    if(content != "")
+    if(content !== "")
     {
         let encryptedMessage = await Utils.AesEncryptCompressString(key, content);
         messageBytes = Utils.ConcatBuffers([keyHashBytes, encryptedMessage]);
@@ -3099,7 +3099,7 @@ function Load()
                      protected: true}];
         const keyTypes = { 1:'GROUP', 2:'CONVERSATION', 3:'PERSONAL' };
         Object.entries(DataBase.keys).sort(([,a], [,b]) => b.l - a.l).forEach(([hash, keyObj]) => {
-            if(hash != personalKeyHash) keys.push({ hash, rawDescriptor: keyObj.d, lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: keyObj.h, type: keyTypes[keyObj.t] })
+            if(hash !== personalKeyHash) keys.push({ hash, rawDescriptor: keyObj.d, lastseen: keyObj.l, descriptor: Utils.FormatDescriptor(keyObj.d), hidden: keyObj.h, type: keyTypes[keyObj.t] })
         });
         KeyManagerWindow.Show(keys,
                               (key, rawDescriptor) => {
