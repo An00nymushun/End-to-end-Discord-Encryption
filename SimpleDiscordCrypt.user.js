@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.4
+// @version      1.2.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -78,6 +78,7 @@ const Style = {
     border-radius: 5px;
     pointer-events: auto;
     position: relative;
+    z-index: 1000;
 }
 .sdc-window > * { margin: 0 20px }
 .sdc-footer {
@@ -2003,21 +2004,40 @@ function Init(nonInvasive)
             if(listeners == null) return;
             for(let listener of listeners) listener();
         },
+        keyExchangeListeners: {},
+        AddKeyExchangeListener: function(userId, listener) {
+            let listeners = this.keyExchangeListeners[userId];
+            if(listeners == null) this.keyExchangeListeners[userId] = [listener];
+            else listeners.push(listener);
+        },
+        RemoveKeyExchangeListener: function(userId, listener) {
+            let listeners = this.keyExchangeListeners[userId];
+            if(listeners == null) return;
+            let index = listeners.indexOf(listener);
+            if(index === -1) return;
+            if(listeners.length === 1) { delete this.keyExchangeListeners[userId]; return; }
+            listeners.splice(index, 1);
+        },
+        KeyExchangeEvent: function(userId) {
+            let listeners = this.keyExchangeListeners[userId];
+            if(listeners == null) return;
+            for(let listener of listeners) listener();
+        },
         ongoingKeyExchanges: {},
         InitKeyExchange: async function(user, autoOnMessage, autoOnKey) {
             let userId = user.id;
             let currentUserId = Discord.getCurrentUser().id;
-            if(userId === currentUserId) return;
+            if(userId === currentUserId) return 0;
 
             let channelId = Discord.getDMFromUserId(userId);
             let channelConfig;
             if(autoOnMessage) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && (channelConfig.s/*systemMessageTime*/ > 0 || channelConfig.w/*waitingForSystemMessage*/))
-                    return;
+                    return 2;
 
                 if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                    if(this.ongoingKeyExchanges[userId]) return;
+                    if(this.ongoingKeyExchanges[userId]) return 0;
                     this.ongoingKeyExchanges[userId] = true;
                     if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
@@ -2028,7 +2048,7 @@ function Init(nonInvasive)
                     let force = await popup;
                     this.RemoveMessageDeleteListener(autoOnMessage, autoCancel);
                     this.RemoveKeyShareListener(autoOnKey, autoCancel);
-                    if(!force) return;
+                    if(!force) return 0;
                 }
             }
             delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
@@ -2045,25 +2065,26 @@ function Init(nonInvasive)
             channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
             this.dbChanged = true;
+            return 1;
         },
         ongoingKeyRequests: {},
         RequestKey: async function(keyHash, user, autoOnMessage) {
             let userId = user.id;
-            if(DataBase.keys[keyHash] != null) return;
+            if(DataBase.keys[keyHash] != null) return false;
 
             let channelId = Discord.getDMFromUserId(userId);
-            if(channelId == null) return;
+            if(channelId == null) return false;
 
             let channelConfig;
             let requestId = keyHash + userId;
             if(autoOnMessage) {
                 channelConfig = this.GetChannelConfig(channelId);
                 if(channelConfig != null && channelConfig.w/*waitingForSystemMessage*/)
-                    return;
+                    return false;
 
                 if(/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
-                    if(this.ongoingKeyRequests[requestId]) return;
-                    if(this.ongoingKeyExchanges[userId]) return;
+                    if(this.ongoingKeyRequests[requestId]) return false;
+                    if(this.ongoingKeyExchanges[userId]) return false;
                     this.ongoingKeyRequests[requestId] = true;
                     if(user.username == null) user = Discord.getUser(userId);
                     let popupOverride = {};
@@ -2074,7 +2095,7 @@ function Init(nonInvasive)
                     let force = await popup;
                     this.RemoveMessageDeleteListener(autoOnMessage, autoCancel);
                     this.RemoveKeyShareListener(keyHash, autoCancel);
-                    if(!force) return;
+                    if(!force) return false;
                 }
             }
             delete this.ongoingKeyRequests[requestId];
@@ -2087,6 +2108,28 @@ function Init(nonInvasive)
             channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
             channelConfig.w = 1;
             this.dbChanged = true;
+            return true;
+        },
+        ongoingKeyExchangesWithRequest: {},
+        InitKeyExchangeAndRequestKey: async function(keyHash, user, autoOnMessage) {
+            let requestId = keyHash + user.id;
+            let ongoing = this.ongoingKeyExchangesWithRequest[requestId];
+            if(ongoing && autoOnMessage) return false;
+            let initKeyExchangeStatus = await this.InitKeyExchange(user, autoOnMessage, keyHash);
+            if(initKeyExchangeStatus === 0) return false;
+            if(ongoing) return false;
+            this.ongoingKeyExchangesWithRequest[requestId] = true;
+            let promiseResolve;
+            if(initKeyExchangeStatus === 1) {
+                await new Promise((resolve) => { promiseResolve = resolve; this.AddKeyExchangeListener(user.id, resolve); });
+                this.RemoveKeyExchangeListener(user.id, promiseResolve);
+            }
+            if(await this.RequestKey(keyHash, user, (initKeyExchangeStatus === 1) ? null : autoOnMessage)) {
+                await new Promise((resolve) => { promiseResolve = resolve; this.AddKeyShareListener(keyHash, resolve); });
+                this.RemoveKeyShareListener(keyHash, promiseResolve);
+            }
+            delete this.ongoingKeyExchangesWithRequest[requestId];
+            return true;
         },
         ShareKey: async function(keyHash, channelId, nonForced, user) {
             let keyObj = DataBase.keys[keyHash];
@@ -2139,8 +2182,12 @@ function Init(nonInvasive)
             this.dbChanged = true;
         },
         UpdateMessageContent: (message) => {
-            if(message.edited_timestamp == null) message.edited_timestamp = message.timestamp;
-            Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+            if(message.edited_timestamp == null) {
+                message.edited_timestamp = message.timestamp;
+                Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+                message.edited_timestamp = null; //in case the message is still loading when updated
+            }
+            else Discord.dispatch({type: 'MESSAGE_UPDATE', message});
         }
     });
 //Discord.window.SdcUtils = Utils;
@@ -2518,8 +2565,9 @@ async function decryptMessage(message, payload) {
 
     if(key == null) {
         let messageDeleted = false;
-        if(!DataBase.isSecondary) {
-            if(message.author != null) Utils.InitKeyExchange(message.author, message.id, keyHashBase64);
+        if(!DataBase.isSecondary && message.author != null) {
+            let keyExchangeConcluded = false;
+            let keyExchange = Utils.InitKeyExchangeAndRequestKey(keyHashBase64, message.author, message.id);
 
             let onMessageDelete;
             let messageDeleteException = new Promise((resolve) => {
@@ -2528,13 +2576,11 @@ async function decryptMessage(message, payload) {
             });
 
             for(let i = 1; i <= 5; i++) {
-                await Promise.race([Utils.Sleep(i * 200), messageDeleteException]);
+                await Promise.race([keyExchange, Utils.Sleep(i * 200), messageDeleteException]);
                 if(messageDeleted) break;
 
                 key = await Utils.GetKeyByHash(keyHashBase64);
-                if(key != null) break;
-
-                if(message.author != null) Utils.RequestKey(keyHashBase64, message.author, message.id);
+                if(key != null || keyExchangeConcluded) break;
             }
             
             Utils.RemoveMessageDeleteListener(message.id, onMessageDelete);
@@ -2704,6 +2750,8 @@ async function processSystemMessage(message, sysmsg) {
 
                 await Utils.SendPersonalKey(message.channel_id);
                 
+                Utils.KeyExchangeEvent(userId);
+                
                 decryptWaitingMessages(keyHash);
                 decryptWaitingMessages(remotePersonalKeyHash);
             }
@@ -2732,6 +2780,9 @@ async function processSystemMessage(message, sysmsg) {
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
                 delete keyExchangeWhitelist[userId];
+                
+                Utils.KeyExchangeEvent(userId);
+                
                 decryptWaitingMessages(remotePersonalKeyHash);
             }
             catch(e) { break }
