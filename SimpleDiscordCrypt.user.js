@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.5
+// @version      1.2.6
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -117,6 +117,7 @@ const Style = {
     min-height: 38px;
     border-radius: 3px;
     justify-content: center;
+    align-items: center;
     padding: 2px 16px;
     cursor: pointer;
 }
@@ -191,13 +192,14 @@ const Style = {
 .sdc-select, .sdc-select > div {
     border: solid 1px rgba(0,0,0,.3);
     flex-direction: column;
+    box-sizing: content-box;
 }
 .sdc-select > div {
     background: #303237;
     position: absolute;
     top: 100%;
     width: 100%;
-    margin: -1px;
+    margin: -.8px;
     margin-top: -2px;
     border-radius: 0 0 4px 4px;
     box-shadow: 0 1px 5px rgba(0,0,0,.3);
@@ -275,6 +277,7 @@ const Style = {
     overflow: hidden;
     outline: 0;
     margin: 0;
+    opacity: 0;
 }
 .sdc-scroll {
     display: block;
@@ -292,7 +295,10 @@ const Style = {
     border-radius: 4px;
     background-clip: padding-box;
 }
-.sdc-list { flex-direction: column }
+.sdc-list {
+    flex-direction: column;
+    min-height: 100px;
+}
 .sdc-list > div {
     border: solid 1px rgba(32,34,37,.6);
     border-radius: 5px;
@@ -393,6 +399,16 @@ const Style = {
 .sdc-close:hover {
     opacity: 1;
     background-color: hsla(210,3%,87%,.05);
+}
+.sdc-zoom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.sdc-zoom::-webkit-scrollbar, .sdc-zoom::-webkit-scrollbar-corner {
+    background: #36393f;
+}
+.sdc-zoom::-webkit-scrollbar-thumb {
+    background: #72dac7;
 }`,
     Inject: function() {
         let style = document.createElement('style');
@@ -795,12 +811,12 @@ const MenuBar = {
             if(keySelectDropdown.checked) dropdownOn();
             else dropdownOff();
         };
-        keySelectDropdown.onblur = () => {
+        keySelectDropdown.onblur = () => { setTimeout(() => { //:active in FF is only valid after the event
             if(!keySelectDropdown.matches(':active')) {
                 keySelectDropdown.checked = false;
                 dropdownOff()
             }
-        };
+        }, 0)};
 
         this.toggleOnButton.oncontextmenu = this.toggleOffButton.oncontextmenu = (e) => {
             e.preventDefault();
@@ -824,7 +840,7 @@ const MenuBar = {
             clearTimeout(this.retryTimeout);
 
             if(this.mutationObserver != null) this.mutationObserver.disconnect();
-            else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) { this.Update(); break; }});
+            else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) if(removed === this.keySelect || removed.contains(this.keySelect)) { this.Update(); return; }});
             
             let styleEnabled = document.head.contains(this.toggledOnStyle);
             let keySelectEnabled = document.body.contains(this.keySelect);
@@ -1206,6 +1222,7 @@ var DataBase;
 var Cache;
 var Blacklist;
 var Patcher;
+var ImageZoomObserver;
 
 function Init(nonInvasive)
 {
@@ -1613,7 +1630,7 @@ function Init(nonInvasive)
 
             keyObj.k = this.BytesToBase64(keyBytes);
             DataBase.keys[keyHashBase64] = keyObj;
-            this.SaveDb();
+            this.FastSaveDb();
             return keyHashBase64;
         },
 
@@ -1653,8 +1670,8 @@ function Init(nonInvasive)
         saveDbTimeout: null,
         FastSaveDb: function() {
             this.dbChanged = true;
-            clearTimeout(this.saveDbTimeout);
-            setTimeout(() => { this.SaveDb() }, 10);
+            if(this.saveDbTimeout != null) clearTimeout(this.saveDbTimeout);
+            this.saveDbTimeout = setTimeout(() => { this.saveDbTimeout = null; this.SaveDb(); }, 10);
         },
 
         DownloadDb: async function(uncompressed) {
@@ -2051,7 +2068,7 @@ function Init(nonInvasive)
                     if(!force) return 0;
                 }
             }
-            delete this.ongoingKeyExchanges[userId]; //this way once cancelled you either have to add them as friend or restart the plugin
+            delete this.ongoingKeyExchanges[userId]; //this way once canceled you either have to add them as friend or restart the plugin
 
             keyExchangeWhitelist[userId] = true;
 
@@ -2271,6 +2288,58 @@ function Init(nonInvasive)
     LockMessages(true);
     Utils.LoadDb(() => { Load(); UnlockMessages(); }, UnlockMessages);
 
+    //convenience feature
+    let closeModal = () => { document.querySelector("div[class*=backdrop]").click() };
+    let zoom = function(event) {
+        this.removeEventListener('click', zoom);
+		let url = this.src.split('?', 2)[0];
+        let parent = this.parentElement;
+        parent.addEventListener('click', closeModal);
+        parent.classList.add('sdc-zoom');
+        parent.parentElement.style = "position: fixed; left: 0; top: 0";
+        parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto";
+        this.style = "position: relative";
+        if(url.length !== this.src.length && !url.startsWith('blob:')) {
+            let loadStart = Date.now();
+            this.addEventListener('load', () => {
+                let duration;
+                if(Date.now() - loadStart < 200) duration = 100;
+                else duration = 100 + Math.log(this.naturalWidth / this.width) * 400;
+                this.addEventListener('transitionend', () => {
+                    parent.style.justifyContent = null; parent.style.alignItems = null; this.style.margin = 'auto';
+                    parent.scroll((this.naturalWidth - parent.clientWidth) / 2, (this.naturalHeight - parent.clientHeight) / 2);
+                });
+                this.style.transitionDuration = duration+'ms';
+                this.style.width = this.naturalWidth+'px'; this.style.height = this.naturalHeight+'px';
+            });
+            parent.style.justifyContent = 'center';
+            parent.style.alignItems = 'center';
+            this.style.width = this.width+'px'; this.style.height = this.height+'px';
+            this.src = url; //img.src can be sync in FF
+        }
+        else {
+            this.style.margin = 'auto';
+            parent.scroll((parent.scrollWidth - parent.clientWidth) / 2, (parent.scrollHeight - parent.clientHeight) / 2);
+        }
+        event.stopPropagation();
+    }
+    ImageZoomObserver = new MutationObserver((changes) => {
+        for(let change of changes) for(let added of change.addedNodes)
+            if(added.tagName === 'IMG') {
+                if(added.matches(`.modal-3c3bKg .imageWrapper-2p5ogY > img`)) {
+                    added.addEventListener('click', zoom);
+                }
+                return;
+            }
+            else if(added.classList != null && added.classList.contains('modal-3c3bKg')) {
+                let img = added.querySelector(`.imageWrapper-2p5ogY > img`);
+                if(img != null) {
+                    img.addEventListener('click', zoom);
+                }
+                return;
+            }
+    });
+    
     return 1;
 }
 
@@ -3248,6 +3317,9 @@ function Load()
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
+    let appDiv = document.getElementById('app-mount');
+    if(appDiv != null) ImageZoomObserver.observe(appDiv, { childList: true, subtree: true });
+    
     Utils.Log("loaded");
 
     LoadBlacklist();
@@ -3275,6 +3347,8 @@ function Unload()
     PopupManager.Remove();
 
     clearInterval(dbSaveInterval);
+    
+    ImageZoomObserver.disconnect();
 }
 
 function TryInit()
