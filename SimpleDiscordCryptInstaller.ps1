@@ -221,9 +221,8 @@ const onHeadersReceived = (details, callback) => {
 	callback(response);
 };
 
-require('electron').remote.app.on('browser-window-created', (event, browserWindow) => {
-	browserWindow.webContents.session.webRequest.onHeadersReceived(onHeadersReceived);
-});
+require('electron').remote.session.defaultSession.webRequest.onHeadersReceived(onHeadersReceived);
+
 
 let script;
 let scriptCallbacks = [];
