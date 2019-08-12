@@ -30,7 +30,7 @@ I hope this is actually simple as the name suggests<br>
 <br>
 <br>
 Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt) for BetterDiscord users<br>
-<br>
+<sup>The two versions are not compatible!</sup><br>
 <br>
 <br>
 <br>
@@ -106,6 +106,11 @@ If a group key isn't set as 'hidden' it will automatically be shared with a frie
 In order to share a key you need to establish a secure connection with an initial key exchange, it is usually automatic but you can start it manually from the menu by clicking on 'Start Key Exchange' from the DM channel.<br>
 You can manually share keys by using the 'Share Keys' menu option.<br>
 During a key share, the sharing party will suggest you channels to use so it's advised to not set anything for the channel (or toggle encryption) before you have the key for it.<br>
+# Extras
+You can click on an already enlarged image to further enlarge it, for horizontal scrolling you can press the scroll wheel or hold shift and scroll the scrollwheel.<br>
+You can use any emote (animated too) in encrypted messages, but you might get a Clyde popup at the first try. Just type the whole :emotename: out.<br>
+Messages above 1600 characters will be compressed, but this feature might have incompatibilities with future versions. This also means that the messages can be 2000 character long if they are mostly made of normal characters.<br>
+The encryption is completely secure unless someone at Discord replaces your messages right when you secure your DMs, to make sure you have the right keys, you can use the Key Visualizer and compare your result with the other party.</br>
 <br>
 <br>
 <br>
