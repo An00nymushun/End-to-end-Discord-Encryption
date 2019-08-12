@@ -2292,7 +2292,7 @@ function Init(nonInvasive)
     let closeModal = () => { document.querySelector("div[class*=backdrop]").click() };
     let zoom = function(event) {
         this.removeEventListener('click', zoom);
-		let url = this.src.split('?', 2)[0];
+        let url = this.src.split('?', 2)[0];
         let parent = this.parentElement;
         parent.addEventListener('click', closeModal);
         parent.classList.add('sdc-zoom');
