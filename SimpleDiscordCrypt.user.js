@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.2.6
+// @version      1.2.7
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -22,7 +22,7 @@
 // @connect      gitlab.com
 // ==/UserScript==
 
-// Credits to the original DiscordCrypt
+// Credits for inspiration to the original DiscordCrypt
 
 (function() {
 
@@ -36,14 +36,25 @@ const FixedCsp = (typeof(CspDisarmed) !== 'undefined') ? CspDisarmed : false;
 const BaseColor = "#0fc";
 const BaseColorInt = 0x00ffcc;
 
+const HeaderBarSelector = `.title-3qD0b-`;
+const HeaderBarChildrenSelector = `.children-19S4PO`;
+const HeaderBarStatusSelector = `.status-1XNdyw`;
+const HeaderBarChannelNameSelector = `.title-3qD0b- .title-29uC1r, .title-3qD0b- .channelName-qsg_a_`;
+const BackdropSelector = `div[class*="backdrop"]`;
+const ModalClass = 'modal-3c3bKg';
+const ImageWrapperImgSelector = `.imageWrapper-2p5ogY > img`;
+const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
+const MessageContainerSelector = `.messages-3amgkR`;
+const ChatInputSelector = `.inner-zqa7da`;
+
 const htmlEscapeCharacters = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
 function HtmlEscape(string) { return string.replace(/[<>&]/g, x => htmlEscapeCharacters[x]) }
 
 const Style = {
     css: `
 /*fixes*/
-.title-3qD0b-, .children-19S4PO { overflow: visible !important }
-.status-1XNdyw { margin-left: 10px }
+${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !important }
+${HeaderBarStatusSelector} { margin-left: 10px }
 /*style*/
 .sdc * {
     font-family: Whitney,Helvetica Neue,Helvetica,Arial,sans-serif;
@@ -728,7 +739,7 @@ const MenuBar = {
     toggleOnButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 0c-4.612 0-8.483 3.126-9.639 7.371l3.855 1.052C12.91 5.876 15.233 4 18 4c3.313 0 6 2.687 6 6v10h4V10c0-5.522-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/></svg><p class="sdc-tooltip">Encrypt Channel</p></div>`,
     toggleOffButtonHtml: `<div class="sdc" style="position:relative"><svg class="SDC_TOGGLE" style="opacity:1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M18 3C12.477 3 8 7.477 8 13v10h4V13c0-3.313 2.686-6 6-6s6 2.687 6 6v10h4V13c0-5.523-4.477-10-10-10z"/><path d="M31 32c0 2.209-1.791 4-4 4H9c-2.209 0-4-1.791-4-4V20c0-2.209 1.791-4 4-4h18c2.209 0 4 1.791 4 4v12z"/><p class="sdc-tooltip">Disable Encryption</p></svg>`,
     keySelectHtml: `<div class="sdc sdc-select" style="margin:-3px 0 -2px 5px"><label style="min-width:200px;max-width:300px;height:30px"><input class="SDC_DROPDOWN sdc-hidden" type="checkbox"><p class="SDC_SELECTED" style="justify-content:center;text-align:center"></p></label><div class="SDC_OPTIONS" style="visibility:hidden"></div></div>`,
-    toggledOnCss: `.inner-zqa7da{box-shadow:0 0 0 1px ${BaseColor} !important}`,
+    toggledOnCss: `${ChatInputSelector}{box-shadow:0 0 0 1px ${BaseColor} !important}`,
     menuHtml: `<button type="button" class="SDC_FOCUS sdc-hidden"></button>
 <div class="sdc sdc-menu SDC_MENU" style="visibility:hidden">
     <div class="SDC_DMMENU">
@@ -828,7 +839,7 @@ const MenuBar = {
         menuFocus.onblur = () => { menu.style.visibility = 'hidden' };
 
         this.Update = function(isRetry) {
-            let titleElement = document.querySelector(`.title-3qD0b- .title-29uC1r, .title-3qD0b- .channelName-qsg_a_`);
+            let titleElement = document.querySelector(HeaderBarChannelNameSelector);
             if(titleElement == null) {
                 if(!isRetry) this.retries = 0;
                 if(this.retries < 10) {
@@ -841,7 +852,7 @@ const MenuBar = {
 
             if(this.mutationObserver != null) this.mutationObserver.disconnect();
             else this.mutationObserver = new MutationObserver((changes) => { for(let change of changes) for(let removed of change.removedNodes) if(removed === this.keySelect || removed.contains(this.keySelect)) { this.Update(); return; }});
-            
+
             let styleEnabled = document.head.contains(this.toggledOnStyle);
             let keySelectEnabled = document.body.contains(this.keySelect);
             let toggleOnEnabled = document.body.contains(this.toggleOnButton);
@@ -870,7 +881,7 @@ const MenuBar = {
                 menuDmGroup.style.display = 'none';
                 menuNondmGroup.style.display = null;
             }
-            
+
             let randomChangesNode = document.getElementsByClassName('base-3dtUhz')[0];
             if(randomChangesNode != null) this.mutationObserver.observe(randomChangesNode, { childList: true, subtree: true });
         };
@@ -1222,7 +1233,7 @@ var DataBase;
 var Cache;
 var Blacklist;
 var Patcher;
-var ImageZoomObserver;
+var ImageZoom;
 
 function Init(nonInvasive)
 {
@@ -1385,7 +1396,7 @@ function Init(nonInvasive)
             let a = document.createElement('a');
             a.href = url;
             a.download = filename;
-            a.style = "display:none"; 
+            a.style = "display:none";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1485,7 +1496,7 @@ function Init(nonInvasive)
             }
             return result;
         },
-        
+
         Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
         Sha512_128: async (buffer) => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
         Sha512_128str: async function(string) { return await this.Sha512_128(this.StringToUtf8Bytes(string)) },
@@ -1791,7 +1802,7 @@ function Init(nonInvasive)
                 dhPrivateKeyBytes = await this.DhExportPrivateKeyFallback(dhKeys.privateKey);
                 dhPrivateKeyFallback = true;
             }
-            
+
             let dhPublicKeyBytes = await this.DhExportPublicKey(dhKeys.publicKey);
 
             if(DataBase.isEncrypted)
@@ -1807,19 +1818,19 @@ function Init(nonInvasive)
             let dhPrivateKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
             if(DataBase.isEncrypted)
                 dhPrivateKeyBytes = await this.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
-            
+
             if(DataBase.dhPrivateKeyFallback) {
                 let dhPrivateKey = await this.DhImportPrivateKeyFallback(dhPrivateKeyBytes);
                 try {
                     dhPrivateKeyBytes = await this.DhExportPrivateKey(dhPrivateKey);
                     if(DataBase.isEncrypted)
                         dhPrivateKeyBytes = await this.AesEncrypt(Cache.dbKey, dhPrivateKeyBytes);
-                        
+
                     delete DataBase.dhPrivateKeyFallback;
                     DataBase.dhPrivateKey = this.BytesToBase64(dhPrivateKeyBytes);
                 }
                 catch(e) { }
-                
+
                 return dhPrivateKey;
             }
             else return await this.DhImportPrivateKey(dhPrivateKeyBytes);
@@ -2216,7 +2227,7 @@ function Init(nonInvasive)
         let a = document.createElement('a');
         a.href = url;
         a.download = filename;
-        a.style = "display:none"; 
+        a.style = "display:none";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2239,8 +2250,8 @@ function Init(nonInvasive)
                 Utils.DeleteChannelConfig(hash);
         }
     };
-    
-    
+
+
     const mirrorFunction = (moduleName, functionName) => {
         Discord[`original_${functionName}`] = modules[moduleName][functionName];
         Discord[functionName] = function() { return Discord[`original_${functionName}`].apply(Discord.modules[moduleName], arguments) };
@@ -2289,17 +2300,19 @@ function Init(nonInvasive)
     Utils.LoadDb(() => { Load(); UnlockMessages(); }, UnlockMessages);
 
     //convenience feature
-    let closeModal = () => { document.querySelector("div[class*=backdrop]").click() };
+    ImageZoom = {};
+    let closeModal = () => { document.querySelector(BackdropSelector).click() };
     let zoom = function(event) {
         this.removeEventListener('click', zoom);
-        let url = this.src.split('?', 2)[0];
+        let url;
+        if(this.src != null) url = this.src.split('?', 2)[0];
         let parent = this.parentElement;
         parent.addEventListener('click', closeModal);
         parent.classList.add('sdc-zoom');
         parent.parentElement.style = "position: fixed; left: 0; top: 0";
         parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto";
         this.style = "position: relative";
-        if(url.length !== this.src.length && !url.startsWith('blob:')) {
+        if(url != null && url.length !== this.src.length && !url.startsWith('blob:')) {
             let loadStart = Date.now();
             this.addEventListener('load', () => {
                 let duration;
@@ -2323,23 +2336,23 @@ function Init(nonInvasive)
         }
         event.stopPropagation();
     }
-    ImageZoomObserver = new MutationObserver((changes) => {
+    ImageZoom.zoom = zoom;
+    ImageZoom.observer = new MutationObserver((changes) => {
         for(let change of changes) for(let added of change.addedNodes)
             if(added.tagName === 'IMG') {
-                if(added.matches(`.modal-3c3bKg .imageWrapper-2p5ogY > img`)) {
+                if(added.matches(ModalImgSelector)) {
                     added.addEventListener('click', zoom);
                 }
                 return;
             }
-            else if(added.classList != null && added.classList.contains('modal-3c3bKg')) {
-                let img = added.querySelector(`.imageWrapper-2p5ogY > img`);
+            else if(added.classList != null && added.classList.contains(ModalClass)) {
+                let img = added.querySelector(ImageWrapperImgSelector);
                 if(img != null) {
                     img.addEventListener('click', zoom);
                 }
                 return;
             }
     });
-    
     return 1;
 }
 
@@ -2368,6 +2381,13 @@ async function processMessage(message) {
     }
 
     return await processEmbeds(message);
+}
+
+function scrollChat(by) {
+    let messageContainer = document.querySelector(MessageContainerSelector);
+    if(messageContainer == null) return;
+    if(messageContainer.scrollTop + 1 >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
+    messageContainer.scrollTop += by;
 }
 
 var mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img' };
@@ -2400,27 +2420,40 @@ async function decryptAttachment(key, keyHash, message, attachment) {
     }
 
     let spoiler = filename.startsWith('SPOILER_');
-    
-    let placeholder = (spoiler && mediaType === 'img') ? {
-        type: 'rich',
-        thumbnail: {
-            url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-            width: 1,
-            height: 80
+    let placeholder;
+    if(mediaType === 'img') {
+        placeholder = spoiler ? {
+            type: 'rich',
+            thumbnail: {
+                url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+                width: 1,
+                height: 80
+            }
+        } : {
+            type: 'image',
+            thumbnail: {
+                url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+                width: 1,
+                height: 300
+            }
+        };
+    }
+    else {
+        placeholder = {
+            type: 'image',
+            title: "Loading...",
+            thumbnail: {
+                url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+                width: 400,
+                height: 300
+            }
         }
-    } : {
-        type: 'image',
-        thumbnail: {
-            url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-            width: 1,
-            height: 300
-        }
-    };
+    }
     message.embeds.push(placeholder);
 
     (async () => {
         if(downloadLocked) {
-            await (new Promise((resolve) => downloadLocks.unshift(resolve)));
+            await (new Promise((resolve) => downloadLocks.push([message.channel_id, resolve])));
         }
         else downloadLocked = true;
 
@@ -2429,7 +2462,12 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             encryptedFileBuffer = await Utils.DownloadFile(encryptedUrl);
         }
         finally {
-            if(downloadLocks.length !== 0) downloadLocks.pop()();
+            if(downloadLocks.length !== 0) {
+                let currentChannel = Cache.channelId;
+                let importantDlIndex = downloadLocks.findIndex(([channelId]) => (channelId === currentChannel));
+                let unlockNext = (importantDlIndex > 0) ? downloadLocks.splice(importantDlIndex, 1)[0][1] : downloadLocks.shift()[1];
+                unlockNext();
+            }
             else downloadLocked = false;
         }
 
@@ -2488,9 +2526,9 @@ async function decryptAttachment(key, keyHash, message, attachment) {
             }
         }
         else {
-            let id = Utils.BytesToBase64(Utils.GetRandomBytes(16));
+            let id = Patcher.FreeImageId++;
             url = `https://media.discordapp.net/attachments/479272118538862592/479272171944804377/keylogo.png#${id}`;
-            let bitmap = await createImageBitmap(blob);
+            let bitmap = await createImageBitmap(blob); //resets image rotation it seems
             width = bitmap.width;
             height = bitmap.height;
 
@@ -2510,36 +2548,31 @@ async function decryptAttachment(key, keyHash, message, attachment) {
 
         Discord.dispatch({type: 'MESSAGE_UPDATE', message});
 
-        if(message.channel_id !== Cache.channelId) return;
-        let messageContainer = document.querySelector(`.scroller[class^="messages"]`);
-        if(messageContainer != null) {
-            if(messageContainer.scrollTop + 1 >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
+        /*if(message.channel_id !== Cache.channelId) return;
 
-            let displayHeight = height;
-            if(!spoiler) {
-                if(width > 400 || height > 300) { //image will be resized
-                    if(width / 400 > height / 300) { //scale by with
-                        displayHeight = Math.round(height / (width / 400));
-                    }
-                    else { //scale by height
-                        displayHeight = 300;
-                    }
+        let displayHeight = height;
+        if(!spoiler || mediaType === 'video') {
+            if(width > 400 || height > 300) { //image will be resized
+                if(width / 400 > height / 300) { //scale by with
+                    displayHeight = Math.round(height / (width / 400));
                 }
-                if(displayHeight !== 300) messageContainer.scrollTop += 300 - displayHeight;
-            }
-            else {
-                if(width > 80 || height > 80) { //image will be resized
-                    if(width > height) {
-                        displayHeight = Math.round(height / (width / 80));
-                    }
-                    else {
-                        displayHeight = 80;
-                    }
+                else { //scale by height
+                    displayHeight = 300;
                 }
-                if(displayHeight !== 80) messageContainer.scrollTop += 80 - displayHeight;
             }
-
+            if(displayHeight !== 300) scrollChat(300 - displayHeight);
         }
+        else {
+            if(width > 80 || height > 80) { //image will be resized
+                if(width > height) {
+                    displayHeight = Math.round(height / (width / 80));
+                }
+                else {
+                    displayHeight = 80;
+                }
+            }
+            if(displayHeight !== 80) scrollChat(80 - displayHeight);
+        }*/
     })();
 }
 
@@ -2565,18 +2598,35 @@ const imageRegex = /\.(?:png|jpe?g|gif|webp)$/i;
 function embedImage(message, url, queryString) {
     if(!imageRegex.test(queryString)) return;
 
+    let placeholder = {
+        type: 'image',
+        url,
+        thumbnail: {
+            url: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+            width: 1,
+            height: 300
+        }
+    };
+    message.embeds.push(placeholder);
     let tmpimg = document.createElement('img');
     tmpimg.onload = () => {
-        message.embeds.push({
-            type: 'image',
-            url,
-            thumbnail: {
-                url,
-                width: tmpimg.width,
-                height: tmpimg.height
-            }
-        });
+        let width = tmpimg.width;
+        let height = tmpimg.height;
+        placeholder.thumbnail = { url, width, height };
         Discord.dispatch({type: 'MESSAGE_UPDATE', message});
+
+        /*if(message.channel_id === Cache.channelId) {
+            let displayHeight = height;
+            if(width > 400 || height > 300) {
+                if(width / 400 > height / 300) {
+                    displayHeight = Math.round(height / (width / 400));
+                }
+                else {
+                    displayHeight = 300;
+                }
+            }
+            if(displayHeight !== 300) scrollChat(300 - displayHeight);
+        }*/
     };
     tmpimg.src = url;
 }
@@ -2651,7 +2701,6 @@ async function decryptMessage(message, payload) {
                 key = await Utils.GetKeyByHash(keyHashBase64);
                 if(key != null || keyExchangeConcluded) break;
             }
-            
             Utils.RemoveMessageDeleteListener(message.id, onMessageDelete);
         }
         if(key == null) {
@@ -2818,9 +2867,9 @@ async function processSystemMessage(message, sysmsg) {
                 let remotePersonalKeyHash = await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
 
                 await Utils.SendPersonalKey(message.channel_id);
-                
+
                 Utils.KeyExchangeEvent(userId);
-                
+
                 decryptWaitingMessages(keyHash);
                 decryptWaitingMessages(remotePersonalKeyHash);
             }
@@ -2849,9 +2898,9 @@ async function processSystemMessage(message, sysmsg) {
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
                 delete keyExchangeWhitelist[userId];
-                
+
                 Utils.KeyExchangeEvent(userId);
-                
+
                 decryptWaitingMessages(remotePersonalKeyHash);
             }
             catch(e) { break }
@@ -3274,6 +3323,7 @@ function Load()
             let ctx = canvas.getContext('2d');
             ctx.drawImage(bitmap, 0, 0);
             canvas.style.cssText = img.style.cssText;
+            if(img.matches(ModalImgSelector)) canvas.addEventListener('click', ImageZoom.zoom);
             img.replaceWith(canvas);
         };
         const scriptLink = function(event) {
@@ -3296,21 +3346,25 @@ function Load()
                         }
                     }
                     else {
-                        let addedNode = mutation.addedNodes[0];
-                        if(addedNode == null || addedNode.getElementsByTagName == null) continue;
+                        for(let addedNode of mutation.addedNodes) {
+                            if(addedNode.tagName === 'IMG') { tryReplaceImage(addedNode); return; }
 
-                        for(let img of addedNode.getElementsByTagName('img')) {
-                            tryReplaceImage(img);
-                        }
+                            if(addedNode.getElementsByTagName == null) continue;
 
-                        for(let a of addedNode.getElementsByTagName('a')) {
-                            if(!a.href.startsWith("javascript:")) continue;
-                            a.addEventListener('auxclick', scriptLink);
+                            for(let img of addedNode.getElementsByTagName('img')) {
+                                tryReplaceImage(img);
+                            }
+
+                            for(let a of addedNode.getElementsByTagName('a')) {
+                                if(!a.href.startsWith("javascript:")) continue;
+                                a.addEventListener('auxclick', scriptLink);
+                            }
                         }
                     }
                 }
             }),
-            Images: []
+            Images: [],
+            FreeImageId: 0
         };
         Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true });
     }
@@ -3318,8 +3372,8 @@ function Load()
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
     let appDiv = document.getElementById('app-mount');
-    if(appDiv != null) ImageZoomObserver.observe(appDiv, { childList: true, subtree: true });
-    
+    if(appDiv != null) ImageZoom.observer.observe(appDiv, { childList: true, subtree: true });
+
     Utils.Log("loaded");
 
     LoadBlacklist();
@@ -3347,8 +3401,8 @@ function Unload()
     PopupManager.Remove();
 
     clearInterval(dbSaveInterval);
-    
-    ImageZoomObserver.disconnect();
+
+    ImageZoom.observer.disconnect();
 }
 
 function TryInit()
