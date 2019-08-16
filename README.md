@@ -114,7 +114,7 @@ The encryption is completely secure unless someone at Discord replaces your mess
 <br>
 <br>
 <br>
-To uninstall, just delete it from %localappdata%.<br>
+To uninstall, just delete it from %localappdata% and make new shortcuts.<br>
 <br>
 <br>
 
