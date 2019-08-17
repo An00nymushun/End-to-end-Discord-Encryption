@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.0
+// @version      1.3.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
 // @downloadURL  https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js
 // @updateURL    https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.meta.js
 // @icon         https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/logo.png
-// @match        https://discordapp.com/channels/*
-// @match        https://discordapp.com/activity
-// @match        https://ptb.discordapp.com/channels/*
-// @match        https://ptb.discordapp.com/activity
-// @match        https://canary.discordapp.com/channels/*
-// @match        https://canary.discordapp.com/activity
+// @match        https://*.discordapp.com/channels/*
+// @match        https://*.discordapp.com/activity
+// @match        https://*.discordapp.com/login*
+// @match        https://*.discordapp.com/app
+// @match        https://*.discordapp.com/library
+// @match        https://*.discordapp.com/store
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
@@ -51,6 +51,7 @@ const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
 const MessageContainerSelector = `.messages-3amgkR`;
 const ChatInputSelector = `.inner-zqa7da`;
 const MessageImgSelector = `.message-1PNnaP img`;
+const ChatImageSelector = `${MessageContainerSelector} .imageZoom-1n-ADA img`;
 
 const htmlEscapeCharacters = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
 function HtmlEscape(string) { return string.replace(/[<>&]/g, x => htmlEscapeCharacters[x]) }
@@ -604,12 +605,12 @@ const KeyManagerWindow = {
                 let descriptorInput = descriptorElement.getElementsByClassName('SDC_DESCRIPTORINPUT')[0];
                 descriptorInput.value = key.rawDescriptor;
                 descriptorInput.onkeydown = function(e) {
-                    if(e.keyCode === 13/*ENTER*/) {
+                    if(e.key === 'Enter') {
                         e.preventDefault();
                         setKeyDescriptor(key, this.value)
                         changeBack();
                     }
-                    else if(e.keyCode === 27/*ESC*/)
+                    else if(e.key === 'Escape')
                         changeBack();
                 };
                 descriptorInput.focus();
@@ -2241,7 +2242,7 @@ function Init(nonInvasive)
             this.dbChanged = true;
         },
         KeyRotationTimeout: function(keyHash, keyRotator, timeFromNow) {
-            return setTimeout(async () => {console.log("rotate");
+            return setTimeout(async () => {
                 delete DataBase.keyRotators[keyHash]; delete KeyRotators[keyHash];
                 let now = Date.now();
                 let rotationCtr = Math.floor((now - keyRotator.start) / keyRotator.interval);
@@ -2441,30 +2442,87 @@ function Init(nonInvasive)
         parent.addEventListener('click', closeModal);
         parent.classList.add('sdc-zoom');
         parent.parentElement.style = "position: fixed; left: 0; top: 0";
-        parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto";
+        parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0";
         this.style = "position: relative";
+        let loading = false;
         if(url != null && url.length !== this.src.length && !url.startsWith('blob:')) {
             let loadStart = Date.now();
-            this.addEventListener('load', () => {
+            const onLoad = () => {
                 let duration;
                 if(Date.now() - loadStart < 200) duration = 100;
                 else duration = 100 + Math.log(this.naturalWidth / this.width) * 400;
-                this.addEventListener('transitionend', () => {
+                const onTransitionEnd = () => {
                     parent.style.justifyContent = null; parent.style.alignItems = null; this.style.margin = 'auto';
                     parent.scroll((this.naturalWidth - parent.clientWidth) / 2, (this.naturalHeight - parent.clientHeight) / 2);
-                });
+                    this.removeEventListener('transitionend', onTransitionEnd);
+                    this.style.transitionDuration = null;
+                };
+                this.addEventListener('transitionend', onTransitionEnd);
                 this.style.transitionDuration = duration+'ms';
                 this.style.width = this.naturalWidth+'px'; this.style.height = this.naturalHeight+'px';
-            });
+                this.removeEventListener('load', onLoad);
+                loading = false;
+            };
+            this.addEventListener('load', onLoad);
             parent.style.justifyContent = 'center';
             parent.style.alignItems = 'center';
             this.style.width = this.width+'px'; this.style.height = this.height+'px';
+            loading = true;
             this.src = url; //img.src can be sync in FF
         }
         else {
             this.style.margin = 'auto';
             parent.scroll((parent.scrollWidth - parent.clientWidth) / 2, (parent.scrollHeight - parent.clientHeight) / 2);
         }
+        this.draggable = false;
+        let dragDelta;
+        let oldX, oldY;
+        let clickRemoved;
+        const drag = (event) => {
+            let deltaX = oldX - event.clientX, deltaY = oldY - event.clientY;
+            oldX = event.clientX; oldY = event.clientY;
+            parent.scrollBy(deltaX, deltaY);
+            if(clickRemoved) return;
+            dragDelta += Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+            if(dragDelta > 10/*px*/) { parent.removeEventListener('click', closeModal); clickRemoved = true; }
+        };
+        const stopDrag = () => {
+            this.removeEventListener('mousemove', drag);
+            Discord.window.removeEventListener('mouseup', stopDrag);
+            if(clickRemoved) setTimeout(() => parent.addEventListener('click', closeModal), 100);
+        };
+        this.addEventListener('mousedown', (event) => {
+            dragDelta = 0; clickRemoved = false;
+            oldX = event.clientX; oldY = event.clientY;
+            this.addEventListener('mousemove', drag);
+            Discord.window.addEventListener('mouseup', stopDrag);
+        });
+        parent.tabIndex = 0;
+        parent.focus();
+        let loadAdded = false;
+        parent.addEventListener('keydown', (event) => {
+            if(loading || event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            let images = document.querySelectorAll(ChatImageSelector);
+            let count = images.length;
+            for(let i = 0; i < count; i++) if(images[i].src.startsWith(url)) {
+                let image = (event.key === 'ArrowLeft') ? images[i-1] : images[i+1];
+                if(image != null && !image.src.startsWith('data:')) { //still loading
+                    url = image.src.split('?', 2)[0];
+                    if(!loadAdded) {
+                        this.addEventListener('load', () => {
+                            this.style.width = this.naturalWidth+'px'; this.style.height = this.naturalHeight+'px';
+                            parent.scroll((this.naturalWidth - parent.clientWidth) / 2, (this.naturalHeight - parent.clientHeight) / 2);
+                            loading = false;
+                        });
+                        loadAdded = true;
+                    }
+                    loading = true;
+                    this.src = url;
+                    image.scrollIntoView();
+                }
+                break;
+            }
+        }, true);
         event.stopPropagation();
     }
     ImageZoom.zoom = zoom;
@@ -2890,6 +2948,7 @@ async function decryptMessage(message, payload) {
     let keyObj = keyObjRef[0];
     let myKey;
     let differentKey = false;
+    let differentKeyDescriptor;
     let differentKeyDesc;
     let notPersonalKey = (keyObj.t/*type*/ !== 3/*personal*/);
     if(channelConfig == null) {
@@ -2903,8 +2962,8 @@ async function decryptMessage(message, payload) {
         }
     }
     if(differentKey) {
-        let descriptor = Utils.FormatDescriptor(keyObj.d/*descriptor*/);
-        differentKeyDesc = descriptor.replace(/ /g, '_').replace(/\W/g, "");
+        differentKeyDescriptor = Utils.FormatDescriptor(keyObj.d/*descriptor*/);
+        differentKeyDesc = differentKeyDescriptor.replace(/ /g, '_').replace(/\W/g, "");
     }
     let timestamp = new Date(message.timestamp).getTime();
     if(differentKey && notPersonalKey && channelConfig != null) {
@@ -2915,7 +2974,7 @@ async function decryptMessage(message, payload) {
                 if(myKey == null) myKey = DataBase.keys[channelConfig.k];
                 if(myKey.t/*type*/ !== 2/*conversation*/) (async () => {
                     let popupOverride = {};
-                    let popup = PopupManager.NewPromise(`Would you like to set key to "${descriptor}" in "${Utils.FormatDescriptor(channelConfig.d)}"`, true, popupOverride);
+                    let popup = PopupManager.NewPromise(`Would you like to set key to "${differentKeyDescriptor}" in "${Utils.FormatDescriptor(channelConfig.d)}"`, true, popupOverride);
                     const autoCancel = () => { keyChangeWatcher.different = 0; popupOverride.cancel(); };
                     Utils.AddMessageDeleteListener(message.id, autoCancel);
                     let changeKey = await popup;
