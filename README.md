@@ -114,6 +114,7 @@ If the key is set to `hidden`, the new key will be hidden too.<br>
 Keys shared with `trusted keys` can swap keys for channels automatically, which is **useful for rotated keys**.<br>
 # Extras
 You can click on an already enlarged **image** to **further enlarge** it, for horizontal scrolling you can press the scroll wheel or hold shift and scroll the scrollwheel.<br>
+Use the `arrow keys` to **navigate** like a gallery when zoomed in.<br>
 You can use **any emote** (animated too) in encrypted messages, but you might get a Clyde popup at the first try. Just **type the whole :emotename:** out.<br>
 Messages above 1600 characters will be compressed, but this feature might have incompatibilities with future versions. This also means that the messages can be 2000 character long if they are mostly made of normal characters.<br>
 The **encryption** is completely secure unless someone at Discord replaces your messages right when you secure your DMs, to **make sure** you have the right keys, you can use the `Key Visualizer` and **compare** your result with the other party.</br>
