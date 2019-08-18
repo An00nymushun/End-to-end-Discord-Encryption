@@ -35,7 +35,7 @@ function RootElectron([string]$discordIconPath, [string]$exeName, [string]$path,
 		$shortcut.IconLocation = $path + $iconLocation
 	}
 	$shortcut.TargetPath = $env:WINDIR+'\System32\cmd.exe'
-	$shortcut.Arguments = "/c `"set NODE_OPTIONS=-r ../../SimpleDiscordCrypt/NodeLoad.js && start $path\Update.exe --processStart $exeName`""
+	$shortcut.Arguments = "/c `"set NODE_OPTIONS=-r ../../SimpleDiscordCrypt/NodeLoad.js && start ^`"^`" ^`"$path\Update.exe^`" --processStart $exeName`""
 	$shortcut.WindowStyle = 7
 	$shortcut.Save()
 
