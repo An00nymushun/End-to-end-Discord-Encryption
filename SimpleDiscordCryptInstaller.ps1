@@ -197,6 +197,24 @@ else console.log("Uh-oh, looks like this version of electron isn't rooted yet");
 '@)
 
 	'FINISHED'
+
+    $needsWait = $false
+    $discordProcesses = Get-Process 'Discord' -ErrorAction SilentlyContinue
+    $discordProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+
+    $discordPtbProcesses = Get-Process 'DiscordPTB' -ErrorAction SilentlyContinue
+    $discordPtbProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+
+    $discordCanaryProcesses = Get-Process 'DiscordCanary' -ErrorAction SilentlyContinue
+    $discordCanaryProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+
+    if($needsWait) { sleep 1 }
+
+    ($discordProcesses + $discordPtbProcesses + $discordCanaryProcesses) | % { $_.Kill() }
+
+    if($discordProcesses.Length -ne 0) { [void](start $discordIconPath)  }
+    if($discordPtbProcesses.Length -ne 0) { [void](start $discordPtbIconPath)  }
+    if($discordCanaryProcesses.Length -ne 0) { [void](start $discordCanaryIconPath)  }
 }
 else { 'Discord not found' }
 
