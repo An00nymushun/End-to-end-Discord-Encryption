@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.1
+// @version      1.3.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -226,6 +226,7 @@ ${HeaderBarStatusSelector} { margin-left: 10px }
     height: 38px;
     padding: 0 10px;
     align-items: center;
+    overflow: hidden;
 }
 .sdc-select > div > a:hover { background: rgba(0,0,0,.1) }
 
@@ -1345,6 +1346,8 @@ function Init(nonInvasive)
     //modules.MessageCache = findModuleByUniqueProperties([ '_channelMessages', 'getOrCreate', 'clearCache' ], nonInvasive);
     //if(modules.MessageCache == null) { if(!nonInvasive) Utils.Error("MessageCache not found."); return 0; }
 
+    modules.DiscordConstants = findModuleByUniqueProperties( [ 'SpotifyEndpoints' ], nonInvasive);
+
     Discord.modules = modules;
 
     Object.assign(Utils, {
@@ -1391,11 +1394,12 @@ function Init(nonInvasive)
                 onerror: reject
             })
         })
-        : (typeof(require) !== 'undefined') ? function(url) { return new Promise ((resolve, reject) => {
-            require('https').get(url, (response) => {
+        : (typeof(require) !== 'undefined' && (this.https = require('https'))) ? function(url) { return new Promise((resolve, reject) => {
+            this.https.get(url, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
+                response.on('aborted', reject);
             }).on('error', reject);
         })}
         : (url) => new Promise((resolve, reject) => {
@@ -2256,6 +2260,7 @@ function Init(nonInvasive)
                 seedEdit.setUint32(0, seedEdit.getUint32(0, true) ^ rotationCtr, true);
                 let newKeyHash = await this.SaveKey(await this.Sha512_256(this.ConcatBuffers([seed, dhPrivateKeyBytes])), 1/*group*/, newName, oldKey.h/*hidden*/);
                 DataBase.keyRotators[newKeyHash] = keyRotator;
+                oldKey.d/*descriptor*/ = "Rotated " + oldKey.d;
                 this.dbChanged = true;
                 this.ReplaceChannelKeys(keyHash, newKeyHash);
                 if(Cache.channelConfig != null && Cache.channelConfig.k/*keyHash*/ === newKeyHash) MenuBar.Update();
@@ -2426,6 +2431,14 @@ function Init(nonInvasive)
     hookFunction('MessageDispatcher', 'dispatch');
     hookFunction('FileUploader', 'upload');
 
+    if(modules.DiscordConstants != null && modules.DiscordConstants.SpotifyEndpoints != null) {
+        let spotify = modules.DiscordConstants.SpotifyEndpoints;
+        if(Object.isFrozen(spotify)) modules.DiscordConstants.SpotifyEndpoints = spotify = Object.assign({}, spotify);
+        modules.SpotifyEndpoints = spotify;
+        mirrorFunction('SpotifyEndpoints', 'EMBED');
+        hookFunction('SpotifyEndpoints', 'EMBED');
+    }
+
     Style.Inject();
 
     LockMessages(true);
@@ -2443,7 +2456,7 @@ function Init(nonInvasive)
         parent.classList.add('sdc-zoom');
         parent.parentElement.style = "position: fixed; left: 0; top: 0";
         parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0";
-        this.style = "position: relative";
+        this.style = "position: relative; max-width: 100%; user-select: none; -moz-user-select: none";
         let loading = false;
         if(url != null && url.length !== this.src.length && !url.startsWith('blob:')) {
             let loadStart = Date.now();
@@ -2453,26 +2466,27 @@ function Init(nonInvasive)
                 else duration = 100 + Math.log(this.naturalWidth / this.width) * 400;
                 const onTransitionEnd = () => {
                     parent.style.justifyContent = null; parent.style.alignItems = null; this.style.margin = 'auto';
-                    parent.scroll((this.naturalWidth - parent.clientWidth) / 2, (this.naturalHeight - parent.clientHeight) / 2);
+                    parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
                     this.removeEventListener('transitionend', onTransitionEnd);
                     this.style.transitionDuration = null;
                 };
                 this.addEventListener('transitionend', onTransitionEnd);
                 this.style.transitionDuration = duration+'ms';
-                this.style.width = this.naturalWidth+'px'; this.style.height = this.naturalHeight+'px';
+                this.style.minWidth = ((this.naturalWidth > parent.clientWidth * 2) ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
                 this.removeEventListener('load', onLoad);
                 loading = false;
             };
             this.addEventListener('load', onLoad);
             parent.style.justifyContent = 'center';
             parent.style.alignItems = 'center';
-            this.style.width = this.width+'px'; this.style.height = this.height+'px';
+            this.style.minWidth = ((this.naturalWidth > parent.clientWidth * 2) ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
             loading = true;
             this.src = url; //img.src can be sync in FF
         }
         else {
             this.style.margin = 'auto';
-            parent.scroll((parent.scrollWidth - parent.clientWidth) / 2, (parent.scrollHeight - parent.clientHeight) / 2);
+            this.style.minWidth = ((this.naturalWidth > parent.clientWidth * 2) ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
+            parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
         }
         this.draggable = false;
         let dragDelta;
@@ -2497,6 +2511,7 @@ function Init(nonInvasive)
             this.addEventListener('mousemove', drag);
             Discord.window.addEventListener('mouseup', stopDrag);
         });
+        this.addEventListener('dragstart', (event) => { event.preventDefault() });
         parent.tabIndex = 0;
         parent.focus();
         let loadAdded = false;
@@ -2510,18 +2525,19 @@ function Init(nonInvasive)
                     url = image.src.split('?', 2)[0];
                     if(!loadAdded) {
                         this.addEventListener('load', () => {
-                            this.style.width = this.naturalWidth+'px'; this.style.height = this.naturalHeight+'px';
-                            parent.scroll((this.naturalWidth - parent.clientWidth) / 2, (this.naturalHeight - parent.clientHeight) / 2);
+                            this.style.minWidth = ((this.naturalWidth > parent.clientWidth * 2) ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
+                            parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
                             loading = false;
                         });
                         loadAdded = true;
                     }
                     loading = true;
                     this.src = url;
-                    image.scrollIntoView();
+                    image.scrollIntoView(/*event.key !== 'ArrowLeft'*/); //loading more images can cause some to be skipped if they are still loading
                 }
                 break;
             }
+            event.preventDefault();
         }, true);
         event.stopPropagation();
     }
@@ -2855,36 +2871,56 @@ function embedImage(message, url, queryString) {
     };
     tmpimg.src = url;
 }
+var EmbedFrames = [];
 function embedEncrypted(message, url, queryString) {
-    message.embeds.push({
-        type: 'video',
-        url,
-        thumbnail: { url: "https://media.discordapp.net/attachments/449522590978146304/465783850144890890/key128.png", width: 128, height: 128 },
-        video: { url, width: 400, height: 300 }
-    });
+    if(Discord.detour_EMBED != null) {
+        let embedFrameId = EmbedFrames.push(url) - 1;
+        message.embeds.push({
+            type: 'link',
+            provider: {url: null, name: "Spotify"},
+            url: "https://open.spotify.com/playlist//" + embedFrameId
+        });
+    }
+    else {
+        message.embeds.push({
+            type: 'video',
+            url,
+            thumbnail: { url: "https://media.discordapp.net/attachments/449522590978146304/465783850144890890/key128.png", width: 128, height: 128 },
+            video: { url, width: 400, height: 300 }
+        });
+    }
 }
 function embedMega(message, url, queryString) {
-    if(queryString.startsWith("embed"))
-        embedEncrypted(message, url, queryString);
+    if(!queryString.startsWith("embed")) url = "https://mega.nz/embed" + queryString;
+    embedEncrypted(message, url, null);
+}
+const validSoundcloudRegex = /^[^\/]+\/[^\/?]+(\?|$)/;
+function embedSoundcloud(message, url, queryString) {
+    if(validSoundcloudRegex.test(queryString))
+        embedEncrypted(message, "https://w.soundcloud.com/player/?visual=true&url=" + encodeURIComponent(url), null);
 }
 const linkEmbedders = {
     "www.youtube.com": embedYoutube,
     "youtu.be": embedYoutu,
     "cdn.discordapp.com": embedImage,
     "media.discordapp.net": embedImage,
-    "i.imgur.com": embedImage,
+    "i.imgur.com": embedImage
+};
+if(FixedCsp) Object.assign(linkEmbedders, {
     "i.redd.it": embedImage,
+    "soundcloud.com": embedSoundcloud,
     "share.riseup.net": embedEncrypted,
     "mega.nz": embedMega
-};
-let urlRegex = /https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+)/g;
+});
+
+let urlRegex = /(?:<https?:\/\/(?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+)\/[^\s<>'"]+>|https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+))/g;
 function postProcessMessage(message, content) {
     let currentUser = Discord.getCurrentUser();
     if(content.includes(`<@${currentUser.id}>`) || content.includes(`<@!${currentUser.id}>`))
         message.mentions = [currentUser];
 
     let url;
-    while((url = urlRegex.exec(content)) != null) {
+    while((url = urlRegex.exec(content)) != null && url[1] != null) {
         let linkEmbedder = linkEmbedders[url[1]];
         if(linkEmbedder != null) linkEmbedder(message, url[0], url[2]);
     }
@@ -3517,6 +3553,13 @@ function Load()
         Discord.original__merge.apply(this, arguments);
     };*/
 
+    Discord.detour_EMBED = function(path, t) {
+
+        if(path.startsWith("/playlist//")) return EmbedFrames[path.substr(11)];
+
+        return Discord.original_EMBED.apply(this, arguments);
+    };
+
     MenuBar.Show(() => Utils.GetCurrentChannelEncrypt(),
                  () => { Utils.ToggleCurrentChannelEncrypt(); MenuBar.Update(); },
                  () => {
@@ -3607,9 +3650,10 @@ function Load()
 
     PopupManager.Inject();
 
-    if(!FixedCsp) {
+	const isFirefox = navigator.userAgent.includes('Firefox');
+    if(!FixedCsp || isFirefox) {
         const imgsrcIdRegex = /#([^?]+)/;
-        const tryReplaceImage = async (img) => {
+        const tryReplaceImage = (isFirefox && FixedCsp) ? ()=>{} : async (img) => { //noop if we only need the links
             let srcmatch = imgsrcIdRegex.exec(img.src);
             if(srcmatch == null) return;
             let blob = Patcher.Images[srcmatch[1]];
@@ -3645,8 +3689,9 @@ function Load()
                             tryReplaceImage(img);
                         }
                         else if(tagName === 'A') {
-                            if(!mutation.target.href.startsWith("javascript:")) continue;
-                            mutation.target.addEventListener('auxclick', scriptLink);
+                            let href = mutation.target.href;
+                            if(!href.startsWith("javascript:")) continue;
+                            mutation.target.addEventListener(href.startsWith("javascript:SdcDecryptDl(") ? 'click' : 'auxclick', scriptLink);
                         }
                     }
                     else {
@@ -3660,8 +3705,9 @@ function Load()
                             }
 
                             for(let a of addedNode.getElementsByTagName('a')) {
-                                if(!a.href.startsWith("javascript:")) continue;
-                                a.addEventListener('auxclick', scriptLink);
+                                let href = a.href;
+                                if(!href.startsWith("javascript:")) continue;
+                                a.addEventListener(href.startsWith("javascript:SdcDecryptDl(") ? 'click' : 'auxclick', scriptLink);
                             }
                         }
                     }
@@ -3701,6 +3747,7 @@ function Unload()
     restoreFunction('MessageQueue', 'enqueue');
     restoreFunction('MessageDispatcher', 'dispatch');
     restoreFunction('FileUploader', 'upload');
+    restoreFunction('SpotifyEndpoints', 'EMBED');
 
     //Discord.MessageCache.prototype._merge = Discord.original__merge;
 
