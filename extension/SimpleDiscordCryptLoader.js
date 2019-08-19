@@ -5,15 +5,17 @@ script.remove();
 
 
 const makeRequest = (data, responseCallback) => {
-	chrome.runtime.sendMessage(data, (result) => {
-		if(result.bloburl !== undefined) {
-			fetch(result.bloburl).then((response) => response.arrayBuffer()).then((response) => {
-				responseCallback({ response });
-				URL.revokeObjectURL(result.bloburl);
-			});
-		}
-		else responseCallback(result);
-	});
+	try {
+		chrome.runtime.sendMessage(data, (result) => {
+			if(result.bloburl !== undefined) {
+				fetch(result.bloburl).then((response) => response.arrayBuffer()).then((response) => {
+					responseCallback({ response });
+					URL.revokeObjectURL(result.bloburl);
+				});
+			}
+			else responseCallback(result);
+		});
+	} catch { location.reload() } //extension unloaded/reloaded
 };
 
 window.addEventListener('message', (event) => {
