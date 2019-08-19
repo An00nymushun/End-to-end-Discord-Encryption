@@ -1350,6 +1350,7 @@ function Init(nonInvasive)
 
     Discord.modules = modules;
 
+    let https;
     Object.assign(Utils, {
 
         StorageSave:
@@ -1394,8 +1395,8 @@ function Init(nonInvasive)
                 onerror: reject
             })
         })
-        : (typeof(require) !== 'undefined' && (this.https = require('https'))) ? function(url) { return new Promise((resolve, reject) => {
-            this.https.get(url, (response) => {
+        : (typeof(require) !== 'undefined' && (https = require('https'))) ? function(url) { return new Promise((resolve, reject) => {
+            https.get(url, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
