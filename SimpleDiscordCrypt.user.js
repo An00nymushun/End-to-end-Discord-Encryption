@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.2
+// @version      1.3.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1347,10 +1347,12 @@ function Init(nonInvasive)
     //if(modules.MessageCache == null) { if(!nonInvasive) Utils.Error("MessageCache not found."); return 0; }
 
     modules.DiscordConstants = findModuleByUniqueProperties( [ 'SpotifyEndpoints' ], nonInvasive);
+    modules.Premium = findModuleByUniqueProperties( [ 'canUseEmojisEverywhere' ], nonInvasive);
 
     Discord.modules = modules;
 
-    let https;
+    let nodeHttps = (typeof(require) !== 'undefined') ? require('https') : null;
+
     Object.assign(Utils, {
 
         StorageSave:
@@ -1395,8 +1397,8 @@ function Init(nonInvasive)
                 onerror: reject
             })
         })
-        : (typeof(require) !== 'undefined' && (https = require('https'))) ? function(url) { return new Promise((resolve, reject) => {
-            https.get(url, (response) => {
+        : (nodeHttps != null) ? function(url) { return new Promise((resolve, reject) => {
+            nodeHttps.get(url, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
@@ -2438,6 +2440,14 @@ function Init(nonInvasive)
         modules.SpotifyEndpoints = spotify;
         mirrorFunction('SpotifyEndpoints', 'EMBED');
         hookFunction('SpotifyEndpoints', 'EMBED');
+    }
+    if(modules.Premium != null && modules.Premium.canUseEmojisEverywhere != null) {
+        mirrorFunction('Premium', 'canUseEmojisEverywhere');
+        hookFunction('Premium', 'canUseEmojisEverywhere');
+        if(modules.Premium.canUseAnimatedEmojis != null) {
+            mirrorFunction('Premium', 'canUseAnimatedEmojis');
+            hookFunction('Premium', 'canUseAnimatedEmojis');
+        }
     }
 
     Style.Inject();
@@ -3554,11 +3564,18 @@ function Load()
         Discord.original__merge.apply(this, arguments);
     };*/
 
-    Discord.detour_EMBED = function(path, t) {
+    if(Discord.detour_EMBED != null) Discord.detour_EMBED = function(path, t) {
 
         if(path.startsWith("/playlist//")) return EmbedFrames[path.substr(11)];
 
         return Discord.original_EMBED.apply(this, arguments);
+    };
+
+    if(Discord.detour_canUseEmojisEverywhere != null) Discord.detour_canUseEmojisEverywhere = function() {
+        return !!Utils.GetCurrentChannelEncrypt() || Discord.original_canUseEmojisEverywhere.apply(this, arguments);
+    };
+    if(Discord.detour_canUseAnimatedEmojis != null) Discord.detour_canUseAnimatedEmojis = function() {
+        return !!Utils.GetCurrentChannelEncrypt() || Discord.original_canUseAnimatedEmojis.apply(this, arguments);
     };
 
     MenuBar.Show(() => Utils.GetCurrentChannelEncrypt(),
@@ -3748,7 +3765,9 @@ function Unload()
     restoreFunction('MessageQueue', 'enqueue');
     restoreFunction('MessageDispatcher', 'dispatch');
     restoreFunction('FileUploader', 'upload');
-    restoreFunction('SpotifyEndpoints', 'EMBED');
+    if(Discord.detour_EMBED != null) restoreFunction('SpotifyEndpoints', 'EMBED');
+    if(Discord.detour_canUseEmojisEverywhere != null) restoreFunction('Premium', 'canUseEmojisEverywhere');
+    if(Discord.detour_canUseAnimatedEmojis != null) restoreFunction('Premium', 'canUseAnimatedEmojis');
 
     //Discord.MessageCache.prototype._merge = Discord.original__merge;
 
