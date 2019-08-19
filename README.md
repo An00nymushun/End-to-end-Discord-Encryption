@@ -115,7 +115,7 @@ Keys shared with `trusted keys` can swap keys for channels automatically, which 
 # Extras
 You can click on an already enlarged **image** to **further enlarge** it, you can also `drag` the enlarged image if it doesn't fit the screen.<br>
 Use the `arrow keys` to **navigate** like a gallery when zoomed in.<br>
-You can use **any emote** (animated too) in encrypted messages, but you might get a Clyde popup at the first try. Just **type the whole :emotename:** out.<br>
+You can use **any emote** (animated too) in `encrypted messages`.<br>
 Messages above 1600 characters will be compressed, but this feature might have incompatibilities with future versions. This also means that the messages can be 2000 character long if they are mostly made of normal characters.<br>
 For `large audio and video files`, you can use **Mega**, it automatically **embeds**.<br>
 The **encryption** is completely secure unless someone at Discord replaces your messages right when you secure your DMs, to **make sure** you have the right keys, you can use the `Key Visualizer` and **compare** your result with the other party.</br>
