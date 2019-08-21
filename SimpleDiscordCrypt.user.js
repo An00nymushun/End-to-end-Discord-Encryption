@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.3.1
+// @version      1.3.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2826,8 +2826,8 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
     };
     if(message.channel_id === Cache.channelId || (channelConfig != null && channelConfig.l/*lastseen*/ > Date.now() - InactiveChannelTime)) downloadAndProcess();
     else {
-        let onChannelOpen = async () => { await downloadAndProcess(); Utils.RemoveChannelSelectListener(message.channel_id, onChannelOpen); };
-        Utils.AddChannelSelectListener(message.channel_id, onChannelOpen)
+        let onChannelOpen = () => { downloadAndProcess(); Utils.RemoveChannelSelectListener(message.channel_id, onChannelOpen); };
+        Utils.AddChannelSelectListener(message.channel_id, onChannelOpen);
     }
 }
 
@@ -3074,7 +3074,7 @@ async function decryptMessage(message, payload) {
         message.attachments = [];
         for(let attachment of attachments) {
             try {
-                await decryptAttachment(key, keyHashBase64, message, attachment);
+                await decryptAttachment(key, keyHashBase64, message, attachment, channelConfig);
             }
             catch(e) {
                 attachment.filename = "-----ENCRYPTED FILE FAILED TO DECRYPT-----";
@@ -3149,6 +3149,7 @@ async function processSystemMessage(message, sysmsg) {
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
+                Utils.KeyShareEvent(keyHash);
                 channelConfig.k/*keyHash*/ = keyHash;
                 if(message.channel_id === Cache.channelId) {
                     Cache.channelConfig = channelConfig; //in case it's a new config
@@ -3186,6 +3187,7 @@ async function processSystemMessage(message, sysmsg) {
 
                 let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
                 let keyHash = await Utils.SaveKey(sharedSecret, 2/*conversation*/, `DM key with <@${message.author.id}>`);
+                Utils.KeyShareEvent(keyHash);
                 channelConfig.k/*keyHash*/ = keyHash;
                 Utils.dbChanged = true;
                 if(message.channel_id === Cache.channelId) {
@@ -3198,6 +3200,7 @@ async function processSystemMessage(message, sysmsg) {
                 let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
                 if(remotePersonalKey.byteLength !== 32) break;
                 let remotePersonalKeyHash = await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
+                Utils.KeyShareEvent(remotePersonalKeyHash);
 
                 await Utils.SendPersonalKey(message.channel_id);
 
@@ -3227,6 +3230,7 @@ async function processSystemMessage(message, sysmsg) {
                 let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
                 if(remotePersonalKey.byteLength !== 32) break;
                 let remotePersonalKeyHash = await Utils.SaveKey(remotePersonalKey, 3/*personal*/, `<@${message.author.id}>'s personal key`);
+                Utils.KeyShareEvent(remotePersonalKeyHash);
 
                 delete channelConfig.w; //waitingForSystemMessage
                 Utils.dbChanged = true;
@@ -3334,7 +3338,7 @@ async function processSystemMessage(message, sysmsg) {
 
 const descriptionRegex = /^[⠀-⣿]{16,}$/;
 async function processEmbeds(message) {
-    if(message.embeds.length !== 1) return;
+    if(message.embeds == null || message.embeds.length !== 1) return;
     let embed = message.embeds[0];
     if(embed.footer == null || (embed.footer.text !== "SimpleDiscordCrypt" && embed.footer.text !== "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵")) return;
 
