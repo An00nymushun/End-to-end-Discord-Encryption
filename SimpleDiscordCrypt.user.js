@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4
+// @version      1.3.4.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1351,7 +1351,12 @@ function Init(nonInvasive)
 
     Discord.modules = modules;
 
-    let nodeHttps = (typeof(require) !== 'undefined') ? require('https') : null;
+    let nodeHttps;
+    let nodeHttpsOptions;
+    if(typeof(require) !== 'undefined') {
+        nodeHttps = require('https');
+        nodeHttpsOptions = { agent: new nodeHttps.Agent({ keepAlive: true }), timeout: 120000 };
+    }
 
     Object.assign(Utils, {
 
@@ -1398,7 +1403,7 @@ function Init(nonInvasive)
             })
         })
         : (nodeHttps != null) ? function(url) { return new Promise((resolve, reject) => {
-            nodeHttps.get(url, (response) => {
+            nodeHttps.get(url, nodeHttpsOptions, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
@@ -2688,6 +2693,7 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
         try {
             encryptedFileBuffer = await Utils.DownloadFile(encryptedUrl);
         }
+        catch(e) { Utils.Error('File download faled'); return; }
         finally {
             if(downloadLocks.length !== 0) {
                 let unlockNext;
@@ -3677,7 +3683,7 @@ function Load()
 
     PopupManager.Inject();
 
-	const isFirefox = navigator.userAgent.includes('Firefox');
+    const isFirefox = navigator.userAgent.includes('Firefox');
     if(!FixedCsp || isFirefox) {
         const imgsrcIdRegex = /#([^?]+)/;
         const tryReplaceImage = (isFirefox && FixedCsp) ? ()=>{} : async (img) => { //noop if we only need the links
