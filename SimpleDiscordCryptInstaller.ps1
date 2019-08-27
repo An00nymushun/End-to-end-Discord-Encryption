@@ -210,11 +210,13 @@ else console.log("Uh-oh, looks like this version of electron isn't rooted yet");
 
     if($needsWait) { sleep 1 }
 
-    ($discordProcesses + $discordPtbProcesses + $discordCanaryProcesses) | % { $_.Kill() }
-
-    if($discordProcesses.Length -ne 0) { [void](start $discordIconPath)  }
-    if($discordPtbProcesses.Length -ne 0) { [void](start $discordPtbIconPath)  }
-    if($discordCanaryProcesses.Length -ne 0) { [void](start $discordCanaryIconPath)  }
+    $processes = ($discordProcesses + $discordPtbProcesses + $discordCanaryProcesses)
+    if($processes.Length -ne 0) {
+        $processes | % { $_.Kill() }
+        if($discordProcesses.Length -ne 0) { [void](start $discordIconPath)  }
+        if($discordPtbProcesses.Length -ne 0) { [void](start $discordPtbIconPath)  }
+        if($discordCanaryProcesses.Length -ne 0) { [void](start $discordCanaryIconPath)  }
+    }
 }
 else { 'Discord not found' }
 
