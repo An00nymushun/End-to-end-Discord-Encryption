@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4.3
+// @version      1.3.4.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -49,7 +49,7 @@ const ModalClass = 'modal-3c3bKg';
 const ImageWrapperImgSelector = `.imageWrapper-2p5ogY > img`;
 const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
 const MessageContainerSelector = `.messages-3amgkR`;
-const ChatInputSelector = `.inner-zqa7da`;
+const ChatInputSelector = `.scrollableContainer-38zsVD`;
 const MessageImgSelector = `.message-1PNnaP img`;
 const ChatImageSelector = `${MessageContainerSelector} .imageZoom-1n-ADA img`;
 
@@ -428,7 +428,12 @@ ${HeaderBarChildrenSelector} { mask-image: none !important; -webkit-mask-image: 
 }
 .sdc-zoom::-webkit-scrollbar-thumb {
     background: #72dac7;
-}`,
+}
+
+/*for light theme*/
+.theme-light .SDC_TOGGLE { fill: #4f5660 }
+.theme-light .SDC_SELECTED { color: #4f5660 }
+`,
     Inject: function() {
         let style = document.createElement('style');
         style.innerHTML = this.css;
