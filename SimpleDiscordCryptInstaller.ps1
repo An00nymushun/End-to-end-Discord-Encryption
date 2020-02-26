@@ -121,9 +121,6 @@ if($install) {
 	'installing'
 	
 	[void](New-Item "$pluginPath\NodeLoad.js" -Type File -Force -Value @'
-const originalRequire = module.__proto__.require;
-let electron;
-
 const onHeadersReceived = (details, callback) => {
 	let response = { cancel: false };
 	let responseHeaders = details.responseHeaders;
@@ -134,37 +131,47 @@ const onHeadersReceived = (details, callback) => {
 	callback(response);
 };
 
-let orginalBrowserWindow;
+let originalBrowserWindow;
 function browserWindowHook(options) {
 	if(options != null && options.webPreferences != null &&
+	   options.title != null && options.title.startsWith("Discord") &&
 	   options.webPreferences.preload != null && options.webPreferences.preload.endsWith("mainScreenPreload.js")) {
 		let webPreferences = options.webPreferences;
 		let originalPreload = webPreferences.preload;
 		//webPreferences.nodeIntegration = true;
 		//webPreferences.enableRemoteModule = true;
 		webPreferences.preload = `${__dirname}/SimpleDiscordCryptLoader.js`;
-		let mainWindow = new orginalBrowserWindow(options);
+		let mainWindow = new originalBrowserWindow(options);
 		mainWindow.PreloadScript = originalPreload;
 		return mainWindow;
 	}
-	return new orginalBrowserWindow(options);
+	return new originalBrowserWindow(options);
 }
+browserWindowHook.ISHOOK = true;
 
-module.__proto__.require = function(name) {
-	let result = originalRequire.apply(this, arguments);
-	
-	if(name === '@electron/internal/browser/api/browser-window.js') {
-		module.__proto__.require = originalRequire;
-		electron = require('electron');
-		orginalBrowserWindow = electron.BrowserWindow;
-		Object.assign(browserWindowHook, orginalBrowserWindow);
-		browserWindowHook.prototype = orginalBrowserWindow;
-		result = browserWindowHook;
-		electron.app.once('ready', () => { electron.session.defaultSession.webRequest.onHeadersReceived(onHeadersReceived) });
+
+let originalElectronBinding;
+function electronBindingHook(name) {
+	let result = originalElectronBinding.apply(this, arguments);
+
+	if(name === 'atom_browser_window' && !result.BrowserWindow.ISHOOK) {
+		originalBrowserWindow = result.BrowserWindow;
+		Object.assign(browserWindowHook, originalBrowserWindow);
+		browserWindowHook.prototype = originalBrowserWindow.prototype;
+		result.BrowserWindow = browserWindowHook;
+		const electron = require('electron');
+		electron.app.whenReady().then(() => { electron.session.defaultSession.webRequest.onHeadersReceived(onHeadersReceived) });
 	}
-
+	
 	return result;
-};
+}
+electronBindingHook.ISHOOK = true;
+
+originalElectronBinding = process._linkedBinding;
+if(originalElectronBinding.ISHOOK) return;
+Object.assign(electronBindingHook, originalElectronBinding);
+electronBindingHook.prototype = originalElectronBinding.prototype;
+process._linkedBinding = electronBindingHook;
 '@)
 
 	[void](New-Item "$pluginPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
