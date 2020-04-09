@@ -2037,8 +2037,9 @@ function Init(nonInvasive)
         },
         SendPersonalKey: async function(channelId) {
             let channelConfig = this.GetChannelConfig(channelId);
+            if(channelConfig == null) return;
             let keyHash = channelConfig.k;
-            if(channelConfig == null || keyHash === DataBase.personalKeyHash) return;
+            if(keyHash === DataBase.personalKeyHash) return;
 
             let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
             let key = await this.GetKeyByHash(keyHash);
