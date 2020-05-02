@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4.6
+// @version      1.3.4.7
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -45,12 +45,12 @@ const HeaderBarChildrenSelector = `.children-19S4PO`;
 const HeaderBarStatusSelector = `.status-1XNdyw`;
 const HeaderBarChannelNameSelector = `.title-3qD0b- .title-29uC1r, .title-3qD0b- .channelName-qsg_a_`;
 const BackdropSelector = `div[class*="backdrop"]`;
-const ModalClass = 'modal-3c3bKg';
+const ModalClass = 'layer-2KE1M9';
 const ImageWrapperImgSelector = `.imageWrapper-2p5ogY > img`;
 const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
 const MessageContainerSelector = `.messages-3amgkR`;
 const ChatInputSelector = `.scrollableContainer-2NUZem`;
-const MessageImgSelector = `.message-1PNnaP img`;
+const MessageImgSelector = `.message-2qnXI6 img`;
 const ChatImageSelector = `${MessageContainerSelector} .imageZoom-1n-ADA img`;
 
 const htmlEscapeDiv = document.createElement('div');
@@ -2469,17 +2469,28 @@ function Init(nonInvasive)
 
     //convenience feature
     ImageZoom = {};
+    const isDesktopDc = navigator.userAgent.includes('discord');
     let closeModal = () => { document.querySelector(BackdropSelector).click() };
     let zoom = function(event) {
         this.removeEventListener('click', zoom);
         let url;
-        if(this.src != null) url = this.src.split('?', 2)[0];
+        if(this.src != null) url = this.src.split('?', 1)[0];
         let parent = this.parentElement;
         parent.addEventListener('click', closeModal);
         parent.classList.add('sdc-zoom');
-        parent.parentElement.style = "position: fixed; left: 0; top: 0";
+		let p = parent.parentElement;
+		for(let child of p.childNodes) {
+			if(child !== parent) child.remove();
+		}
+        //p.style = "position: fixed; left: 0; top: 0";
+		while(true) {
+			p = p.parentElement;
+			if(p == null || p.classList.contains(ModalClass)) break;
+			//p.style.transform = null;
+			p.style.backgroundColor = "transparent";
+		}
         parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0";
-        this.style = "position: relative; max-width: 100%; user-select: none; -moz-user-select: none";
+        this.style = "position: relative; max-width: 100%; height: auto; user-select: none; -moz-user-select: none";
         let loading = false;
         if(url != null && url.length !== this.src.length && !url.startsWith('blob:')) {
             let loadStart = Date.now();
@@ -2550,7 +2561,7 @@ function Init(nonInvasive)
             for(let i = 0; i < count; i++) if(images[i].src.startsWith(url)) {
                 let image = (event.key === 'ArrowLeft') ? images[i-1] : images[i+1];
                 if(image != null && !image.src.startsWith('data:')) { //still loading
-                    url = image.src.split('?', 2)[0];
+                    url = image.src.split('?', 1)[0];
                     if(!loadAdded) {
                         this.addEventListener('load', () => {
                             this.style.minWidth = ((this.naturalWidth > parent.clientWidth * 2) ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
@@ -2567,6 +2578,14 @@ function Init(nonInvasive)
             }
             event.preventDefault();
         }, true);
+		if(isDesktopDc) this.addEventListener('contextmenu', (event) => {
+			if(!loading && this.src) {
+				let noqueryUrl = this.src.split('?', 1)[0];
+				SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
+			}
+			event.preventDefault();
+		});
+		
         event.stopPropagation();
     }
     ImageZoom.zoom = zoom;
@@ -3544,6 +3563,16 @@ async function LoadBlacklist() {
     if(Cache.channelBlacklist === 1) MenuBar.Update();
 }
 
+async function HandleDispatch(event) {
+	let handler = eventHandlers[event.type];
+	if(handler !== undefined) {
+		let suppress = await handler(event);
+		if(suppress) return;
+	}
+
+	Discord.original_dispatch.apply(this, arguments);
+}
+
 var dbSaveInterval;
 function Load()
 {
@@ -3558,15 +3587,10 @@ function Load()
         Discord.original_enqueue.apply(this, arguments);
     })()};
 
-    Discord.detour_dispatch = function(event){(async () => {
-        let handler = eventHandlers[event.type];
-        if(handler) {
-            let suppress = await handler(event);
-            if(suppress) return;
-        }
 
-        Discord.original_dispatch.apply(this, arguments);
-    })()};
+    Discord.detour_dispatch = function(event) {
+		HandleDispatch.apply(this, arguments);
+	};
 
     Discord.detour_upload = function(){(async () => {
 
