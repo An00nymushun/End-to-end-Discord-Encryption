@@ -7,7 +7,7 @@ const onHeadersReceived = (details) => {
 };
 
 const filter = {
-	urls: ["https://discordapp.com/*","https://ptb.discordapp.com/*","https://canary.discordapp.com/*"],
+	urls: ["https://discord.com/*","https://ptb.discord.com/*","https://canary.discord.com/*"],
 	types: ["main_frame"]
 };
 
