@@ -1,16 +1,22 @@
 {
+	"manifest_version": 2,
 	"name": "SimpleDiscordCrypt",
-	"version": "1.3",
-	"description": "",
+	"version": "1.4",
+	"description": "Discord message encryption plugin, it gives end-to-end clientside encryption for your messages and files with automatic key exchange",
+	"icons": {
+		"16": "logo16.png",
+		"48": "logo48.png",
+		"128": "logo128.png"
+	},
 	"permissions": [
 		"storage",
 		"webRequest",
 		"webRequestBlocking",
 		"https://gitlab.com/",
 		"https://cdn.discordapp.com/",
-		"https://discordapp.com/",
-		"https://ptb.discordapp.com/",
-		"https://canary.discordapp.com/"
+		"https://discord.com/",
+		"https://ptb.discord.com/",
+		"https://canary.discord.com/"
 	],
 	"background": {
 	  "scripts": ["background.js"],
@@ -19,17 +25,13 @@
 	"content_scripts": [ {
 		"js": ["SimpleDiscordCryptLoader.js"],
 		"matches": [
-			"https://*.discordapp.com/channels/*",
-			"https://*.discordapp.com/activity",
-			"https://*.discordapp.com/login*",
-			"https://*.discordapp.com/app",
-			"https://*.discordapp.com/library",
-			"https://*.discordapp.com/store"
+			"https://*.discord.com/channels/*",
+			"https://*.discord.com/activity",
+			"https://*.discord.com/login*",
+			"https://*.discord.com/app",
+			"https://*.discord.com/library",
+			"https://*.discord.com/store"
 		],
 		"run_at": "document_start"
-	} ],
-	"icons": {
-		"64": "logo.png"
-	},
-	"manifest_version": 2
+	} ]
 }
