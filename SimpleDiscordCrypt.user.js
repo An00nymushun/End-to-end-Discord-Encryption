@@ -3533,6 +3533,8 @@ function LockMessages(initial) {
         if(event.type === 'LOAD_MESSAGES_SUCCESS' || event.type === 'MESSAGE_CREATE' || event.type === 'MESSAGE_UPDATE') {
 
             await new Promise((resolve) => { messageLocks.push(resolve) });
+			
+			return Discord.detour_dispatch.apply(this, arguments);
         }
 
         Discord.original_dispatch.apply(this, arguments);
