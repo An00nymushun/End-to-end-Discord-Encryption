@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4.7
+// @version      1.3.4.8
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
 // @downloadURL  https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js
 // @updateURL    https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.meta.js
 // @icon         https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/logo.png
-// @match        https://*.discord.com/channels/*
-// @match        https://*.discord.com/activity
-// @match        https://*.discord.com/login*
-// @match        https://*.discord.com/app
-// @match        https://*.discord.com/library
+// @match        https://*.discord.com/channels/*	
+// @match        https://*.discord.com/activity	
+// @match        https://*.discord.com/login*	
+// @match        https://*.discord.com/app	
+// @match        https://*.discord.com/library	
 // @match        https://*.discord.com/store
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -2610,16 +2610,21 @@ function Init(nonInvasive)
 
 
 async function handleMessage(event) {
-    return await processMessage(event.message);
+    if(!await processMessage(event.message))
+		Discord.original_dispatch.apply(this, arguments);
 }
 async function handleMessages(event) {
     for(let message of event.messages.slice()) //in case they reverse the array
         await processMessage(message);
+		
+	Discord.original_dispatch.apply(this, arguments);
 }
 async function handleSearch(event) {
     for(let group of event.messages)
         for(let message of group)
             await processMessage(message);
+
+	Discord.original_dispatch.apply(this, arguments);
 }
 
 const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
@@ -3385,13 +3390,7 @@ async function processEmbeds(message) {
     }
 }
 
-/*async function handleMessageUpdate(event) {
-    if(event.message.edited_timestamp != null) return;
-
-    await processEmbeds(event.message);
-}*/
-
-async function handleChannelSelect(event) {
+function handleChannelSelect(event) {
     if(Blacklist != null) {
         let guildId = event.guildId;
         Cache.channelBlacklist = (guildId == null) ? null : Blacklist[guildId];
@@ -3407,13 +3406,17 @@ async function handleChannelSelect(event) {
         setTimeout(() => { PopupManager.Update() }, 0);
         //Update after event is processed by Discord
     }
+	
+    Discord.original_dispatch.apply(this, arguments);
 }
 
-async function handleDelete(event) {
+function handleDelete(event) {
     Utils.MessageDeleteEvent(event.id);
+	Discord.original_dispatch.apply(this, arguments);
 }
-async function handleDeletes(event) {
+function handleDeletes(event) {
     Utils.MessageDeleteBulkEvent(event.ids);
+	Discord.original_dispatch.apply(this, arguments);
 }
 
 
@@ -3565,11 +3568,10 @@ async function LoadBlacklist() {
     if(Cache.channelBlacklist === 1) MenuBar.Update();
 }
 
-async function HandleDispatch(event) {
+function HandleDispatch(event) {
 	let handler = eventHandlers[event.type];
 	if(handler !== undefined) {
-		let suppress = await handler(event);
-		if(suppress) return;
+		return handler.apply(this, arguments);
 	}
 
 	Discord.original_dispatch.apply(this, arguments);
@@ -3589,10 +3591,7 @@ function Load()
         Discord.original_enqueue.apply(this, arguments);
     })()};
 
-
-    Discord.detour_dispatch = function(event) {
-		HandleDispatch.apply(this, arguments);
-	};
+	Discord.detour_dispatch = HandleDispatch;
 
     Discord.detour_upload = function(){(async () => {
 
