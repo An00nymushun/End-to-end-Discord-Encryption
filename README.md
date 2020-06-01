@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="https://gitlab.com/An0/SimpleDiscordCrypt/avatar" height="50" width="50">
+    <img src="https://gitlab.com/An0/SimpleDiscordCrypt/-/avatar" height="50" width="50">
     SimpleDiscordCrypt
 </h1>
 
@@ -136,4 +136,5 @@ To uninstall, just delete it from %localappdata% and make new shortcuts.<br>
 <br>
 <br>
 
-𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵
+𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵<br>
+Or according to google: simple discord crypt
