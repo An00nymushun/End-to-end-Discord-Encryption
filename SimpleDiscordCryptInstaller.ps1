@@ -134,8 +134,7 @@ const onHeadersReceived = (details, callback) => {
 let originalBrowserWindow;
 function browserWindowHook(options) {
 	if(options != null && options.webPreferences != null &&
-	   options.title != null && options.title.startsWith("Discord") &&
-	   options.webPreferences.preload != null && options.webPreferences.preload.endsWith("mainScreenPreload.js")) {
+	   options.title != null && options.title.startsWith("Discord") && options.webPreferences.preload != null) {
 		let webPreferences = options.webPreferences;
 		let originalPreload = webPreferences.preload;
 		//webPreferences.nodeIntegration = true;
