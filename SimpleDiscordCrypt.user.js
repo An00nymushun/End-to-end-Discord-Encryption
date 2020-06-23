@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4.8
+// @version      1.3.4.9
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2868,9 +2868,19 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
     }
 }
 
-function createYoutubeEmbed(id, extra) {
+const starttimeRegex = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/;
+function createYoutubeEmbed(id, timequery) {
     let embedUrl = `https://youtube.com/embed/${id}`;
-    if(extra != null) embedUrl += '?' + extra.substr(1);
+    if(timequery != null) {
+		let time = timequery.split('=')[1];
+		let timeMatch = starttimeRegex.exec(time);
+		let t = 0;
+		if(timeMatch[1] !== undefined) t += timeMatch[1] * 3600;
+		if(timeMatch[2] !== undefined) t += timeMatch[2] * 60;
+		if(timeMatch[3] !== undefined) t += parseInt(timeMatch[3]);
+		if(t !== 0) time = t;
+		embedUrl += "?start=" + time;
+	}
     return {
         type: 'video',
         url: `https://youtube.com/watch?v=${id}`,
@@ -2878,12 +2888,12 @@ function createYoutubeEmbed(id, extra) {
         video: { url: embedUrl, width: 1280, height: 720 }
     }
 }
-const youtubeRegex = /[?&]v=([\w-]+).*?(&t=\d+)?/;
+const youtubeRegex = /[?&]v=([\w-]+).*?(&(?:t|start)=[\dhms]+)?/;
 function embedYoutube(message, url, queryString) {
     let match = youtubeRegex.exec(queryString);
     if(match != null) message.embeds.push(createYoutubeEmbed(match[1], match[2]));
 }
-const youtuRegex = /^([\w-]+).*?(\?t=\d+)?/;
+const youtuRegex = /^([\w-]+).*?(\?(?:t|start)=[\dhms]+)?/;
 function embedYoutu(message, url, queryString) {
     let match = youtuRegex.exec(queryString);
     if(match != null) message.embeds.push(createYoutubeEmbed(match[1], match[2]));
