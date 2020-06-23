@@ -137,8 +137,8 @@ function browserWindowHook(options) {
 	   options.title != null && options.title.startsWith("Discord") && options.webPreferences.preload != null) {
 		let webPreferences = options.webPreferences;
 		let originalPreload = webPreferences.preload;
-		//webPreferences.nodeIntegration = true;
-		//webPreferences.enableRemoteModule = true;
+		webPreferences.nodeIntegration = true;
+		webPreferences.enableRemoteModule = true;
 		webPreferences.preload = `${__dirname}/SimpleDiscordCryptLoader.js`;
 		let mainWindow = new originalBrowserWindow(options);
 		mainWindow.PreloadScript = originalPreload;
