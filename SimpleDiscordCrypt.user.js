@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.4.10
+// @version      1.3.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
 // @downloadURL  https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js
 // @updateURL    https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.meta.js
 // @icon         https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/logo.png
-// @match        https://*.discord.com/channels/*	
-// @match        https://*.discord.com/activity	
-// @match        https://*.discord.com/login*	
-// @match        https://*.discord.com/app	
-// @match        https://*.discord.com/library	
+// @match        https://*.discord.com/channels/*
+// @match        https://*.discord.com/activity
+// @match        https://*.discord.com/login*
+// @match        https://*.discord.com/app
+// @match        https://*.discord.com/library
 // @match        https://*.discord.com/store
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -2478,17 +2478,17 @@ function Init(nonInvasive)
         let parent = this.parentElement;
         parent.addEventListener('click', closeModal);
         parent.classList.add('sdc-zoom');
-		let p = parent.parentElement;
-		for(let child of p.childNodes) {
-			if(child !== parent) child.remove();
-		}
-        //p.style = "position: fixed; left: 0; top: 0";
-		while(true) {
-			p = p.parentElement;
-			if(p == null || p.classList.contains(ModalClass)) break;
-			//p.style.transform = null;
-			p.style.backgroundColor = "transparent";
-		}
+        let p = parent.parentElement;
+        /*for(let child of p.childNodes) {
+            if(child !== parent) child.remove();
+        }*/
+        p.parentElement.style = "position: fixed; left: 0; top: 0";
+        /*while(true) {
+            p = p.parentElement;
+            if(p == null || p.classList.contains(ModalClass)) break;
+            //p.style.transform = null;
+            p.style.backgroundColor = "transparent";
+        }*/
         parent.style = "width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0";
         this.style = "position: relative; max-width: 100%; height: auto; user-select: none; -moz-user-select: none";
         let loading = false;
@@ -2578,14 +2578,14 @@ function Init(nonInvasive)
             }
             event.preventDefault();
         }, true);
-		if(isDesktopDc) this.addEventListener('contextmenu', (event) => {
-			if(!loading && this.src) {
-				let noqueryUrl = this.src.split('?', 1)[0];
-				SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
-			}
-			event.preventDefault();
-		});
-		
+        if(isDesktopDc) this.addEventListener('contextmenu', (event) => {
+            if(!loading && this.src) {
+                let noqueryUrl = this.src.split('?', 1)[0];
+                SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
+            }
+            event.preventDefault();
+        });
+
         event.stopPropagation();
     }
     ImageZoom.zoom = zoom;
@@ -2611,20 +2611,32 @@ function Init(nonInvasive)
 
 async function handleMessage(event) {
     if(!await processMessage(event.message))
-		Discord.original_dispatch.apply(this, arguments);
+        Discord.original_dispatch.apply(this, arguments);
 }
 async function handleMessages(event) {
     for(let message of event.messages.slice()) //in case they reverse the array
         await processMessage(message);
-		
-	Discord.original_dispatch.apply(this, arguments);
+
+    Discord.original_dispatch.apply(this, arguments);
 }
 async function handleSearch(event) {
     for(let group of event.messages)
         for(let message of group)
             await processMessage(message);
 
-	Discord.original_dispatch.apply(this, arguments);
+    Discord.original_dispatch.apply(this, arguments);
+}
+async function handleUpdate(event) {
+    let message = event.message;
+    if(message.content == null && message.embeds != null && message.embeds.length === 1) {
+        let embed = message.embeds[0];
+        if(embed.footer != null && (embed.footer.text === "SimpleDiscordCrypt" || embed.footer.text === "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵")) {
+            return; //ignore embed-only updates
+        }
+    }
+
+    if(!await processMessage(message))
+        Discord.original_dispatch.apply(this, arguments);
 }
 
 const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
@@ -2872,15 +2884,15 @@ const starttimeRegex = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/;
 function createYoutubeEmbed(id, timequery) {
     let embedUrl = `https://youtube.com/embed/${id}`;
     if(timequery != null) {
-		let time = timequery.split('=')[1];
-		let timeMatch = starttimeRegex.exec(time);
-		let t = 0;
-		if(timeMatch[1] !== undefined) t += timeMatch[1] * 3600;
-		if(timeMatch[2] !== undefined) t += timeMatch[2] * 60;
-		if(timeMatch[3] !== undefined) t += parseInt(timeMatch[3]);
-		if(t !== 0) time = t;
-		embedUrl += "?start=" + time;
-	}
+        let time = timequery.split('=')[1];
+        let timeMatch = starttimeRegex.exec(time);
+        let t = 0;
+        if(timeMatch[1] !== undefined) t += timeMatch[1] * 3600;
+        if(timeMatch[2] !== undefined) t += timeMatch[2] * 60;
+        if(timeMatch[3] !== undefined) t += parseInt(timeMatch[3]);
+        if(t !== 0) time = t;
+        embedUrl += "?start=" + time;
+    }
     return {
         type: 'video',
         url: `https://youtube.com/watch?v=${id}`,
@@ -3416,17 +3428,17 @@ function handleChannelSelect(event) {
         setTimeout(() => { PopupManager.Update() }, 0);
         //Update after event is processed by Discord
     }
-	
+
     Discord.original_dispatch.apply(this, arguments);
 }
 
 function handleDelete(event) {
     Utils.MessageDeleteEvent(event.id);
-	Discord.original_dispatch.apply(this, arguments);
+    Discord.original_dispatch.apply(this, arguments);
 }
 function handleDeletes(event) {
     Utils.MessageDeleteBulkEvent(event.ids);
-	Discord.original_dispatch.apply(this, arguments);
+    Discord.original_dispatch.apply(this, arguments);
 }
 
 
@@ -3534,7 +3546,7 @@ const eventHandlers = {
     'LOAD_RECENT_MENTIONS_SUCCESS': handleMessages,
     'SEARCH_FINISH': handleSearch,
     'MESSAGE_CREATE': handleMessage,
-    'MESSAGE_UPDATE': handleMessage,
+    'MESSAGE_UPDATE': handleUpdate,
     'MESSAGE_DELETE': handleDelete,
     'MESSAGE_DELETE_BULK': handleDeletes
 }
@@ -3546,8 +3558,8 @@ function LockMessages(initial) {
         if(event.type === 'LOAD_MESSAGES_SUCCESS' || event.type === 'MESSAGE_CREATE' || event.type === 'MESSAGE_UPDATE') {
 
             await new Promise((resolve) => { messageLocks.push(resolve) });
-			
-			return Discord.detour_dispatch.apply(this, arguments);
+
+            return Discord.detour_dispatch.apply(this, arguments);
         }
 
         Discord.original_dispatch.apply(this, arguments);
@@ -3579,12 +3591,12 @@ async function LoadBlacklist() {
 }
 
 function HandleDispatch(event) {
-	let handler = eventHandlers[event.type];
-	if(handler !== undefined) {
-		return handler.apply(this, arguments);
-	}
+    let handler = eventHandlers[event.type];
+    if(handler !== undefined) {
+        return handler.apply(this, arguments);
+    }
 
-	Discord.original_dispatch.apply(this, arguments);
+    Discord.original_dispatch.apply(this, arguments);
 }
 
 var dbSaveInterval;
@@ -3601,7 +3613,7 @@ function Load()
         Discord.original_enqueue.apply(this, arguments);
     })()};
 
-	Discord.detour_dispatch = HandleDispatch;
+    Discord.detour_dispatch = HandleDispatch;
 
     Discord.detour_upload = function(){(async () => {
 
