@@ -2014,7 +2014,7 @@ function Init(nonInvasive)
 
         SendSystemMessage: function(channelId, sysmsg) {
             Discord.enqueue({
-                type: 'send',
+                type: 0/*send*/,
                 message: {
                     channelId: channelId,
                     nonce: this.GetNonce(),
@@ -3608,7 +3608,7 @@ function Load()
 
     Discord.detour_enqueue = function(packet){(async () => {
 
-        await handleSend(packet.message.channelId, packet.message, packet.type === 'edit');
+        await handleSend(packet.message.channelId, packet.message, packet.type === 1/*edit*/);
 
         Discord.original_enqueue.apply(this, arguments);
     })()};
