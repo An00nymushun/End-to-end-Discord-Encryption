@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5
+// @version      1.3.5.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1319,7 +1319,7 @@ function Init(nonInvasive)
 
     let modules = {};
 
-    modules.MessageQueue = findModuleByUniqueProperties([ 'enqueue', 'handleSend', 'handleResponse' ], nonInvasive);
+    modules.MessageQueue = findModuleByUniqueProperties([ 'enqueue', 'handleSend', 'handleEdit' ], nonInvasive);
     if(modules.MessageQueue == null) { if(!nonInvasive) Utils.Error("MessageQueue not found."); return 0; }
 
     modules.MessageDispatcher = findModuleByUniqueProperties( [ 'dispatch', 'maybeDispatch', 'dirtyDispatch' ], nonInvasive);
