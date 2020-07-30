@@ -3,23 +3,27 @@ $ErrorActionPreference = 'Stop'
 
 $startMenuPath = [Environment]::GetFolderPath('StartMenu')+'\Programs\Discord Inc\'
 $desktopPath = [Environment]::GetFolderPath('Desktop')+'\'
+$taskbarPath = $env:APPDATA+'\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\'
 $discordPath = $env:LOCALAPPDATA+'\Discord'
 $discordDataPath = $env:APPDATA+'\discord'
 $discordResourcesPath = $discordPath+'\app-*'
 $discordIconPath = $startMenuPath+'Discord.lnk'
 $discordDesktopIconPath = $desktopPath+'Discord.lnk'
+$discordTaskbarIconPath = $taskbarPath+'Discord.lnk'
 $discordExeName = 'Discord.exe'
 $discordPtbPath = $env:LOCALAPPDATA+'\DiscordPTB'
 $discordPtbDataPath = $env:APPDATA+'\discordptb'
 $discordPtbResourcesPath = $discordPtbPath+'\app-*'
 $discordPtbIconPath = $startMenuPath+'Discord PTB.lnk'
 $discordPtbDesktopIconPath = $desktopPath+'Discord PTB.lnk'
+$discordPtbTaskbarIconPath = $taskbarPath+'Discord PTB.lnk'
 $discordPtbExeName = 'DiscordPTB.exe'
 $discordCanaryPath = $env:LOCALAPPDATA+'\DiscordCanary'
 $discordCanaryDataPath = $env:APPDATA+'\discordcanary'
 $discordCanaryResourcesPath = $discordCanaryPath+'\app-*'
 $discordCanaryIconPath = $startMenuPath+'Discord Canary.lnk'
 $discordCanaryDesktopIconPath = $desktopPath+'Discord Canary.lnk'
+$discordCanaryTaskbarIconPath = $taskbarPath+'Discord Canary.lnk'
 $discordCanaryExeName = 'DiscordCanary.exe'
 $iconLocation = '\app.ico,0'
 $pluginPath = $env:LOCALAPPDATA+'\SimpleDiscordCrypt'
@@ -27,7 +31,7 @@ $startupRegistry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 
 
 $shell = New-Object -ComObject WScript.Shell
-function RootElectron([string]$discordIconPath, [string]$exeName, [string]$path, [string]$resourcesPath, [string]$desktopIconPath) {
+function RootElectron([string]$discordIconPath, [string]$exeName, [string]$path, [string]$resourcesPath, [string]$desktopIconPath, [string]$taskbarIconPath) {
 	'rooting'
 	$shortcut = $shell.CreateShortcut($discordIconPath)
 	if($shortcut.WorkingDirectory -eq "") {
@@ -41,6 +45,9 @@ function RootElectron([string]$discordIconPath, [string]$exeName, [string]$path,
 
 	if(Test-Path $desktopIconPath) {
 		copy $discordIconPath $desktopIconPath -Force
+	}
+	if(Test-Path $taskbarIconPath) {
+		copy $discordIconPath $taskbarIconPath -Force
 	}
 }
 
@@ -78,7 +85,7 @@ while(Test-Path $discordPath) {
 
 	RemoveExtension $discordDataPath
 
-	RootElectron $discordIconPath $discordExeName $discordPath $discordResourcesPath $discordDesktopIconPath
+	RootElectron $discordIconPath $discordExeName $discordPath $discordResourcesPath $discordDesktopIconPath $discordTaskbarIconPath
 
 	ReplaceStartup 'Discord' $discordIconPath
 	
@@ -93,7 +100,7 @@ while(Test-Path $discordPtbPath) {
 
 	RemoveExtension $discordPtbDataPath
 
-	RootElectron $discordPtbIconPath $discordPtbExeName $discordPtbPath $discordPtbResourcesPath $discordPtbDesktopIconPath
+	RootElectron $discordPtbIconPath $discordPtbExeName $discordPtbPath $discordPtbResourcesPath $discordPtbDesktopIconPath $discordPtbTaskbarIconPath
 	
 	ReplaceStartup 'DiscordPTB' $discordPtbIconPath
 
@@ -108,7 +115,7 @@ while(Test-Path $discordCanaryPath) {
 
 	RemoveExtension $discordCanaryDataPath
 
-	RootElectron $discordCanaryIconPath $discordCanaryExeName $discordCanaryPath $discordCanaryResourcesPath $discordCanaryDesktopIconPath
+	RootElectron $discordCanaryIconPath $discordCanaryExeName $discordCanaryPath $discordCanaryResourcesPath $discordCanaryDesktopIconPath $discordCanaryTaskbarIconPath
 	
 	ReplaceStartup 'DiscordCanary' $discordCanaryIconPath
 
@@ -139,6 +146,7 @@ function browserWindowHook(options) {
 		let originalPreload = webPreferences.preload;
 		webPreferences.nodeIntegration = true;
 		webPreferences.enableRemoteModule = true;
+		webPreferences.contextIsolation = false;
 		webPreferences.preload = `${__dirname}/SimpleDiscordCryptLoader.js`;
 		let mainWindow = new originalBrowserWindow(options);
 		mainWindow.PreloadScript = originalPreload;
@@ -175,8 +183,6 @@ process._linkedBinding = electronBindingHook;
 
 	[void](New-Item "$pluginPath\SimpleDiscordCryptLoader.js" -Type File -Force -Value @'
 let requireGrab = require;
-if(requireGrab == null && window.chrome != null) requireGrab = chrome.require; 
-
 if(requireGrab != null) {
 	const require = requireGrab;
 
@@ -185,16 +191,20 @@ if(requireGrab != null) {
 	const localStorage = window.localStorage;
 	const CspDisarmed = true;
 
-	require('https').get("https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/SimpleDiscordCrypt.user.js", (response) => {
+	require('https').get("https://gitlab.com/An0/SimpleDiscordCrypt/-/raw/master/SimpleDiscordCrypt.user.js", (response) => {
 		let data = "";
 		response.on('data', (chunk) => data += chunk);
 		response.on('end', () => eval(data));
 	});
 	
-	const remote = require('electron').remote;
+	const electron = require('electron');
+	const remote = electron.remote;
 	if(remote != null) {
 		let currentWindow = remote.getCurrentWindow();
-		if(currentWindow.PreloadScript != null) require(currentWindow.PreloadScript);
+		if(currentWindow.PreloadScript != null) {
+			electron.contextBridge.exposeInMainWorld = (name, object) => window[name] = object;
+			require(currentWindow.PreloadScript);
+		}
 	}
 	/*if(typeof process !== 'undefined')
 		process.once('loaded', () => { delete window.require; delete window.module; });*/
@@ -206,13 +216,13 @@ else console.log("Uh-oh, looks like this version of electron isn't rooted yet");
 
     $needsWait = $false
     $discordProcesses = Get-Process 'Discord' -ErrorAction SilentlyContinue
-    $discordProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+    $discordProcesses | % { $needsWait = $_.CloseMainWindow() -or $needsWait }
 
     $discordPtbProcesses = Get-Process 'DiscordPTB' -ErrorAction SilentlyContinue
-    $discordPtbProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+    $discordPtbProcesses | % { $needsWait = $_.CloseMainWindow() -or $needsWait }
 
     $discordCanaryProcesses = Get-Process 'DiscordCanary' -ErrorAction SilentlyContinue
-    $discordCanaryProcesses | % { $needsWait = $needsWait -or $_.CloseMainWindow() }
+    $discordCanaryProcesses | % { $needsWait = $_.CloseMainWindow() -or $needsWait }
 
     if($needsWait) { sleep 1 }
 
