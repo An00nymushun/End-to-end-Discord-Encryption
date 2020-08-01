@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.2
+// @version      1.3.5.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3441,7 +3441,7 @@ function handleDeletes(event) {
     Discord.original_dispatch.apply(this, arguments);
 }
 
-
+const EMBED_LINKS_CHECK = { data: 0x4000n };
 const prefixRegex = /^(?::?ENC(?:(?:_\w*)?:|\b)|<:ENC:\d{1,20}>)\s*/;
 const noencprefixRegex = /^(?::?NOENC:?|<:NOENC:\d{1,20}>)\s*/; //not really expecting an emoji
 async function handleSend(channelId, message, forceSimple) {
@@ -3483,7 +3483,7 @@ async function handleSend(channelId, message, forceSimple) {
     let payload = Utils.PayloadEncode(messageBytes);
 
     let channel = Discord.getChannel(channelId);
-    if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(0x4000/*EMBED_LINKS*/, Discord.getCurrentUser(), channel))) {
+    if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))) {
        message.content = payload + " `SimpleDiscordCrypt`";
     }
     else {
