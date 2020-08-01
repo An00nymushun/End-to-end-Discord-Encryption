@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.3
+// @version      1.3.5.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2798,7 +2798,7 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
                 Object.assign(placeholder, {
                     type: 'video',
                     //color: BaseColorInt,
-                    url: downloadUrl,
+                    url: "/#" + downloadUrl, //ugly hack because Discord now filters urls here
                     title: "Download",
                     thumbnail: { url: coverImageUrl, width, height },
                     video: { url: downloadUrl, proxy_url: url, width, height }
@@ -3737,10 +3737,32 @@ function Load()
 
     PopupManager.Inject();
 
-    const isFirefox = navigator.userAgent.includes('Firefox');
-    if(!FixedCsp || isFirefox) {
+
+    const scriptLink = function(event) {
+        event.preventDefault();
+        return new Function(this.attributes.href.value.substr(11)).apply(this);
+    };
+    const fakeScriptLink = function(event) {
+        event.preventDefault();
+        console.log(this.attributes.href.value.substr(13))
+        return new Function(this.attributes.href.value.substr(13)).apply(this);
+    };
+    const tryReplaceLink = (a) => {
+        let href = a.attributes.href;
+        if(href === undefined) return;
+        href = href.value;
+        if(href.startsWith("/#javascript:")) {
+            a.addEventListener('click', fakeScriptLink);
+            a.addEventListener('auxclick', fakeScriptLink);
+        }
+        else if(href.startsWith("javascript:")) {
+            a.addEventListener(href.startsWith("javascript:SdcDecryptDl(") ? 'click' : 'auxclick', scriptLink);
+        }
+    }
+    //const isFirefox = navigator.userAgent.includes('Firefox');
+    if(!FixedCsp) {
         const imgsrcIdRegex = /#([^?]+)/;
-        const tryReplaceImage = (isFirefox && FixedCsp) ? ()=>{} : async (img) => { //noop if we only need the links
+        const tryReplaceImage = async (img) => {
             let srcmatch = imgsrcIdRegex.exec(img.src);
             if(srcmatch == null) return;
             let blob = Patcher.Images[srcmatch[1]];
@@ -3761,10 +3783,6 @@ function Load()
             canvas.style.cssText = img.style.cssText;
             img.replaceWith(canvas);
         };
-        const scriptLink = function(event) {
-            event.preventDefault();
-            return new Function(this.href.substr(11)).apply(this);
-        };
         Patcher = {
             observer: new MutationObserver((mutations) => {
                 for(let mutation of mutations) {
@@ -3772,13 +3790,10 @@ function Load()
                         let tagName = mutation.target.tagName;
                         if(tagName === 'IMG') {
                             if(mutation.attributeName !== 'src') continue;
-                            let img = mutation.target;
-                            tryReplaceImage(img);
+                            tryReplaceImage(mutation.target);
                         }
                         else if(tagName === 'A') {
-                            let href = mutation.target.href;
-                            if(!href.startsWith("javascript:")) continue;
-                            mutation.target.addEventListener(href.startsWith("javascript:SdcDecryptDl(") ? 'click' : 'auxclick', scriptLink);
+                            tryReplaceLink(mutation.target);
                         }
                     }
                     else {
@@ -3792,9 +3807,7 @@ function Load()
                             }
 
                             for(let a of addedNode.getElementsByTagName('a')) {
-                                let href = a.href;
-                                if(!href.startsWith("javascript:")) continue;
-                                a.addEventListener(href.startsWith("javascript:SdcDecryptDl(") ? 'click' : 'auxclick', scriptLink);
+                                tryReplaceLink(a);
                             }
                         }
                     }
@@ -3803,8 +3816,29 @@ function Load()
             Images: [],
             FreeImageId: 0
         };
-        Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true });
     }
+    else {
+        Patcher = {
+            observer: new MutationObserver((mutations) => {
+                for(let mutation of mutations) {
+                    if(mutation.type === 'attributes') {
+                        if(mutation.target.tagName === 'A') {
+                            tryReplaceLink(mutation.target);
+                        }
+                    }
+                    else {
+                        for(let addedNode of mutation.addedNodes) {
+                            if(addedNode.getElementsByTagName == null) continue;
+                            for(let a of addedNode.getElementsByTagName('a')) {
+                                tryReplaceLink(a);
+                            }
+                        }
+                    }
+                }
+            })
+        };
+    }
+    Patcher.observer.observe(document.documentElement, { attributes: true, childList: true, subtree: true });
 
     dbSaveInterval = setInterval(() => { Utils.SaveDb() }, 10000);
 
