@@ -192,6 +192,7 @@ if(requireGrab != null) {
 	const CspDisarmed = true;
 
 	require('https').get("https://gitlab.com/An0/SimpleDiscordCrypt/-/raw/master/SimpleDiscordCrypt.user.js", (response) => {
+		response.setEncoding('utf8');
 		let data = "";
 		response.on('data', (chunk) => data += chunk);
 		response.on('end', () => eval(data));
