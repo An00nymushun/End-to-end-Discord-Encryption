@@ -201,10 +201,11 @@ if(requireGrab != null) {
 	const electron = require('electron');
 	const remote = electron.remote;
 	if(remote != null) {
-		let currentWindow = remote.getCurrentWindow();
-		if(currentWindow.PreloadScript != null) {
+		let originalPreloadScript = remote.getCurrentWindow().PreloadScript;
+		if(originalPreloadScript != null) {
+			process.electronBinding('command_line').appendSwitch('preload', originalPreloadScript);
 			electron.contextBridge.exposeInMainWorld = (name, object) => window[name] = object;
-			require(currentWindow.PreloadScript);
+			require(originalPreloadScript);
 		}
 	}
 	/*if(typeof process !== 'undefined')
