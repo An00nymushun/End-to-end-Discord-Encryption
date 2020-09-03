@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.4
+// @version      1.3.5.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -48,10 +48,10 @@ const BackdropSelector = `div[class*="backdrop"]`;
 const ModalClass = 'layer-2KE1M9';
 const ImageWrapperImgSelector = `.imageWrapper-2p5ogY > img`;
 const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
-const MessageContainerSelector = `.messages-3amgkR`;
+const MessageScrollerSelector = `.scroller-2LSbBU`;
 const ChatInputSelector = `.scrollableContainer-2NUZem`;
 const MessageImgSelector = `.message-2qnXI6 img`;
-const ChatImageSelector = `${MessageContainerSelector} .imageZoom-1n-ADA img`;
+const ChatImageSelector = `${MessageScrollerSelector} .imageZoom-1n-ADA img`;
 
 const htmlEscapeDiv = document.createElement('div');
 function HtmlEscape(string) { htmlEscapeDiv.textContent = string; return htmlEscapeDiv.innerHTML; }
@@ -2658,7 +2658,7 @@ async function processMessage(message) {
 }
 
 function scrollChat(by) {
-    let messageContainer = document.querySelector(MessageContainerSelector);
+    let messageContainer = document.querySelector(MessageScrollerSelector);
     if(messageContainer == null) return;
     if(messageContainer.scrollTop + 1 >= (messageContainer.scrollHeight - messageContainer.clientHeight)) return; //scrolled to bottom
     messageContainer.scrollTop += by;
