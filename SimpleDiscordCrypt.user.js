@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.5
+// @version      1.3.5.6
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2751,7 +2751,7 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
         let blob = new File([fileBuffer], filename);
         let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
         let url;
-        let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(filename)},'${bloburl}')`;
+        let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(filename)},${JSON.stringify(bloburl)})`;
 
         let width;
         let height;
@@ -3744,7 +3744,6 @@ function Load()
     };
     const fakeScriptLink = function(event) {
         event.preventDefault();
-        console.log(this.attributes.href.value.substr(13))
         return new Function(this.attributes.href.value.substr(13)).apply(this);
     };
     const tryReplaceLink = (a) => {
