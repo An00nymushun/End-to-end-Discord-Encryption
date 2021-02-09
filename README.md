@@ -35,7 +35,7 @@ Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/Discord
 <br>
 <br>
 <br>
-If you have any questions come to my [Discord server](https://discord.gg/6yjzhAm)<br>
+If you have any questions come to my [Discord server](https://discord.gg/rSUyXeCHBE)<br>
 If you want a server blacklisted or you would like users to not use embeds, do tell<br>
 <br>
 List of servers that use the plugin:<br>
