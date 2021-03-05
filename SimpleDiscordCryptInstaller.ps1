@@ -205,6 +205,7 @@ if(requireGrab != null) {
 		if(originalPreloadScript != null) {
 			process.electronBinding('command_line').appendSwitch('preload', originalPreloadScript);
 			electron.contextBridge.exposeInMainWorld = (name, object) => window[name] = object;
+			window.onerror = null;
 			require(originalPreloadScript);
 		}
 	}
