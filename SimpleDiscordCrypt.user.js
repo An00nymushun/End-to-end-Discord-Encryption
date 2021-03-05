@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.8
+// @version      1.3.5.9
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3530,6 +3530,7 @@ async function handleUpload(channelId, file, message, spoiler) {
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
         arguments[1] = new File([encryptedBuffer], encryptedFilename);
+        arguments[4] = encryptedFilename;
     }
     catch(e) {
         arguments[1] = null;
