@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.0.0
+// @version      1.4.0.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3913,6 +3913,8 @@ function Unload()
     clearInterval(dbSaveInterval);
 
     ImageZoom.observer.disconnect();
+
+    Utils.Log("unloaded");
 }
 
 var InitTries = 200;
