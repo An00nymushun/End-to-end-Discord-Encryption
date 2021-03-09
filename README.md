@@ -29,14 +29,15 @@ If you would like to use the plugin on **multiple devices**; choose a main one, 
 I hope this is actually simple as the name suggests<br>
 <br>
 <br>
-Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt) for BetterDiscord users<br>
-<sup>The two versions are not compatible!</sup><br>
+Here is a link to the original [DiscordCrypt](https://gitlab.com/leogx9r/DiscordCrypt)<br>
+<sup>It has been discontinued</sup><br>
 <br>
 <br>
 <br>
 <br>
 If you have any questions come to my [Discord server](https://discord.gg/rSUyXeCHBE)<br>
 If you want a server blacklisted or you would like users to not use embeds, do tell<br>
+We have experimental BetterDiscord loaders for the plugin too.<br>
 <br>
 List of servers that use the plugin:<br>
 <br>
