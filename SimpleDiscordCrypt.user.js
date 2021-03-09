@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.3.5.9
+// @version      1.4.0.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -441,8 +441,7 @@ ${HeaderBarChildrenSelector} { mask-image: none !important; -webkit-mask-image: 
         this.domElement = style;
     },
     Remove: function() {
-        if(document.head.contains(this.domElement))
-            document.head.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const UnlockWindow = {
@@ -481,8 +480,7 @@ const UnlockWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const NewdbWindow = {
@@ -523,8 +521,7 @@ const NewdbWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const NewPasswordWindow = {
@@ -559,8 +556,7 @@ const NewPasswordWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const KeyManagerWindow = {
@@ -638,8 +634,7 @@ const KeyManagerWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const ChannelManagerWindow = {
@@ -691,8 +686,7 @@ const ChannelManagerWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const ShareKeyWindow = {
@@ -744,8 +738,7 @@ const ShareKeyWindow = {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const MenuBar = {
@@ -881,12 +874,12 @@ const MenuBar = {
 
             if(toggledOn) {
                 if(!styleEnabled) document.head.appendChild(this.toggledOnStyle);
-                if(toggleOnEnabled) this.toggleOnButton.parentNode.removeChild(this.toggleOnButton);
+                if(toggleOnEnabled) this.toggleOnButton.remove();
                 if(!toggleOffEnabled) titleElement.insertAdjacentElement('afterend', this.toggleOffButton);
             }
             else {
                 if(styleEnabled) document.head.removeChild(this.toggledOnStyle);
-                if(toggleOffEnabled) this.toggleOffButton.parentNode.removeChild(this.toggleOffButton);
+                if(toggleOffEnabled) this.toggleOffButton.remove();
                 if(!toggleOnEnabled) titleElement.insertAdjacentElement('afterend', this.toggleOnButton);
             }
 
@@ -905,16 +898,13 @@ const MenuBar = {
         this.Update();
     },
     Remove: function() {
-        if(document.head.contains(this.toggledOnStyle))
-            document.head.removeChild(this.toggledOnStyle);
-        if(document.head.contains(this.menuBarStyle))
-            document.head.removeChild(this.menuBarStyle);
-        if(document.body.contains(this.toggleOnButton))
-            document.body.removeChild(this.toggleOnButton);
-        if(document.body.contains(this.toggleOffButton))
-            document.body.removeChild(this.toggleOffButton);
-        if(document.body.contains(this.menuWrapper))
-            document.body.removeChild(this.menuWrapper);
+        if(this.mutationObserver) this.mutationObserver.disconnect();
+        if(this.toggledOnStyle) this.toggledOnStyle.remove();
+        if(this.menuBarStyle) this.menuBarStyle.remove();
+        if(this.keySelect) this.keySelect.remove();
+        if(this.toggleOnButton) this.toggleOnButton.remove();
+        if(this.toggleOffButton) this.toggleOffButton.remove();
+        if(this.menuWrapper) this.menuWrapper.remove();
     }
 };
 const PopupManager = {
@@ -941,11 +931,11 @@ const PopupManager = {
 </div>
 <button type="button" class="SDC_FOCUS sdc-hidden"></button>`;
         Utils.AttachEventToClass(popup, 'SDC_OK', 'click', () => {
-            this.domElement.removeChild(popup);
+            popup.remove();
             okCallback();
         });
         Utils.AttachEventToClass(popup, 'SDC_CANCEL', 'click', () => {
-            this.domElement.removeChild(popup);
+            popup.remove();
             if(cancelCallback) cancelCallback();
         });
         if(ontop) this.domElement.appendChild(popup);
@@ -961,17 +951,16 @@ const PopupManager = {
                                      () => { clearTimeout(cancelTimeout); resolve(false); },
                                      ontop);
 
-                cancelTimeout = setTimeout(() => { this.domElement.removeChild(popup); resolve(false); }, timeout);
+                cancelTimeout = setTimeout(() => { popup.remove(); resolve(false); }, timeout);
             }
             else {
                 let popup = this.New(message, () => resolve(true), () => resolve(false), ontop);
-                if(typeof timeout === 'object') { timeout.cancel = () => { this.domElement.removeChild(popup); resolve(false); } };
+                if(typeof timeout === 'object') { timeout.cancel = () => { popup.remove(); resolve(false); } };
             }
         });
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 const KeyVisualizerWindow = {
@@ -1240,8 +1229,7 @@ switch(popBits(2)) {
         this.domElement = wrapper;
     },
     Remove: function() {
-        if(document.body.contains(this.domElement))
-            document.body.removeChild(this.domElement);
+        if(this.domElement) this.domElement.remove();
     }
 };
 
@@ -1258,6 +1246,8 @@ var Blacklist;
 var Patcher;
 var KeyRotators;
 var ImageZoom;
+var ResolveInitPromise;
+var InitPromise = new Promise(resolve => { ResolveInitPromise = resolve });
 
 function Init(nonInvasive)
 {
@@ -2028,7 +2018,7 @@ function Init(nonInvasive)
                         },
                         description: sysmsg,
                         footer: {
-                            text: "SimpleDiscordCrypt",
+                            text: "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵",
                             icon_url: "https://i.imgur.com/zWXtTpX.png",
                         }
                     }
@@ -2399,7 +2389,7 @@ function Init(nonInvasive)
         Discord[mirroredName] = originalFunction;
         Discord[functionName] = function() { return originalFunction.apply(module, arguments) };
     };
-    const hookFunction = (moduleName, functionName) => { //TODO: move these to Load()
+    const hookFunction = (moduleName, functionName) => {
         let detourName = `detour_${functionName}`;
         Discord[detourName] = Discord[functionName];
         modules[moduleName][functionName] = function() { return Discord[detourName].apply(this, arguments) };
@@ -2465,7 +2455,7 @@ function Init(nonInvasive)
     Style.Inject();
 
     LockMessages(true);
-    Utils.LoadDb(() => { Load(); UnlockMessages(true); }, UnlockMessages);
+    Utils.LoadDb(() => { Load(); UnlockMessages(true); ResolveInitPromise({ Load, Unload }) }, UnlockMessages);
 
     //convenience feature
     ImageZoom = {};
@@ -2642,14 +2632,14 @@ async function handleUpdate(event) {
 const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidMessage = "```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
-async function processMessage(message) {
+async function processMessage(message, ignoreAttachments) {
     let result;
     let match = messageRegex.exec(message.content);
     if(match != null) { //simple messsage
-        result = await decryptMessage(message, match[1]);
+        result = await decryptMessage(message, match[1], ignoreAttachments);
     }
     else {
-        result = await processEmbeds(message);
+        result = await processEmbeds(message, ignoreAttachments);
     }
 
     if((Cache.pingOn != null) && Cache.pingOn.test(message.content)) message.mentions = [Discord.getCurrentUser()];
@@ -2664,7 +2654,7 @@ function scrollChat(by) {
     messageContainer.scrollTop += by;
 }
 
-var mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video', 'jpe': 'img', 'jfif': 'img' };
+var mediaTypes = { 'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'webp': 'img', 'webm': 'video', 'mp4': 'video', 'jpe': 'img', 'jfif': 'img', 'mov': 'video' };
 const extensionRegex = /\.([^.]+)$/;
 var downloadLocked = false;
 var downloadLocks = [];
@@ -2988,11 +2978,43 @@ if(FixedCsp) Object.assign(linkEmbedders, {
     "mega.nz": embedMega
 });
 
-let urlRegex = /(?:<https?:\/\/(?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+)\/[^\s<>'"]+>|https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+))/g;
+const MENTION_EVERYONE_CHECK = { data: 0x20000n };
+const everyoneRegex = /(?<!https?:\/\/[^\s]*)@(?:everyone|here)/;
+const roleMentionRegex = /<@&(\d{16,20})>/g;
+const urlRegex = /(?:<https?:\/\/(?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+)\/[^\s<>'"]+>|https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+))/g;
 function postProcessMessage(message, content) {
     let currentUser = Discord.getCurrentUser();
-    if(content.includes(`<@${currentUser.id}>`) || content.includes(`<@!${currentUser.id}>`))
+    if(content.includes(`<@${currentUser.id}>`) || content.includes(`<@!${currentUser.id}>`)) {
         message.mentions = [currentUser];
+    }
+    else if(message.author != null) {
+        let guildId = message.guild_id;
+        let channel;
+        if(guildId == null) {
+            channel = Discord.getChannel(message.channel_id);
+            guildId = channel.guild_id;
+        }
+        if(guildId != null) {
+            let canMentionEveryone;
+            if(everyoneRegex.test(content)) {
+                if(channel == null) channel = Discord.getChannel(message.channel_id);
+                message.mention_everyone = canMentionEveryone = Discord.can(MENTION_EVERYONE_CHECK, message.author, channel);
+            }
+
+            let mentionRoles = [...content.matchAll(roleMentionRegex)].map(x => x[1]);
+            if(mentionRoles.length !== 0) {
+                if(canMentionEveryone == null) {
+                    if(channel == null) channel = Discord.getChannel(message.channel_id);
+                    canMentionEveryone = Discord.can(MENTION_EVERYONE_CHECK, message.author, channel);
+                }
+                if(!canMentionEveryone) {
+                    let guild = Discord.getGuild(guildId);
+                    mentionRoles = mentionRoles.filter(x => guild.roles[x] && guild.roles[x].mentionable);
+                }
+                message.mention_roles = mentionRoles;
+            }
+        }
+    }
 
     let url;
     while((url = urlRegex.exec(content)) != null && url[1] != null) {
@@ -3013,7 +3035,10 @@ async function decryptWaitingMessages(keyHash) {
 }
 
 let keyChangeWatchers = {};
-async function decryptMessage(message, payload) {
+async function decryptMessage(message, payload, ignoreAttachments) {
+    if(message.referenced_message != null)
+        await processMessage(message.referenced_message, true);
+
     let payloadBuffer = Utils.PayloadDecode(payload).buffer;
     let keyHashBytes = payloadBuffer.slice(0, 16);
     let keyHashBase64 = Utils.BytesToBase64(keyHashBytes);
@@ -3128,7 +3153,7 @@ async function decryptMessage(message, payload) {
         postProcessMessage(message, content);
     }
 
-    if(message.attachments != null && message.attachments.length !== 0) {
+    if(message.attachments != null && message.attachments.length !== 0 && !ignoreAttachments) {
         let attachments = message.attachments;
         message.attachments = [];
         for(let attachment of attachments) {
@@ -3396,7 +3421,7 @@ async function processSystemMessage(message, sysmsg) {
 }
 
 const descriptionRegex = /^[⠀-⣿]{16,}$/;
-async function processEmbeds(message) {
+async function processEmbeds(message, ignoreAttachments) {
     if(message.embeds == null || message.embeds.length !== 1) return;
     let embed = message.embeds[0];
     if(embed.footer == null || (embed.footer.text !== "SimpleDiscordCrypt" && embed.footer.text !== "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵")) return;
@@ -3405,7 +3430,7 @@ async function processEmbeds(message) {
 
     if(embed.author.name === "-----ENCRYPTED MESSAGE-----") {
         if(!descriptionRegex.test(embed.description)) return;
-        return await decryptMessage(message, embed.description);
+        return await decryptMessage(message, embed.description, ignoreAttachments);
     }
     else if(embed.author.name === "-----SYSTEM MESSAGE-----") {
         processSystemMessage(message, embed.description).then((delayed) => { if(delayed) Utils.UpdateMessageContent(message); } );
@@ -3484,7 +3509,7 @@ async function handleSend(channelId, message, forceSimple) {
 
     let channel = Discord.getChannel(channelId);
     if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))) {
-       message.content = payload + " `SimpleDiscordCrypt`";
+       message.content = payload + " `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵`";
     }
     else {
         message.content = "";
@@ -3497,7 +3522,7 @@ async function handleSend(channelId, message, forceSimple) {
             },
             description: payload,
             footer: {
-                text: "SimpleDiscordCrypt",
+                text: "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵",
                 icon_url: "https://i.imgur.com/zWXtTpX.png",
             }
         };
@@ -3863,7 +3888,7 @@ function Load()
 
 function Unload()
 {
-    const restoreFunction = (moduleName, functionName) => { let module = Discord.modules[moduleName]; module[functionName] = module[`original_${functionName}`]; };
+    const restoreFunction = (moduleName, functionName) => { Discord[`detour_${functionName}`] = Discord[`original_${functionName}`]; };
 
     restoreFunction('MessageQueue', 'enqueue');
     restoreFunction('MessageDispatcher', 'dispatch');
@@ -3871,8 +3896,6 @@ function Unload()
     if(Discord.detour_EMBED != null) restoreFunction('SpotifyEndpoints', 'EMBED');
     if(Discord.detour_canUseEmojisEverywhere != null) restoreFunction('Premium', 'canUseEmojisEverywhere');
     if(Discord.detour_canUseAnimatedEmojis != null) restoreFunction('Premium', 'canUseAnimatedEmojis');
-
-    //Discord.MessageCache.prototype._merge = Discord.original__merge;
 
     if(Patcher != null) Patcher.observer.disconnect();
 
@@ -3882,8 +3905,10 @@ function Unload()
     NewPasswordWindow.Remove();
     KeyManagerWindow.Remove();
     ChannelManagerWindow.Remove();
+    ShareKeyWindow.Remove();
     MenuBar.Remove();
     PopupManager.Remove();
+    KeyVisualizerWindow.Remove();
 
     clearInterval(dbSaveInterval);
 
@@ -3901,7 +3926,7 @@ function TryInit()
 
 Utils.Log("injected");
 
-//window.addEventListener('load', TryInit);
 TryInit();
 
+return InitPromise;
 })();
