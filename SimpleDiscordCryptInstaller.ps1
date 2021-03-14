@@ -140,17 +140,11 @@ const onHeadersReceived = (details, callback) => {
 
 let originalBrowserWindow;
 function browserWindowHook(options) {
-	if(options != null && options.webPreferences != null &&
-	   options.title != null && options.title.startsWith("Discord") && options.webPreferences.preload != null) {
+	if(options?.webPreferences?.preload != null && options.title?.startsWith("Discord")) {
 		let webPreferences = options.webPreferences;
 		let originalPreload = webPreferences.preload;
-		webPreferences.nodeIntegration = true;
-		webPreferences.enableRemoteModule = true;
-		webPreferences.contextIsolation = false;
 		webPreferences.preload = `${__dirname}/SimpleDiscordCryptLoader.js`;
-		let mainWindow = new originalBrowserWindow(options);
-		mainWindow.PreloadScript = originalPreload;
-		return mainWindow;
+		webPreferences.additionalArguments = [...(webPreferences.additionalArguments || []), `--sdc-preload=${originalPreload}`];
 	}
 	return new originalBrowserWindow(options);
 }
@@ -186,33 +180,32 @@ let requireGrab = require;
 if(requireGrab != null) {
 	const require = requireGrab;
 
-	if(window.chrome != null && chrome.storage != null) delete chrome.storage;
-	
+	if(window.chrome?.storage) delete chrome.storage;
+
 	const localStorage = window.localStorage;
 	const CspDisarmed = true;
 
+	const electron = require('electron');
+
 	require('https').get("https://gitlab.com/An0/SimpleDiscordCrypt/-/raw/master/SimpleDiscordCrypt.user.js", (response) => {
 		response.setEncoding('utf8');
-		let data = "";
-		response.on('data', (chunk) => data += chunk);
-		response.on('end', () => eval(data));
+		let code = "";
+		response.on('data', (chunk) => code += chunk);
+		response.on('end', () => {
+			const unsafeWindow = electron.webFrame.top.context;
+			eval(code);
+		});
 	});
-	
-	const electron = require('electron');
-	const remote = electron.remote;
-	if(remote != null) {
-		let originalPreloadScript = remote.getCurrentWindow().PreloadScript;
-		if(originalPreloadScript != null) {
-			process.electronBinding('command_line').appendSwitch('preload', originalPreloadScript);
-			electron.contextBridge.exposeInMainWorld = (name, object) => window[name] = object;
-			window.onerror = null;
-			require(originalPreloadScript);
-		}
+
+	const commandLineSwitches = process.electronBinding('command_line');
+	let originalPreloadScript = commandLineSwitches.getSwitchValue('sdc-preload');
+
+	if(originalPreloadScript != null) {
+		commandLineSwitches.appendSwitch('preload', originalPreloadScript);
+		require(originalPreloadScript);
 	}
-	/*if(typeof process !== 'undefined')
-		process.once('loaded', () => { delete window.require; delete window.module; });*/
 }
-else console.log("Uh-oh, looks like this version of electron isn't rooted yet");
+else console.error("Uh-oh, looks like something is blocking require");
 '@)
 
 	'FINISHED'
