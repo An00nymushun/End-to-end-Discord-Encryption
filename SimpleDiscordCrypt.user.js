@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.0.2
+// @version      1.4.1.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2571,7 +2571,7 @@ function Init(nonInvasive)
         if(isDesktopDc) this.addEventListener('contextmenu', (event) => {
             if(!loading && this.src) {
                 let noqueryUrl = this.src.split('?', 1)[0];
-                SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
+                Discord.window.SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
             }
             event.preventDefault();
         });
@@ -2757,12 +2757,12 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
                 height = tmpMedia.videoHeight;
                 let canvas = document.createElement('canvas');
                 let ctx = canvas.getContext('2d');
-                if(spoiler) ctx.filter = "blur(50px)";
 
                 let coverImageUrl;
                 if(FixedCsp) {
                     canvas.width = width;
                     canvas.height = height;
+                    if(spoiler) ctx.filter = "blur(50px)";
                     ctx.drawImage(tmpMedia, 0, 0);
                     coverImageUrl = URL.createObjectURL(await new Promise((resolve) => canvas.toBlob(resolve))) + '#';
                 }
@@ -2781,6 +2781,7 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
                     }
                     canvas.width = posterWidth;
                     canvas.height = posterHeight;
+                    if(spoiler) ctx.filter = "blur(50px)";
                     ctx.drawImage(tmpMedia, 0, 0, posterWidth, posterHeight);
                     coverImageUrl = canvas.toDataURL('image/webp', 0.6);
                 }
@@ -2790,7 +2791,7 @@ async function decryptAttachment(key, keyHash, message, attachment, channelConfi
                     //color: BaseColorInt,
                     url: "/#" + downloadUrl, //ugly hack because Discord now filters urls here
                     title: "Download",
-                    thumbnail: { url: coverImageUrl, width, height },
+                    thumbnail: { url: coverImageUrl, width, height }, //for some reason chromium seems to replace the cover image sadly
                     video: { url: downloadUrl, proxy_url: url, width, height }
                 });
             }
@@ -3537,7 +3538,7 @@ async function handleUpload(channelId, file, draftType, message, spoiler, filena
     if(key == null) return arguments;
 
     if(spoiler) {
-        arguments[3] = false;
+        arguments[4] = false;
         if(!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
     }
     let filenameParts = filenameRegex.exec(filename);
@@ -3762,14 +3763,20 @@ function Load()
 
     PopupManager.Inject();
 
-
+    const executeCall = (event, caller, code) => {
+        let match = /^\s*([^\s]+)\s*\((.*)\)$/s.exec(code);
+        if(match != null) {
+            event.preventDefault();
+            let method = match[1];
+            let params = JSON.parse(`[${match[2].replace(/'/g, '"')}]`);
+            Discord.window[method].apply(this, params);
+        }
+    };
     const scriptLink = function(event) {
-        event.preventDefault();
-        return new Function(this.attributes.href.value.substr(11)).apply(this);
+        return executeCall(event, this, this.attributes.href.value.substr(11));
     };
     const fakeScriptLink = function(event) {
-        event.preventDefault();
-        return new Function(this.attributes.href.value.substr(13)).apply(this);
+        return executeCall(event, this, this.attributes.href.value.substr(13));
     };
     const tryReplaceLink = (a) => {
         let href = a.attributes.href;
