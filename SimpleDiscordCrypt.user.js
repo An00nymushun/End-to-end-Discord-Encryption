@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.1.0
+// @version      1.4.1.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2979,7 +2979,7 @@ if(FixedCsp) Object.assign(linkEmbedders, {
     "mega.nz": embedMega
 });
 
-const MENTION_EVERYONE_CHECK = { data: 0x20000n };
+const MENTION_EVERYONE_CHECK = 0x20000n;
 const everyoneRegex = /(?<!https?:\/\/[^\s]*)@(?:everyone|here)/;
 const roleMentionRegex = /<@&(\d{16,20})>/g;
 const urlRegex = /(?:<https?:\/\/(?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+)\/[^\s<>'"]+>|https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+))/g;
@@ -3467,7 +3467,7 @@ function handleDeletes(event) {
     Discord.original_dispatch.apply(this, arguments);
 }
 
-const EMBED_LINKS_CHECK = { data: 0x4000n };
+const EMBED_LINKS_CHECK = 0x4000n;
 const prefixRegex = /^(?::?ENC(?:(?:_\w*)?:|\b)|<:ENC:\d{1,20}>)\s*/;
 const noencprefixRegex = /^(?::?NOENC:?|<:NOENC:\d{1,20}>)\s*/; //not really expecting an emoji
 async function handleSend(channelId, message, forceSimple) {
