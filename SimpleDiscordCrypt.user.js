@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.1.2
+// @version      1.4.1.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3764,7 +3764,7 @@ function Load()
     PopupManager.Inject();
 
     const executeCall = (event, caller, code) => {
-        let match = /^\s*([^\s]+)\s*\((.*)\)$/s.exec(code);
+        let match = /^\s*([^\s(]+)\s*\((.*)\)$/s.exec(code);
         if(match != null) {
             event.preventDefault();
             let method = match[1];
