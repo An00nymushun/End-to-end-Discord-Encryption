@@ -34,12 +34,19 @@ $shell = New-Object -ComObject WScript.Shell
 function RootElectron([string]$discordIconPath, [string]$exeName, [string]$path, [string]$resourcesPath, [string]$desktopIconPath, [string]$taskbarIconPath) {
 	'rooting'
 	$shortcut = $shell.CreateShortcut($discordIconPath)
-	if($shortcut.WorkingDirectory -eq "") {
-		$shortcut.WorkingDirectory = (Resolve-Path $resourcesPath | % { $_.Path } | Measure -Maximum).Maximum
+	$workingDirectory = $shortcut.WorkingDirectory
+	if($workingDirectory -eq "") {
+		$shortcut.WorkingDirectory = $workingDirectory = (Resolve-Path $resourcesPath | % { $_.Path } | Measure -Maximum).Maximum
 		$shortcut.IconLocation = $path + $iconLocation
 	}
+	
+	$electronLink = "$workingDirectory\electron.exe"
+	if(!(Test-Path $electronLink)) {
+		[void](New-Item -Path $electronLink -Value "$workingDirectory\$exeName" -ItemType HardLink)
+	}
+	
 	$shortcut.TargetPath = $env:WINDIR+'\System32\cmd.exe'
-	$shortcut.Arguments = "/c `"set NODE_OPTIONS=-r ../../SimpleDiscordCrypt/NodeLoad.js && start ^`"^`" ^`"$path\Update.exe^`" --processStart $exeName`""
+	$shortcut.Arguments = "/c `"set NODE_OPTIONS=-r ../../SimpleDiscordCrypt/NodeLoad.js && start ^`"^`" ^`"$path\Update.exe^`" --processStart electron.exe`""
 	$shortcut.WindowStyle = 7
 	$shortcut.Save()
 
@@ -155,7 +162,7 @@ let originalElectronBinding;
 function electronBindingHook(name) {
 	let result = originalElectronBinding.apply(this, arguments);
 
-	if(name === 'atom_browser_window' && !result.BrowserWindow.ISHOOK) {
+	if(name === 'electron_browser_window' && !result.BrowserWindow.ISHOOK) {
 		originalBrowserWindow = result.BrowserWindow;
 		Object.assign(browserWindowHook, originalBrowserWindow);
 		browserWindowHook.prototype = originalBrowserWindow.prototype;
@@ -197,7 +204,7 @@ if(requireGrab != null) {
 		});
 	});
 
-	const commandLineSwitches = process.electronBinding('command_line');
+	const commandLineSwitches = process._linkedBinding('electron_common_command_line');
 	let originalPreloadScript = commandLineSwitches.getSwitchValue('sdc-preload');
 
 	if(originalPreloadScript != null) {
