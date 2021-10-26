@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.1.4
+// @version      1.4.2.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1233,12 +1233,62 @@ switch(popBits(2)) {
     }
 };
 
-
 var Discord;
 var Utils = {
     Log: (message) => { console.log(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
     Warn: (message) => { console.warn(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
-    Error: (message) => { console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") }
+    Error: (message) => { console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, "") },
+    Webpack: () => {
+        let webpackExports;
+
+        if(typeof BdApi !== "undefined" && BdApi?.findModuleByProps && BdApi?.findModule) {
+            return { findModule: BdApi.findModule, findModuleByUniqueProperties: (props) => BdApi.findModuleByProps.apply(null, props) };
+        }
+        else if(Discord.window.webpackChunkdiscord_app != null) {
+            Discord.window.webpackChunkdiscord_app.push([
+                ['__extra_id__'],
+                {},
+                req => webpackExports = req
+            ]);
+        }
+        else if(Discord.window.webpackJsonp != null) {
+            webpackExports = typeof(Discord.window.webpackJsonp) === 'function' ?
+            Discord.window.webpackJsonp(
+                [],
+                { '__extra_id__': (module, _export_, req) => { _export_.default = req } },
+                [ '__extra_id__' ]
+            ).default :
+            Discord.window.webpackJsonp.push([
+                [],
+                { '__extra_id__': (_module_, exports, req) => { _module_.exports = req } },
+                [ [ '__extra_id__' ] ]
+            ]);
+        }
+        else return null;
+    
+        delete webpackExports.m['__extra_id__'];
+        delete webpackExports.c['__extra_id__'];
+    
+        const findModule = (filter) => {
+            for(let i in webpackExports.c) {
+                if(webpackExports.c.hasOwnProperty(i)) {
+                    let m = webpackExports.c[i].exports;
+    
+                    if(!m) continue;
+    
+                    if(m.__esModule && m.default) m = m.default;
+    
+                    if(filter(m)) return m;
+                }
+            }
+    
+            return null;
+        };
+
+        const findModuleByUniqueProperties = (propNames) => findModule(module => propNames.every(prop => module[prop] !== undefined));
+
+        return { findModule, findModuleByUniqueProperties };
+    }
 };
 var DataBase;
 var Cache;
@@ -1249,101 +1299,49 @@ var ImageZoom;
 var ResolveInitPromise;
 var InitPromise = new Promise(resolve => { ResolveInitPromise = resolve });
 
-function Init(nonInvasive)
+function Init()
 {
     Discord = { window: (typeof(unsafeWindow) !== 'undefined') ? unsafeWindow : window };
 
-    if(Discord.window.webpackJsonp == null) { if(!nonInvasive) Utils.Error("Webpack not found."); return 0; }
+    const webpackUtil = Utils.Webpack();
+    if(webpackUtil == null) { Utils.Error("Webpack not found."); return 0; }
 
-    const webpackExports = typeof(Discord.window.webpackJsonp) === 'function' ?
-          Discord.window.webpackJsonp(
-              [],
-              { '__extra_id__': (module, _export_, req) => { _export_.default = req } },
-              [ '__extra_id__' ]
-          ).default :
-          Discord.window.webpackJsonp.push( [
-              [],
-              { '__extra_id__': (_module_, exports, req) => { _module_.exports = req } },
-              [ [ '__extra_id__' ] ] ]
-          );
-
-    delete webpackExports.m['__extra_id__'];
-    delete webpackExports.c['__extra_id__'];
-
-    const findModule = (filter, nonInvasive) => {
-        for(let i in webpackExports.c) {
-            if(webpackExports.c.hasOwnProperty(i)) {
-                let m = webpackExports.c[i].exports;
-
-                if(!m) continue;
-
-                if(m.__esModule && m.default) m = m.default;
-
-                if(filter(m)) return m;
-            }
-        }
-
-        if(!nonInvasive) {
-            Utils.Warn("Couldn't find module in existing cache. Loading all modules.");
-
-            for(let i = 0; i < webpackExports.m.length; i++) {
-                try {
-                    let m = webpackExports(i);
-
-                    if(!m) continue;
-
-                    if(m.__esModule && m.default) m = m.default;
-
-                    if(filter(m)) return m;
-                }
-                catch(e) { }
-            }
-
-            Utils.Warn("Cannot find module.");
-        }
-
-        return null;
-    };
-
-    const findModuleByUniqueProperties = (propNames, nonInvasive) => findModule(module => propNames.every(prop => module[prop] !== undefined), nonInvasive);
+    const { findModule, findModuleByUniqueProperties } = webpackUtil;
 
     let modules = {};
 
-    modules.MessageQueue = findModuleByUniqueProperties([ 'enqueue', 'handleSend', 'handleEdit' ], nonInvasive);
-    if(modules.MessageQueue == null) { if(!nonInvasive) Utils.Error("MessageQueue not found."); return 0; }
+    modules.MessageQueue = findModuleByUniqueProperties([ 'enqueue', 'handleSend', 'handleEdit' ]);
+    if(modules.MessageQueue == null) { Utils.Error("MessageQueue not found."); return 0; }
 
-    modules.MessageDispatcher = findModuleByUniqueProperties( [ 'dispatch', 'maybeDispatch', 'dirtyDispatch' ], nonInvasive);
-    if(modules.MessageDispatcher == null) { if(!nonInvasive) Utils.Error("MessageDispatcher not found."); return 0; }
+    modules.MessageDispatcher = findModuleByUniqueProperties( [ 'dispatch', 'maybeDispatch', 'dirtyDispatch' ]);
+    if(modules.MessageDispatcher == null) { Utils.Error("MessageDispatcher not found."); return 0; }
 
-    modules.UserCache = findModuleByUniqueProperties( [ 'getUser', 'getUsers', 'getCurrentUser' ], nonInvasive);
-    if(modules.UserCache == null) { if(!nonInvasive) Utils.Error("UserCache not found."); return 0; }
+    modules.UserCache = findModuleByUniqueProperties( [ 'getUser', 'getUsers', 'getCurrentUser' ]);
+    if(modules.UserCache == null) { Utils.Error("UserCache not found."); return 0; }
 
-    modules.ChannelCache = findModuleByUniqueProperties( [ 'getChannel', 'getMutableGuildChannels', 'getDMFromUserId' ], nonInvasive);
-    if(modules.ChannelCache == null) { if(!nonInvasive) Utils.Error("ChannelCache not found."); return 0; }
+    modules.ChannelCache = findModuleByUniqueProperties( [ 'getChannel', 'getMutableGuildChannels', 'getDMFromUserId' ]);
+    if(modules.ChannelCache == null) { Utils.Error("ChannelCache not found."); return 0; }
 
-    modules.SelectedChannelStore = findModuleByUniqueProperties( [ 'getChannelId', 'getVoiceChannelId', 'getLastSelectedChannelId' ], nonInvasive);
-    if(modules.SelectedChannelStore == null) { if(!nonInvasive) Utils.Error("SelectedChannelStore not found."); return 0; }
+    modules.SelectedChannelStore = findModuleByUniqueProperties( [ 'getChannelId', 'getVoiceChannelId', 'getLastSelectedChannelId' ]);
+    if(modules.SelectedChannelStore == null) { Utils.Error("SelectedChannelStore not found."); return 0; }
 
-    modules.GuildCache = findModuleByUniqueProperties( [ 'getGuild', 'getGuilds' ], nonInvasive);
-    if(modules.GuildCache == null) { if(!nonInvasive) Utils.Error("GuildCache not found."); return 0; }
+    modules.GuildCache = findModuleByUniqueProperties( [ 'getGuild', 'getGuilds' ]);
+    if(modules.GuildCache == null) { Utils.Error("GuildCache not found."); return 0; }
 
-    modules.FileUploader = findModuleByUniqueProperties( [ 'upload', 'cancel', 'instantBatchUpload' ], nonInvasive);
-    if(modules.FileUploader == null) { if(!nonInvasive) Utils.Error("FileUploader not found."); return 0; }
+    modules.FileUploader = findModuleByUniqueProperties( [ 'upload', 'cancel', 'instantBatchUpload' ]);
+    if(modules.FileUploader == null) { Utils.Error("FileUploader not found."); return 0; }
 
-    modules.PermissionEvaluator = findModuleByUniqueProperties( [ 'can', 'computePermissions', 'canEveryone' ], nonInvasive);
-    if(modules.PermissionEvaluator == null) { if(!nonInvasive) Utils.Error("PermissionEvaluator not found."); return 0; }
+    modules.PermissionEvaluator = findModuleByUniqueProperties( [ 'can', 'computePermissions', 'canEveryone' ]);
+    if(modules.PermissionEvaluator == null) { Utils.Error("PermissionEvaluator not found."); return 0; }
 
-    modules.RelationshipStore = findModuleByUniqueProperties( [ 'isFriend', 'isBlocked', 'getFriendIDs' ], nonInvasive);
-    if(modules.RelationshipStore == null) { if(!nonInvasive) Utils.Error("RelationshipStore not found."); return 0; }
+    modules.RelationshipStore = findModuleByUniqueProperties( [ 'isFriend', 'isBlocked', 'getFriendIDs' ]);
+    if(modules.RelationshipStore == null) { Utils.Error("RelationshipStore not found."); return 0; }
 
-    modules.PrivateChannelManager = findModuleByUniqueProperties( [ 'openPrivateChannel', 'ensurePrivateChannel', 'closePrivateChannel' ], nonInvasive);
-    if(modules.PrivateChannelManager == null) { if(!nonInvasive) Utils.Error("PrivateChannelManager not found."); return 0; }
+    modules.PrivateChannelManager = findModuleByUniqueProperties( [ 'openPrivateChannel', 'ensurePrivateChannel', 'closePrivateChannel' ]);
+    if(modules.PrivateChannelManager == null) { Utils.Error("PrivateChannelManager not found."); return 0; }
 
-    //modules.MessageCache = findModuleByUniqueProperties([ '_channelMessages', 'getOrCreate', 'clearCache' ], nonInvasive);
-    //if(modules.MessageCache == null) { if(!nonInvasive) Utils.Error("MessageCache not found."); return 0; }
-
-    modules.DiscordConstants = findModuleByUniqueProperties( [ 'SpotifyEndpoints' ], nonInvasive);
-    modules.Premium = findModuleByUniqueProperties( [ 'canUseEmojisEverywhere' ], nonInvasive);
+    modules.DiscordConstants = findModuleByUniqueProperties( [ 'SpotifyEndpoints' ]);
+    modules.Premium = findModuleByUniqueProperties( [ 'canUseEmojisEverywhere' ]);
 
     Discord.modules = modules;
 
@@ -2958,7 +2956,7 @@ function embedEncrypted(message, url, queryString) {
 }
 function embedMega(message, url, queryString) {
     if(!queryString.startsWith("embed")) {
-        if(queryString.startsWith("file"))
+		if(queryString.startsWith("file"))
             queryString = queryString.substr(4);
         url = "https://mega.nz/embed" + queryString;
     }
@@ -3930,7 +3928,7 @@ function Unload()
 var InitTries = 200;
 function TryInit()
 {
-    if(Init(--InitTries > 0) !== 0) return;
+    if(Init() !== 0 || --InitTries === 0) return;
 
     window.setTimeout(TryInit, 100);
 };
