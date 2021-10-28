@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "SimpleDiscordCrypt",
-	"version": "1.4",
+	"version": "5",
 	"description": "Discord message encryption plugin, it gives end-to-end clientside encryption for your messages and files with automatic key exchange",
 	"icons": {
 		"16": "logo16.png",
@@ -30,7 +30,8 @@
 			"https://*.discord.com/login*",
 			"https://*.discord.com/app",
 			"https://*.discord.com/library",
-			"https://*.discord.com/store"
+			"https://*.discord.com/store",
+			"https://*.discord.com/guild-discovery"
 		],
 		"run_at": "document_start"
 	} ]
