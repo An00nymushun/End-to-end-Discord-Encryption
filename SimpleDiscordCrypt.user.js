@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.2.2
+// @version      1.4.3.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2390,55 +2390,47 @@ function Init(final)
         let module = modules[moduleName];
         let mirroredName = `original_${functionName}`;
         let originalFunction = module[functionName];
+        
+        if(typeof originalFunction !== 'function') throw `${moduleName}.${functionName}() is invalid`;
+        
         Discord[mirroredName] = originalFunction;
         Discord[functionName] = function() { return originalFunction.apply(module, arguments) };
     };
     const hookFunction = (moduleName, functionName) => {
         let detourName = `detour_${functionName}`;
-        Discord[detourName] = Discord[functionName];
-        modules[moduleName][functionName] = function() { return Discord[detourName].apply(this, arguments) };
+        let detourFunction = Discord[functionName];
+        
+        Object.defineProperty(Discord, detourName, {
+            get: () => detourFunction,
+            set: (value) => detourFunction = value
+        });
+        
+        modules[moduleName][functionName] = function() { return Reflect.apply(detourFunction, this, arguments) };
     };
 
-    if(modules.MessageQueue.enqueue == null) { Utils.Error("enqueue() not found."); return -1; }
-    mirrorFunction('MessageQueue', 'enqueue');
-
-    if(modules.MessageDispatcher.dispatch == null) { Utils.Error("dispatch() not found."); return -1; }
-    mirrorFunction('MessageDispatcher', 'dispatch');
-
-    if(modules.UserCache.getUser == null) { Utils.Error("getUser() not found."); return -1; }
-    mirrorFunction('UserCache', 'getUser');
-    if(modules.UserCache.getCurrentUser == null) { Utils.Error("getCurrentUser() not found."); return -1; }
-    mirrorFunction('UserCache', 'getCurrentUser');
-
-    if(modules.ChannelCache.getChannel == null) { Utils.Error("getChannel() not found."); return -1; }
-    mirrorFunction('ChannelCache', 'getChannel');
-    if(modules.ChannelCache.getDMFromUserId == null) { Utils.Error("getDMFromUserId() not found."); return -1; }
-    mirrorFunction('ChannelCache', 'getDMFromUserId');
-
-    if(modules.SelectedChannelStore.getChannelId == null) { Utils.Error("getChannelId() not found."); return -1; }
-    mirrorFunction('SelectedChannelStore', 'getChannelId');
-
-    if(modules.GuildCache.getGuild == null) { Utils.Error("getGuild() not found."); return -1; }
-    mirrorFunction('GuildCache', 'getGuild');
-
-    if(modules.FileUploader.upload == null) { Utils.Error("upload() not found."); return -1; }
-    mirrorFunction('FileUploader', 'upload');
-
-    if(modules.PermissionEvaluator.can == null) { Utils.Error("can() not found."); return -1; }
-    mirrorFunction('PermissionEvaluator', 'can');
-
-    if(modules.RelationshipStore.isFriend == null) { Utils.Error("isFriend() not found."); return -1; }
-    mirrorFunction('RelationshipStore', 'isFriend');
-
-    if(modules.PrivateChannelManager.ensurePrivateChannel == null) { Utils.Error("ensurePrivateChannel() not found."); return -1; }
-    mirrorFunction('PrivateChannelManager', 'ensurePrivateChannel');
-
-    //if(modules.MessageCache.prototype._merge == null) { Utils.Error("_merge not found."); return -1; }
-    //Discord.original__merge = modules.MessageCache.prototype._merge;
+    try {
+        mirrorFunction('MessageQueue', 'enqueue');
+        mirrorFunction('MessageDispatcher', 'dispatch');
+        mirrorFunction('UserCache', 'getUser');
+        mirrorFunction('UserCache', 'getCurrentUser');
+        mirrorFunction('ChannelCache', 'getChannel');
+        mirrorFunction('ChannelCache', 'getDMFromUserId');
+        mirrorFunction('SelectedChannelStore', 'getChannelId');
+        mirrorFunction('GuildCache', 'getGuild');
+        mirrorFunction('FileUploader', 'upload');
+        mirrorFunction('FileUploader', 'instantBatchUpload');
+        mirrorFunction('FileUploader', 'uploadFiles');
+        mirrorFunction('PermissionEvaluator', 'can');
+        mirrorFunction('RelationshipStore', 'isFriend');
+        mirrorFunction('PrivateChannelManager', 'ensurePrivateChannel');
+    }
+    catch(err) { Utils.Error(err); return -1; }
 
     hookFunction('MessageQueue', 'enqueue');
     hookFunction('MessageDispatcher', 'dispatch');
     hookFunction('FileUploader', 'upload');
+    hookFunction('FileUploader', 'instantBatchUpload');
+    hookFunction('FileUploader', 'uploadFiles');
 
     if(modules.DiscordConstants != null && modules.DiscordConstants.SpotifyEndpoints != null) {
         let spotify = modules.DiscordConstants.SpotifyEndpoints;
@@ -2962,7 +2954,7 @@ function embedEncrypted(message, url, queryString) {
 }
 function embedMega(message, url, queryString) {
     if(!queryString.startsWith("embed")) {
-		if(queryString.startsWith("file"))
+        if(queryString.startsWith("file"))
             queryString = queryString.substr(4);
         url = "https://mega.nz/embed" + queryString;
     }
@@ -3541,6 +3533,21 @@ async function handleSend(channelId, message, forceSimple) {
 
 const filenameLimit = 47;
 const filenameRegex = /^(.*?)((?:\.[^.]*)?)$/;
+async function encryptFilename(key, filename) {
+    let filenameParts = filenameRegex.exec(filename);
+    let filenameMax = filenameLimit - filenameParts[2].length;
+    filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
+
+    let encryptedFilename;
+    let filenameBytes = Utils.StringToUtf8Bytes(filename);
+    if(filenameBytes.byteLength > filenameLimit) filenameBytes = Utils.StringToUtf8Bytes("file" + filenameParts[2]);
+    do {
+        encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncrypt(key, filenameBytes));
+    } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
+    
+    return encryptedFilename;
+}
+
 async function handleUpload(channelId, file, draftType, message, spoiler, filename) {
     let key = await handleSend(channelId, message, true);
     if(key == null) return arguments;
@@ -3549,17 +3556,9 @@ async function handleUpload(channelId, file, draftType, message, spoiler, filena
         arguments[4] = false;
         if(!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
     }
-    let filenameParts = filenameRegex.exec(filename);
-    let filenameMax = filenameLimit - filenameParts[2].length;
-    filename = filenameParts[1].substr(0, filenameMax) + filenameParts[2];
 
     try {
-        let encryptedFilename;
-        let filenameBytes = Utils.StringToUtf8Bytes(filename);
-        if(filenameBytes.byteLength > filenameLimit) filenameBytes = Utils.StringToUtf8Bytes("file" + filenameParts[2]);
-        do {
-            encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncrypt(key, filenameBytes));
-        } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
+        let encryptedFilename = await encryptFilename(key, filename);
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
         arguments[1] = new File([encryptedBuffer], encryptedFilename);
@@ -3569,6 +3568,57 @@ async function handleUpload(channelId, file, draftType, message, spoiler, filena
         arguments[1] = null;
     }
     return arguments;
+}
+
+async function handleUploadFiles(channelId, editableFiles, draftType, message, stickers) {
+    let key = await handleSend(channelId, message, true);
+    if(key == null) return arguments;
+
+    try {
+        for (let editableFile of editableFiles) {
+            let filename = editableFile.filename;
+            if(editableFile.spoiler) {
+                editableFile.spoiler = false;
+                if(!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
+            }
+
+            let encryptedFilename = await encryptFilename(key, filename);
+            let fileBuffer = await Utils.ReadFile(editableFile.item.file);
+            let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
+            let encryptedFile = new File([encryptedBuffer], encryptedFilename);
+
+            editableFile.filename = encryptedFilename;
+            editableFile.item.file = encryptedFile;
+            //TODO editableFile.description
+        }
+    }
+    catch(err) {
+        Utils.Error(err);
+        arguments[1] = [];
+    }
+
+    return arguments;
+}
+
+async function handleInstantUploads(channelId, fileList, draftType) {
+    let message = { content: "" };
+    let key = await handleSend(channelId, message, true);
+    if(key == null) return Discord.original_instantBatchUpload.apply(this, arguments);
+
+    try {
+        for (let file of fileList) {
+
+            let encryptedFilename = await encryptFilename(key, file.name);
+            let fileBuffer = await Utils.ReadFile(file);
+            let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
+            let encryptedFile = new File([encryptedBuffer], encryptedFilename);
+
+            Discord.original_upload(channelId, encryptedFile, draftType, message, false, encryptedFilename);
+        }
+    }
+    catch(err) {
+        Utils.Error(err);
+    }
 }
 
 const eventHandlers = {
@@ -3656,16 +3706,16 @@ function Load()
         Discord.original_upload.apply(this, argumentsOverride);
     })()};
 
-    /*modules.MessageCache.prototype._merge = function(messages) {
-        console.log(messages);
+    Discord.detour_instantBatchUpload = function() {
+        handleInstantUploads.apply(this, arguments);
+    };
 
-        messages.forEach((message) => {
-            if(message.state !== "SENT") return;
-            //message.contentParsed = null;
-        });
+    Discord.detour_uploadFiles = function(){(async () => {
 
-        Discord.original__merge.apply(this, arguments);
-    };*/
+        let argumentsOverride = await handleUploadFiles.apply(null, arguments);
+
+        Discord.original_uploadFiles.apply(this, argumentsOverride);
+    })()};
 
     if(Discord.detour_EMBED != null) Discord.detour_EMBED = function(path, t) {
 
@@ -3907,13 +3957,15 @@ function Unload()
     restoreFunction('MessageQueue', 'enqueue');
     restoreFunction('MessageDispatcher', 'dispatch');
     restoreFunction('FileUploader', 'upload');
+    restoreFunction('FileUploader', 'instantBatchUpload');
+    restoreFunction('FileUploader', 'uploadFiles');
     if(Discord.detour_EMBED != null) restoreFunction('SpotifyEndpoints', 'EMBED');
     if(Discord.detour_canUseEmojisEverywhere != null) restoreFunction('Premium', 'canUseEmojisEverywhere');
     if(Discord.detour_canUseAnimatedEmojis != null) restoreFunction('Premium', 'canUseAnimatedEmojis');
 
     if(Patcher != null) Patcher.observer.disconnect();
 
-    Style.Remove();
+    //Style.Remove();
     UnlockWindow.Remove();
     NewdbWindow.Remove();
     NewPasswordWindow.Remove();
