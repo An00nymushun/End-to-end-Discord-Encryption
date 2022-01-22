@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.4.3.2
+// @version      1.5.0.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2012,20 +2012,7 @@ function Init(final)
                 message: {
                     channelId: channelId,
                     nonce: this.GetNonce(),
-                    content: "",
-                    embed: {
-                        color: BaseColorInt,
-                        author: {
-                            name: "-----SYSTEM MESSAGE-----",
-                            icon_url: "https://i.imgur.com/pFuRfDE.png",
-                            url: "https://gitlab.com/An0/SimpleDiscordCrypt"
-                        },
-                        description: sysmsg,
-                        footer: {
-                            text: "𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵",
-                            icon_url: "https://i.imgur.com/zWXtTpX.png",
-                        }
-                    }
+                    content: "```ml\n-----SYSTEM MESSAGE-----\n```" + sysmsg + "\n`𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵` ```yaml\n𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵\n```"
                 }
             }, () => { /*TODO*/ });
         },
@@ -2626,16 +2613,24 @@ async function handleUpdate(event) {
 }
 
 const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
+const systemMessageRegex = /^```(?:\w*\n)?-----SYSTEM MESSAGE-----\n?```\s*(.*?)\s*```(?:\w*\n)?(?:𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵|SimpleDiscordCrypt)\n?```$/s;
 const unknownKeyMessage = "```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```";
 const invalidMessage = "```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```"; //invisible separator after the first '-'
 async function processMessage(message, ignoreAttachments) {
     let result;
-    let match = messageRegex.exec(message.content);
-    if(match != null) { //simple messsage
-        result = await decryptMessage(message, match[1], ignoreAttachments);
+    const content = message.content;
+    const messageMatch = messageRegex.exec(content);
+    if(messageMatch != null) { //simple messsage
+        result = await decryptMessage(message, messageMatch[1], ignoreAttachments);
     }
     else {
-        result = await processEmbeds(message, ignoreAttachments);
+        const systemMessageMatch = systemMessageRegex.exec(content);
+        if(systemMessageMatch != null) { //simple system message
+            processUpdateSystemMessage(message, systemMessageMatch[1]);
+        }
+        else {
+            result = await processEmbeds(message, ignoreAttachments);
+        }
     }
 
     if((Cache.pingOn != null) && Cache.pingOn.test(message.content)) message.mentions = [Discord.getCurrentUser()];
@@ -3421,6 +3416,10 @@ async function processSystemMessage(message, sysmsg) {
     return true;
 }
 
+function processUpdateSystemMessage(message, sysmsg) {
+    processSystemMessage(message, sysmsg).then((delayed) => { if(delayed) Utils.UpdateMessageContent(message); } );
+}
+
 const descriptionRegex = /^[⠀-⣿]{16,}$/;
 async function processEmbeds(message, ignoreAttachments) {
     if(message.embeds == null || message.embeds.length !== 1) return;
@@ -3434,7 +3433,7 @@ async function processEmbeds(message, ignoreAttachments) {
         return await decryptMessage(message, embed.description, ignoreAttachments);
     }
     else if(embed.author.name === "-----SYSTEM MESSAGE-----") {
-        processSystemMessage(message, embed.description).then((delayed) => { if(delayed) Utils.UpdateMessageContent(message); } );
+        processUpdateSystemMessage(message, embed.description)
     }
 }
 
@@ -3692,7 +3691,7 @@ function Load()
 
     Discord.detour_enqueue = function(packet){(async () => {
 
-        await handleSend(packet.message.channelId, packet.message, packet.type === 1/*edit*/);
+        await handleSend(packet.message.channelId, packet.message, /*packet.type === 1/*edit*/true);
 
         Discord.original_enqueue.apply(this, arguments);
     })()};
