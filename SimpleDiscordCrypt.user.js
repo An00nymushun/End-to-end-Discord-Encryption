@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.5.0.0
+// @version      1.5.0.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1325,7 +1325,7 @@ function Init(final)
     modules.UserCache = findModuleByUniqueProperties( [ 'getUser', 'getUsers', 'getCurrentUser' ]);
     if(modules.UserCache == null) { if(final) Utils.Error("UserCache not found."); return 0; }
 
-    modules.ChannelCache = findModuleByUniqueProperties( [ 'getChannel', 'getMutableGuildChannels', 'getDMFromUserId' ]);
+    modules.ChannelCache = findModuleByUniqueProperties( [ 'getChannel', 'getDMFromUserId' ]);
     if(modules.ChannelCache == null) { if(final) Utils.Error("ChannelCache not found."); return 0; }
 
     modules.SelectedChannelStore = findModuleByUniqueProperties( [ 'getChannelId', 'getVoiceChannelId', 'getLastSelectedChannelId' ]);
