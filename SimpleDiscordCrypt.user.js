@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.5.1.1
+// @version      1.5.1.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -2278,7 +2278,9 @@ function Init(final)
                 message.edited_timestamp = null; //in case the message is still loading when updated
             }
             else Discord.dispatch({type: 'MESSAGE_UPDATE', message});
-        }
+        },
+		
+		Can: (permission, user, context) => Discord.can({ permission, user, context })
     });
 //Discord.window.SdcUtils = Utils;
 //Discord.window.SdcDiscord = Discord;
@@ -3002,14 +3004,14 @@ function postProcessMessage(message, content) {
             let canMentionEveryone;
             if(everyoneRegex.test(content)) {
                 if(channel == null) channel = Discord.getChannel(message.channel_id);
-                message.mention_everyone = canMentionEveryone = Discord.can(MENTION_EVERYONE_CHECK, message.author, channel);
+                message.mention_everyone = canMentionEveryone = Utils.Can(MENTION_EVERYONE_CHECK, message.author, channel);
             }
 
             let mentionRoles = [...content.matchAll(roleMentionRegex)].map(x => x[1]);
             if(mentionRoles.length !== 0) {
                 if(canMentionEveryone == null) {
                     if(channel == null) channel = Discord.getChannel(message.channel_id);
-                    canMentionEveryone = Discord.can(MENTION_EVERYONE_CHECK, message.author, channel);
+                    canMentionEveryone = Utils.Can(MENTION_EVERYONE_CHECK, message.author, channel);
                 }
                 if(!canMentionEveryone) {
                     let guild = Discord.getGuild(guildId);
@@ -3516,7 +3518,7 @@ async function handleSend(channelId, message, forceSimple) {
     let payload = Utils.PayloadEncode(messageBytes);
 
     let channel = Discord.getChannel(channelId);
-    if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Discord.can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))) {
+    if(forceSimple || Cache.channelBlacklist === 2 || (channel.type === 0 && !Utils.Can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))) {
        message.content = payload + " `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵`";
     }
     else {
