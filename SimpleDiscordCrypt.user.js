@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.5.1.0
+// @version      1.5.1.1
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3555,8 +3555,8 @@ async function encryptFilename(key, filename) {
     return encryptedFilename;
 }
 
-function fixPendingReply(messageExtras) {
-    const messageReference = messageExtras?.messageReference;
+function fixPendingReply(messageOptions) {
+    const messageReference = messageOptions?.messageReference;
     
     if(messageReference != null && Discord.getMessage != null && Discord.createPendingReply != null) {
         const referencedMessage = Discord.getMessage(messageReference.channel_id, messageReference.message_id);
@@ -3566,19 +3566,21 @@ function fixPendingReply(messageExtras) {
             Discord.createPendingReply({
                 message: referencedMessage,
                 channel: referencedChannel,
-                shouldMention: messageExtras.allowedMentions?.replied_user != false,
+                shouldMention: messageOptions.allowedMentions?.replied_user != false,
                 showMentionToggle: true
             });
         }
     }
 }
 
-async function handleUpload(channelId, file, draftType, message, spoiler, filename) {
+async function handleUpload(params) {
+	let { channelId, file, message, hasSpoiler, filename } = params;
+	
     let key = await handleSend(channelId, message, true);
-    if(key == null) return arguments;
+    if(key == null) return;
 
-    if(spoiler) {
-        arguments[4] = false;
+    if(hasSpoiler) {
+        params.hasSpoiler = false;
         if(!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
     }
 
@@ -3586,21 +3588,22 @@ async function handleUpload(channelId, file, draftType, message, spoiler, filena
         let encryptedFilename = await encryptFilename(key, filename);
         let fileBuffer = await Utils.ReadFile(file);
         let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
-        arguments[1] = new File([encryptedBuffer], encryptedFilename);
-        arguments[5] = encryptedFilename;
+        params.file = new File([encryptedBuffer], encryptedFilename);
+        params.filename = encryptedFilename;
     }
     catch(e) {
-        arguments[1] = null;
+        params.file = null;
     }
-    return arguments;
 }
 
-async function handleUploadFiles(channelId, editableFiles, draftType, message, extras) {
-    let key = await handleSend(channelId, message, true);
-    if(key == null) return arguments;
+async function handleUploadFiles(params) {
+	let { channelId, uploads, parsedMessage } = params;
+	
+    let key = await handleSend(channelId, parsedMessage, true);
+    if(key == null) return;
 
     try {
-        for (let editableFile of editableFiles) {
+        for (let editableFile of uploads) {
             let filename = editableFile.filename;
             if(editableFile.spoiler) {
                 editableFile.spoiler = false;
@@ -3619,10 +3622,8 @@ async function handleUploadFiles(channelId, editableFiles, draftType, message, e
     }
     catch(err) {
         Utils.Error(err);
-        arguments[1] = [];
+        params.uploads = [];
     }
-
-    return arguments;
 }
 
 async function handleInstantUploads(channelId, fileList, draftType) {
@@ -3638,7 +3639,7 @@ async function handleInstantUploads(channelId, fileList, draftType) {
             let encryptedBuffer = await Utils.AesEncrypt(key, fileBuffer);
             let encryptedFile = new File([encryptedBuffer], encryptedFilename);
 
-            Discord.original_upload(channelId, encryptedFile, draftType, message, false, encryptedFilename);
+            Discord.original_upload({ channelId, file: encryptedFile, draftType, message, hasSpoiler: false, filename: encryptedFilename });
         }
     }
     catch(err) {
@@ -3724,23 +3725,23 @@ function Load()
 
     Discord.detour_dispatch = HandleDispatch;
 
-    Discord.detour_upload = function(){(async () => {
+    Discord.detour_upload = function(params){(async () => {
 
-        let argumentsOverride = await handleUpload.apply(null, arguments);
+        await handleUpload(params);
 
-        Discord.original_upload.apply(this, argumentsOverride);
+        Discord.original_upload.apply(this, arguments);
     })()};
 
     Discord.detour_instantBatchUpload = function() {
         handleInstantUploads.apply(this, arguments);
     };
 
-    Discord.detour_uploadFiles = function(){(async () => {
+    Discord.detour_uploadFiles = function(params){(async () => {
 
-        let argumentsOverride = await handleUploadFiles.apply(null, arguments);
+        await handleUploadFiles(params);
 
-        fixPendingReply(arguments[4]);
-        Discord.original_uploadFiles.apply(this, argumentsOverride);
+        fixPendingReply(params.options);
+        Discord.original_uploadFiles.apply(this, arguments);
     })()};
 
     if(Discord.detour_EMBED != null) Discord.detour_EMBED = function(path, t) {
