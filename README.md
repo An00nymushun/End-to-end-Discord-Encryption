@@ -18,8 +18,7 @@ Please do not download this plugin from untrusted sources, for example there is 
 <br>
 If you would like to `download an encrypted image`, **middle click on the image**<br>
 <br>
-You can **toggle the encryption** with the `lock icon`, but you can also use the `:ENC:` or `ENC` prefix at the start of your message to force the encryption<br>
-To send non encrypted messages in a channel where encryption is turned on, use the `NOENC` prefix<br>
+You can **toggle the encryption** with the `lock icon`. You can also use the `:ENC:`, `ENC` or `NOENC` prefix at the start of your message, but prefixes are deprecated since Discord starts uploads before you even send your message.<br>
 <br>
 If you want to **change** from one installation to another, `export and import` your database<br>
 If you would like to use the plugin on **multiple devices**; choose a main one, export the database from that and click on `secondary` when **importing to others**, after new key exchanges you'll have to repeat these steps<br>
