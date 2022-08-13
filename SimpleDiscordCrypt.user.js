@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.6.0.2
+// @version      1.6.0.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1340,7 +1340,7 @@ function Init(final)
     modules.CloudUploadPrototype = findModuleByUniqueProperties([ 'CloudFileUpload' ])?.CloudFileUpload.prototype;
     if(modules.CloudUploadPrototype == null) { if(final) Utils.Error("CloudFileUpload not found."); return 0; }
 
-    modules.CloudUploadHelper = findModule(x => x.ZP?.uploadToCloud && x.ZP.getUploadPayload)?.ZP;
+    modules.CloudUploadHelper = findModule(x => x.ZP?.getUploadPayload)?.ZP;
     if(modules.CloudUploadHelper == null) { if(final) Utils.Error("CloudUploadHelper not found."); return 0; }
 
     modules.PermissionEvaluator = findModuleByUniqueProperties([ 'can', 'computePermissions', 'canEveryone' ]);
@@ -2438,8 +2438,8 @@ function Init(final)
         mirrorFunction('PermissionEvaluator', 'can');
         mirrorFunction('RelationshipStore', 'isFriend');
         mirrorFunction('PrivateChannelManager', 'ensurePrivateChannel');
-        mirrorFunction('CloudUploadHelper', 'uploadToCloud');
         mirrorFunction('CloudUploadHelper', 'getUploadPayload');
+        mirrorFunction('CloudUploadPrototype', 'uploadFileToCloud');
         Discord.cloudUpload = modules.CloudUploadPrototype.upload;
 
         hookFunction('MessageQueue', 'enqueue');
@@ -2447,8 +2447,8 @@ function Init(final)
         hookFunction('FileUploader', 'upload');
         hookFunction('FileUploader', 'instantBatchUpload');
         hookFunction('FileUploader', 'uploadFiles');
-        hookFunction('CloudUploadHelper', 'uploadToCloud');
         hookFunction('CloudUploadHelper', 'getUploadPayload');
+        hookFunction('CloudUploadPrototype', 'uploadFileToCloud');
         hookFunction('CloudUploadPrototype', 'upload', 'cloudUpload');
     }
     catch(err) { Utils.Error(err); return -1; }
@@ -3725,16 +3725,16 @@ function handleGetUploadPayload(cloudFileUpload) {
     return result;
 }
 
-async function handleUploadToCloud(cloudFileUpload, progressCallback) {
-    if(!cloudFileUpload.ENCRYPTED_FILE) {
-        return await Discord.original_uploadToCloud.apply(this, arguments);
+async function handleUploadFileToCloud() {
+    if(!this.ENCRYPTED_FILE) {
+        return await Discord.original_uploadFileToCloud.apply(this, arguments);
     }
 
-    let item = cloudFileUpload.item;
+    let item = this.item;
     let originalFile = item.file;
-    item.file = cloudFileUpload.ENCRYPTED_FILE;
+    item.file = this.ENCRYPTED_FILE;
 
-    let resultPromise = Discord.original_uploadToCloud.apply(this, arguments);
+    let resultPromise = Discord.original_uploadFileToCloud.apply(this, arguments);
 
     item.file = originalFile;
 
@@ -3855,7 +3855,7 @@ function Load()
 
     Discord.detour_cloudUpload = handleCloudUpload;
     Discord.detour_getUploadPayload = handleGetUploadPayload;
-    Discord.detour_uploadToCloud = handleUploadToCloud;
+    Discord.detour_uploadFileToCloud = handleUploadFileToCloud;
 
     if(Discord.detour_EMBED != null) Discord.detour_EMBED = function(path, t) {
 
@@ -4099,8 +4099,8 @@ function Unload()
     restoreFunction('FileUploader', 'upload');
     restoreFunction('FileUploader', 'instantBatchUpload');
     restoreFunction('FileUploader', 'uploadFiles');
-    restoreFunction('CloudUploadHelper', 'uploadToCloud');
     restoreFunction('CloudUploadHelper', 'getUploadPayload');
+    restoreFunction('CloudUploadPrototype', 'uploadFileToCloud');
     Discord.detour_cloudUpload = Discord.cloudUpload;
 
     if(Discord.detour_EMBED != null) restoreFunction('SpotifyEndpoints', 'EMBED');
