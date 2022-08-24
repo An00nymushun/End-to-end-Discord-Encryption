@@ -2624,20 +2624,20 @@ function Init(final)
 
 async function handleMessage(event) {
     if(!await processMessage(event.message))
-        Discord.original_dispatch.apply(this, arguments);
+        return await Discord.original_dispatch.apply(this, arguments);
 }
 async function handleMessages(event) {
     for(let message of event.messages.slice()) //in case they reverse the array
         await processMessage(message);
 
-    Discord.original_dispatch.apply(this, arguments);
+    return await Discord.original_dispatch.apply(this, arguments);
 }
 async function handleSearch(event) {
     for(let group of event.messages)
         for(let message of group)
             await processMessage(message);
 
-    Discord.original_dispatch.apply(this, arguments);
+    return await Discord.original_dispatch.apply(this, arguments);
 }
 async function handleUpdate(event) {
     let message = event.message;
@@ -2649,7 +2649,7 @@ async function handleUpdate(event) {
     }
 
     if(!await processMessage(message))
-        Discord.original_dispatch.apply(this, arguments);
+        return await Discord.original_dispatch.apply(this, arguments);
 }
 
 const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
@@ -3494,16 +3494,16 @@ function handleChannelSelect(event) {
         //Update after event is processed by Discord
     }
 
-    Discord.original_dispatch.apply(this, arguments);
+    return Discord.original_dispatch.apply(this, arguments);
 }
 
 function handleDelete(event) {
     Utils.MessageDeleteEvent(event.id);
-    Discord.original_dispatch.apply(this, arguments);
+    return Discord.original_dispatch.apply(this, arguments);
 }
 function handleDeletes(event) {
     Utils.MessageDeleteBulkEvent(event.ids);
-    Discord.original_dispatch.apply(this, arguments);
+    return Discord.original_dispatch.apply(this, arguments);
 }
 
 const EMBED_LINKS_CHECK = 0x4000n;
@@ -3744,7 +3744,7 @@ async function handleUploadFileToCloud() {
 var clearAttachmentBlockedChannels = new Set();
 function handleClearAttachments(event) {
     if(!clearAttachmentBlockedChannels.has(event.channelId))
-        Discord.original_dispatch.apply(this, arguments);
+        return Discord.original_dispatch.apply(this, arguments);
 }
 
 const eventHandlers = {
