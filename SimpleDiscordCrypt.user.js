@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.6.0.4
+// @version      1.6.0.5
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3770,10 +3770,10 @@ function LockMessages() {
 
             await new Promise((resolve) => { messageLocks.push(resolve) });
 
-            return Discord.detour_dispatch.apply(this, arguments);
+            return await Discord.detour_dispatch.apply(this, arguments);
         }
 
-        Discord.original_dispatch.apply(this, arguments);
+        return await Discord.original_dispatch.apply(this, arguments);
     })()};
 
     UnlockMessages = (lifted) => {
@@ -3807,7 +3807,7 @@ function HandleDispatch(event) {
         return handler.apply(this, arguments);
     }
 
-    Discord.original_dispatch.apply(this, arguments);
+    return Discord.original_dispatch.apply(this, arguments);
 }
 
 var dbSaveInterval;
