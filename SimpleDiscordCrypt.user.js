@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.6.0.7
+// @version      1.6.0.8
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -3765,7 +3765,7 @@ const eventHandlers = {
 var messageLocks = [];
 var UnlockMessages;
 function LockMessages() {
-    Discord.detour_dispatch = async (event) => {
+    Discord.detour_dispatch = async function(event) {
         if(event.type === 'LOAD_MESSAGES_SUCCESS' || event.type === 'MESSAGE_CREATE' || event.type === 'MESSAGE_UPDATE') {
 
             await new Promise((resolve) => { messageLocks.push(resolve) });
