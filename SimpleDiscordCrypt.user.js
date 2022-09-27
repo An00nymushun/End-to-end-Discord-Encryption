@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.6.0.9
+// @version      1.7.0.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1337,10 +1337,10 @@ function Init(final)
     modules.FileUploader = findModuleByUniqueProperties([ 'upload', 'cancel', 'instantBatchUpload' ]);
     if(modules.FileUploader == null) { if(final) Utils.Error("FileUploader not found."); return 0; }
 
-    modules.CloudUploadPrototype = findModuleByUniqueProperties([ 'CloudUpload' ])?.CloudUpload.prototype;
+    modules.CloudUploadPrototype = findModule(x => x.prototype?.uploadFileToCloud && x.prototype.upload)?.prototype;
     if(modules.CloudUploadPrototype == null) { if(final) Utils.Error("CloudUpload not found."); return 0; }
 
-    modules.CloudUploadHelper = findModule(x => x.ZP?.getUploadPayload)?.ZP;
+    modules.CloudUploadHelper = findModuleByUniqueProperties([ 'getUploadPayload' ]);
     if(modules.CloudUploadHelper == null) { if(final) Utils.Error("CloudUploadHelper not found."); return 0; }
 
     modules.PermissionEvaluator = findModuleByUniqueProperties([ 'can', 'computePermissions', 'canEveryone' ]);
@@ -1352,9 +1352,7 @@ function Init(final)
     modules.PrivateChannelManager = findModuleByUniqueProperties([ 'openPrivateChannel', 'ensurePrivateChannel', 'closePrivateChannel' ]);
     if(modules.PrivateChannelManager == null) { if(final) Utils.Error("PrivateChannelManager not found."); return 0; }
 
-    modules.DiscordConstants = findModuleByUniqueProperties([ 'SpotifyEndpoints' ]);
     modules.Premium = findModuleByUniqueProperties([ 'canUseEmojisEverywhere' ]);
-    modules.PendingReplyDispatcher = findModuleByUniqueProperties([ 'createPendingReply' ]);
     modules.MessageCache = findModuleByUniqueProperties([ 'getMessage', 'getMessages' ]);
 
     Discord.modules = modules;
@@ -1363,7 +1361,7 @@ function Init(final)
     let nodeHttpsOptions;
     if(typeof(require) !== 'undefined') {
         nodeHttps = require('https');
-        nodeHttpsOptions = { agent: new nodeHttps.Agent({ keepAlive: true }), timeout: 120000 };
+        nodeHttpsOptions = { agent: nodeHttps.Agent && new nodeHttps.Agent({ keepAlive: true }), timeout: 120000 };
     }
 
     Object.assign(Utils, {
@@ -1411,12 +1409,14 @@ function Init(final)
             })
         })
         : (nodeHttps != null) ? function(url) { return new Promise((resolve, reject) => {
-            nodeHttps.get(url, nodeHttpsOptions, (response) => {
+            const request = nodeHttps.get(url, nodeHttpsOptions, (response) => {
                 let data = [];
                 response.on('data', (chunk) => data.push(chunk));
                 response.on('end', () => resolve(this.ConcatBuffers(data)));
                 response.on('aborted', reject);
-            }).on('error', reject).on('timeout', function() { this.abort() });
+            });
+            request.on('error', reject);
+            request.on('timeout', function() { this.abort() });
         })}
         : (url) => new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
@@ -2302,7 +2302,7 @@ function Init(final)
             }
             else Discord.dispatch({type: 'MESSAGE_UPDATE', message});
         },
-        
+
         Can: (permission, user, context) => Discord.can({ permission, user, context })
     });
 //Discord.window.SdcUtils = Utils;
@@ -2404,9 +2404,9 @@ function Init(final)
         let module = modules[moduleName];
         let mirroredName = `original_${functionName}`;
         let originalFunction = module[functionName];
-        
+
         if(typeof originalFunction !== 'function') throw `${moduleName}.${functionName}() is invalid`;
-        
+
         Discord[mirroredName] = originalFunction;
         Discord[functionName] = function() { return originalFunction.apply(module, arguments) };
     };
@@ -2414,12 +2414,12 @@ function Init(final)
         alias ??= functionName;
         let detourName = `detour_${alias}`;
         let detourFunction = Discord[alias];
-        
+
         Object.defineProperty(Discord, detourName, {
             get: () => detourFunction,
             set: (value) => detourFunction = value
         });
-        
+
         modules[moduleName][functionName] = function() { return Reflect.apply(detourFunction, this, arguments) };
     };
 
@@ -2453,13 +2453,14 @@ function Init(final)
     }
     catch(err) { Utils.Error(err); return -1; }
 
-    if(modules.DiscordConstants != null && modules.DiscordConstants.SpotifyEndpoints != null) {
-        let spotify = modules.DiscordConstants.SpotifyEndpoints;
-        if(Object.isFrozen(spotify)) modules.DiscordConstants.SpotifyEndpoints = spotify = Object.assign({}, spotify);
-        modules.SpotifyEndpoints = spotify;
-        mirrorFunction('SpotifyEndpoints', 'EMBED');
-        hookFunction('SpotifyEndpoints', 'EMBED');
+    const iframePrototype = Discord.window.HTMLIFrameElement.prototype;
+    const iframeAttributeProperty = Object.getOwnPropertyDescriptor(iframePrototype, 'setAttribute');
+    if(!iframeAttributeProperty || iframeAttributeProperty.configurable) {
+        modules.IframePrototype = iframePrototype;
+        mirrorFunction('IframePrototype', 'setAttribute');
+        hookFunction('IframePrototype', 'setAttribute');
     }
+
     if(modules.Premium != null && modules.Premium.canUseEmojisEverywhere != null) {
         mirrorFunction('Premium', 'canUseEmojisEverywhere');
         hookFunction('Premium', 'canUseEmojisEverywhere');
@@ -2467,9 +2468,6 @@ function Init(final)
             mirrorFunction('Premium', 'canUseAnimatedEmojis');
             hookFunction('Premium', 'canUseAnimatedEmojis');
         }
-    }
-    if(modules.PendingReplyDispatcher != null && modules.PendingReplyDispatcher.createPendingReply != null) {
-        mirrorFunction('PendingReplyDispatcher', 'createPendingReply');
     }
     if(modules.MessageCache != null && modules.MessageCache.getMessage != null) {
         mirrorFunction('MessageCache', 'getMessage');
@@ -2970,7 +2968,7 @@ function embedImage(message, url, queryString) {
 }
 var EmbedFrames = [];
 function embedEncrypted(message, url, queryString) {
-    if(Discord.detour_EMBED != null) {
+    if(Discord.detour_setAttribute != null) {
         let embedFrameId = EmbedFrames.push(url) - 1;
         message.embeds.push({
             type: 'link',
@@ -3592,19 +3590,20 @@ async function encryptFilename(key, filename) {
     do {
         encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncrypt(key, filenameBytes));
     } while(encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
-    
+
     return encryptedFilename;
 }
 
 function fixPendingReply(messageOptions) {
     const messageReference = messageOptions?.messageReference;
-    
-    if(messageReference != null && Discord.getMessage != null && Discord.createPendingReply != null) {
+
+    if(messageReference != null && Discord.getMessage != null) {
         const referencedMessage = Discord.getMessage(messageReference.channel_id, messageReference.message_id);
         const referencedChannel = Discord.getChannel(messageReference.channel_id);
 
         if(referencedMessage && referencedChannel) {
-            Discord.createPendingReply({
+            Discord.dispatch({
+                type: 'CREATE_PENDING_REPLY',
                 message: referencedMessage,
                 channel: referencedChannel,
                 shouldMention: messageOptions.allowedMentions?.replied_user != false,
@@ -3616,7 +3615,7 @@ function fixPendingReply(messageOptions) {
 
 async function handleUpload(params) {
     let { channelId, file, message, hasSpoiler, filename } = params;
-    
+
     let key = await handleSend(channelId, message, true);
     if(key == null) return;
 
@@ -3639,7 +3638,7 @@ async function handleUpload(params) {
 
 async function handleUploadFiles(params) {
     let { channelId, uploads, parsedMessage } = params;
-    
+
     let key = await handleSend(channelId, parsedMessage, true);
     if(key == null) return;
 
@@ -3705,7 +3704,7 @@ async function handleCloudUpload() {
         let encryptedFile = new File([encryptedBuffer], encryptedFilename);
 
         this.ENCRYPTED_FILE = encryptedFile;
-        
+
         return await Discord.cloudUpload.apply(this, arguments);
     }
     catch(err) {
@@ -3857,11 +3856,12 @@ function Load()
     Discord.detour_getUploadPayload = handleGetUploadPayload;
     Discord.detour_uploadFileToCloud = handleUploadFileToCloud;
 
-    if(Discord.detour_EMBED != null) Discord.detour_EMBED = function(path, t) {
+    if(Discord.detour_setAttribute != null) Discord.detour_setAttribute = function(key, value) {
 
-        if(path.startsWith("/playlist//")) return EmbedFrames[path.substr(11)];
+        if(key === 'src' && value?.startsWith("https://open.spotify.com/embed/playlist//"))
+            value = EmbedFrames[value.split(/\/playlist\/\/|\?/g, 2)[1]];
 
-        return Discord.original_EMBED.apply(this, arguments);
+        return Discord.original_setAttribute.call(this, key, value);
     };
 
     if(Discord.detour_canUseEmojisEverywhere != null) Discord.detour_canUseEmojisEverywhere = function() {
@@ -4103,9 +4103,9 @@ function Unload()
     restoreFunction('CloudUploadPrototype', 'uploadFileToCloud');
     Discord.detour_cloudUpload = Discord.cloudUpload;
 
-    if(Discord.detour_EMBED != null) restoreFunction('SpotifyEndpoints', 'EMBED');
     if(Discord.detour_canUseEmojisEverywhere != null) restoreFunction('Premium', 'canUseEmojisEverywhere');
     if(Discord.detour_canUseAnimatedEmojis != null) restoreFunction('Premium', 'canUseAnimatedEmojis');
+    if(Discord.detour_setAttribute != null) restoreFunction('IframePrototype', 'setAttribute');
 
     if(Patcher != null) Patcher.observer.disconnect();
 
