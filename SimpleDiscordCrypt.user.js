@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.0.0
+// @version      1.7.1.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1257,35 +1257,53 @@ var Utils = {
                 }
             ]);
         }
-        else if(Discord.window.webpackJsonp != null) {
-            webpackExports = typeof(Discord.window.webpackJsonp) === 'function' ?
-            Discord.window.webpackJsonp(
-                [],
-                { '__extra_id__': (module, _export_, req) => { _export_.default = req } },
-                [ '__extra_id__' ]
-            ).default :
-            Discord.window.webpackJsonp.push([
-                [],
-                { '__extra_id__': (_module_, exports, req) => { _module_.exports = req } },
-                [ [ '__extra_id__' ] ]
-            ]);
-
-            delete webpackExports.m['__extra_id__'];
-            delete webpackExports.c['__extra_id__'];
-        }
         else return null;
 
-        const findModule = (filter) => {
-            for(let i in webpackExports.c) {
-                if(webpackExports.c.hasOwnProperty(i)) {
-                    let m = webpackExports.c[i].exports;
+        const cachedExports = new Set();
+        const moduleCache = new Set();
 
-                    if(!m) continue;
+        const addModuleToCache = (module) => {
+            if(typeof module !== 'object' && typeof module !== 'function') return;
 
-                    if(m.__esModule && m.default) m = m.default;
+            if(module.__esModule && module.default)
+                module = module.default;
 
-                    if(filter(m)) return m;
+            moduleCache.add(module);
+        };
+
+        const addModulesToCache = (modules) => {
+            for (const rawModule of modules) {
+                const exports = rawModule.exports;
+                if(!cachedExports.has(exports)) {
+                    cachedExports.add(exports);
+
+                    if(typeof exports === 'object') {
+                        const properties = Object.values(Object.getOwnPropertyDescriptors(exports));
+                        const getters = properties.filter(x => x.get);
+                        if(getters.length !== 0 && getters.length === properties.length) {
+                            try {
+                                // These getters should work without the this parameter
+                                getters.map(({get}) => get()).forEach(addModuleToCache);
+                            }
+                            catch {
+                                addModuleToCache(exports);
+                            }
+                            continue;
+                        }
+                    }
+
+                    addModuleToCache(exports);
                 }
+            }
+        };
+
+        const findModule = (filter) => {
+            const cache = Object.values(webpackExports.c);
+            if(cache.length !== cachedExports.size)
+                addModulesToCache(cache);
+
+            for (const module of moduleCache.values()) {
+                if(filter(module)) return module;
             }
 
             return null;
