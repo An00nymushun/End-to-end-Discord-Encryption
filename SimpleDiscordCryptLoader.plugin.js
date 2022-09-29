@@ -1,4 +1,3 @@
-
 /**
  * @name SimpleDiscordCryptLoader
  * @version 1.2
