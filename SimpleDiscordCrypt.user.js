@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.1.2
+// @version      1.7.1.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -45,7 +45,7 @@ const HeaderBarChildrenSelector = `.children-3xh0VB`;
 const HeaderBarStatusSelector = `.status-12NUUC`;
 const HeaderBarChannelNameSelector = `.title-31SJ6t .titleWrapper-24Kyzc, .title-31SJ6t .channelName-3aS_Eg`;
 const BackdropSelector = `div[class*="backdrop"]`;
-const ModalClass = 'layer-1Ixpg3';
+const ModalClass = 'layer-fP3xEz';
 const ImageWrapperImgSelector = `.imageWrapper-oMkQl4 > img`;
 const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
 const MessageScrollerSelector = `.scroller-kQBbkU`;
