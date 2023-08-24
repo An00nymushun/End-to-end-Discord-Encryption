@@ -1,5 +1,5 @@
 let script = document.createElement('script');
-script.textContent = `window.localStorageBackup = window.localStorage`;
+script.textContent = `window.localStorageBackup = window.localStorage; Object.freeze = o => o;`;
 (document.head||document.documentElement).appendChild(script);
 script.remove();
 
