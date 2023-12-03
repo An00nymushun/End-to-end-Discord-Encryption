@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.3.1
+// @version      1.7.3.2
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1332,15 +1332,17 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             findModule(module => propNames.every(prop => module[prop] !== undefined)),
         });
       } else*/ if (Discord.window.webpackChunkdiscord_app != null) {
-        const ids = ['__extra_id__'];
+        const id = Symbol();
         Discord.window.webpackChunkdiscord_app.push([
-          ids,
+          [id],
           {},
           req => {
             webpackExports = req;
-            ids.length = 0;
           },
         ]);
+
+        delete webpackExports.m[id];
+        delete webpackExports.c[id];
       } else return null;
 
       const cachedExports = new Set();
