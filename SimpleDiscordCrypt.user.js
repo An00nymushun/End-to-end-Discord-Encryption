@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.3.2
+// @version      1.7.3.3
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1337,12 +1337,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           [id],
           {},
           req => {
-            webpackExports = req;
+            // It seems to get called with two different require functions
+            if (req.c != null) {
+              webpackExports = req;
+            }
           },
         ]);
-
-        delete webpackExports.m[id];
-        delete webpackExports.c[id];
       } else return null;
 
       const cachedExports = new Set();
