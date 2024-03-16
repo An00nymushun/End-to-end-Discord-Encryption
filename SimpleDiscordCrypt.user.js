@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.3.3
+// @version      1.7.3.4
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -30,6 +30,7 @@
   const BlacklistUrl = 'https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/blacklist.txt';
 
   const SavedLocalStorage = typeof localStorage !== 'undefined' ? localStorage : null;
+  // @ts-ignore
   const FixedCsp = typeof CspDisarmed !== 'undefined' ? CspDisarmed : false;
 
   const BaseColor = '#0fc';
@@ -39,12 +40,12 @@
   const IgnoreDiffKeyAge = 7 * 24 * 60 * 60 * 1000;
   const DiffKeyTrigger = 10;
 
-  const HeaderBarSelector = `div[class^=chat] > section[class^=title]`;
+  const HeaderBarSelector = `div[class^=chat] section[class^=title]`;
   const HeaderBarChildrenSelector = `${HeaderBarSelector} > div[class^=upperContainer] > div[class^=children]`;
   const HeaderBarChannelNameSelector = `${HeaderBarChildrenSelector} div[class*=titleWrapper], ${HeaderBarChildrenSelector} div[class*=channelName]`;
   const BackdropSelector = `div[class*=backdrop]`;
   const ModalClass = 'layer_ad604d';
-  const ImageWrapperImgSelector = `.imageWrapper_fd6587 > img`;
+  const ImageWrapperImgSelector = `.imageWrapper_fd6587 img`;
   const ModalImgSelector = `.${ModalClass} ${ImageWrapperImgSelector}`;
   const MessageScrollerSelector = `.scroller__1f96e`;
   const ChatInputSelector = `div[class^=channelTextArea] > div[class^=scrollableContainer]`;
@@ -2880,21 +2881,28 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let zoom = function (event) {
       this.removeEventListener('click', zoom);
       let url;
-      if (this.src != null) url = this.src.split('?', 1)[0];
+      if (this.src != null) {
+        const urlObj = new URL(this.src, location.href);
+        urlObj.searchParams.delete('width');
+        urlObj.searchParams.delete('height');
+        url = urlObj.href;
+      }
       let parent = this.parentElement;
       parent.addEventListener('click', closeModal);
       parent.classList.add('sdc-zoom');
       let p = parent.parentElement;
+      p.style = null;
       /*for(let child of p.childNodes) {
             if(child !== parent) child.remove();
         }*/
       p.parentElement.style = 'position: fixed; left: 0; top: 0';
-      /*while(true) {
-            p = p.parentElement;
-            if(p == null || p.classList.contains(ModalClass)) break;
-            //p.style.transform = null;
-            p.style.backgroundColor = "transparent";
-        }*/
+      while (true) {
+        p = p.parentElement;
+        if (p == null || p.classList.contains(ModalClass)) break;
+        p.parentElement.style = 'position: fixed; left: 0; top: 0';
+        //p.style.transform = null;
+        //p.style.backgroundColor = 'transparent';
+      }
       parent.style = 'width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0';
       this.style = 'position: relative; max-width: 100%; height: auto; user-select: none; -moz-user-select: none';
       let loading = false;
@@ -2984,7 +2992,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               let image = event.key === 'ArrowLeft' ? images[i - 1] : images[i + 1];
               if (image != null && !image.src.startsWith('data:')) {
                 //still loading
-                url = image.src.split('?', 1)[0];
+                const urlObj = new URL(image.src, location.href);
+                urlObj.searchParams.delete('width');
+                urlObj.searchParams.delete('height');
+                url = urlObj.href;
                 if (!loadAdded) {
                   this.addEventListener('load', () => {
                     this.style.minWidth =
@@ -3004,14 +3015,18 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         },
         true
       );
-      if (isDesktopDc)
+      if (isDesktopDc) {
         this.addEventListener('contextmenu', event => {
           if (!loading && this.src) {
-            let noqueryUrl = this.src.split('?', 1)[0];
-            Discord.window.SdcDownloadUrl(noqueryUrl.split(/[\/#]/).pop(), noqueryUrl);
+            const urlObj = new URL(this.src, location.href);
+            urlObj.searchParams.delete('width');
+            urlObj.searchParams.delete('height');
+            urlObj.searchParams.delete('format');
+            Discord.window.SdcDownloadUrl(urlObj.pathname.split(/[\/#]/).pop(), urlObj.href);
           }
           event.preventDefault();
         });
+      }
 
       event.stopPropagation();
     };
