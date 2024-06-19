@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.3.5
+// @version      1.7.4.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -27,9 +27,11 @@
 (function () {
   'use strict';
 
-  const BlacklistUrl = 'https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/blacklist.txt';
+  const BlacklistUrl =
+    'https://gitlab.com/An0/SimpleDiscordCrypt/raw/master/blacklist.txt';
 
-  const SavedLocalStorage = typeof localStorage !== 'undefined' ? localStorage : null;
+  const SavedLocalStorage =
+    typeof localStorage !== 'undefined' ? localStorage : null;
   // @ts-ignore
   const FixedCsp = typeof CspDisarmed !== 'undefined' ? CspDisarmed : false;
 
@@ -462,10 +464,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let wrapper = document.createElement('div');
       wrapper.innerHTML = this.html;
 
-      Utils.AttachEventToClass(wrapper, 'SDC_UNBLOCK', 'submit', e => {
+      Utils.AttachEventToClass(wrapper, 'SDC_UNBLOCK', 'submit', (e) => {
         e.preventDefault();
         this.Remove();
-        passwordCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
+        passwordCallback(
+          wrapper.getElementsByClassName('SDC_PASSWORD')[0].value
+        );
       });
       Utils.AttachEventToClass(wrapper, 'SDC_NEWDB', 'click', () => {
         this.Remove();
@@ -497,11 +501,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     </form>
 </div>
 </div>`,
-    Show: function (newdbCallback, importCallback, secondaryCallback, cancelCallback) {
+    Show: function (
+      newdbCallback,
+      importCallback,
+      secondaryCallback,
+      cancelCallback
+    ) {
       let wrapper = document.createElement('div');
       wrapper.innerHTML = this.html;
 
-      Utils.AttachEventToClass(wrapper, 'SDC_CREATEDB', 'submit', e => {
+      Utils.AttachEventToClass(wrapper, 'SDC_CREATEDB', 'submit', (e) => {
         e.preventDefault();
         this.Remove();
         newdbCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
@@ -542,10 +551,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let wrapper = document.createElement('div');
       wrapper.innerHTML = this.html;
 
-      Utils.AttachEventToClass(wrapper, 'SDC_CHANGEPASSWORD', 'submit', e => {
+      Utils.AttachEventToClass(wrapper, 'SDC_CHANGEPASSWORD', 'submit', (e) => {
         e.preventDefault();
         this.Remove();
-        newPasswordCallback(wrapper.getElementsByClassName('SDC_PASSWORD')[0].value);
+        newPasswordCallback(
+          wrapper.getElementsByClassName('SDC_PASSWORD')[0].value
+        );
       });
       Utils.AttachEventToClass(wrapper, 'SDC_CANCEL', 'click', () => {
         this.Remove();
@@ -599,19 +610,33 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
                 </div>
                 <div class="sdc-listbox sdc-listcheckbox"><label><input type="checkbox" class="SDC_SETHIDDEN" style="display:none"${
                   key.hidden ? ' checked' : ''
-                }${key.type !== 'GROUP' ? ' disabled' : ''}><p></p></label></div>
+                }${
+          key.type !== 'GROUP' ? ' disabled' : ''
+        }><p></p></label></div>
                 <div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px"${
                   key.protected ? ' disabled' : ''
                 }>Delete</button></div>`;
-        if (key.trusted) listItem.getElementsByClassName('SDC_DESCRIPTOR')[0].style.color = BaseColor;
-        const editDescriptor = e => {
-          let descriptorElement = listItem.getElementsByClassName('SDC_DESCRIPTOR')[0];
+        if (key.trusted)
+          listItem.getElementsByClassName('SDC_DESCRIPTOR')[0].style.color =
+            BaseColor;
+        const editDescriptor = (e) => {
+          let descriptorElement =
+            listItem.getElementsByClassName('SDC_DESCRIPTOR')[0];
           descriptorElement.innerHTML = `<input type="text" class="SDC_DESCRIPTORINPUT" style="width:320px"></input>`;
           const changeBack = () => {
-            descriptorElement.innerHTML = `${HtmlEscape(key.descriptor)} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a>`;
-            Utils.AttachEventToClass(descriptorElement, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
+            descriptorElement.innerHTML = `${HtmlEscape(
+              key.descriptor
+            )} <a class="SDC_EDITDESCRIPTOR sdc-edit"></a>`;
+            Utils.AttachEventToClass(
+              descriptorElement,
+              'SDC_EDITDESCRIPTOR',
+              'click',
+              editDescriptor
+            );
           };
-          let descriptorInput = descriptorElement.getElementsByClassName('SDC_DESCRIPTORINPUT')[0];
+          let descriptorInput = descriptorElement.getElementsByClassName(
+            'SDC_DESCRIPTORINPUT'
+          )[0];
           descriptorInput.value = key.rawDescriptor;
           descriptorInput.onkeydown = function (e) {
             if (e.key === 'Enter') {
@@ -622,10 +647,20 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           };
           descriptorInput.focus();
         };
-        Utils.AttachEventToClass(listItem, 'SDC_EDITDESCRIPTOR', 'click', editDescriptor);
-        Utils.AttachEventToClass(listItem, 'SDC_SETHIDDEN', 'change', function () {
-          setKeyHidden(key, this.checked);
-        });
+        Utils.AttachEventToClass(
+          listItem,
+          'SDC_EDITDESCRIPTOR',
+          'click',
+          editDescriptor
+        );
+        Utils.AttachEventToClass(
+          listItem,
+          'SDC_SETHIDDEN',
+          'change',
+          function () {
+            setKeyHidden(key, this.checked);
+          }
+        );
         Utils.AttachEventToClass(listItem, 'SDC_DELETE', 'click', () => {
           deleteKey(key);
           list.removeChild(listItem);
@@ -674,7 +709,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       for (let channel of channels) {
         let listItem = document.createElement('div');
         listItem.innerHTML = `<div>
-                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(channel.descriptor)}</h6>
+                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(
+                      channel.descriptor
+                    )}</h6>
                     <p>${Utils.FormatTime(channel.lastseen)}</p>
                 </div>
                 <div class="sdc-listbox"><button type="button" class="SDC_DELETE sdc-rbtn" style="margin:0 4px">Delete</button></div>`;
@@ -726,7 +763,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       for (let key of keys) {
         let listItem = document.createElement('div');
         listItem.innerHTML = `<div>
-                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(key.descriptor)}</h6>
+                    <h6 class="SDC_DESCRIPTOR">${HtmlEscape(
+                      key.descriptor
+                    )}</h6>
                     <p>${Utils.FormatTime(key.lastseen)}</p>
                 </div>
                 <div class="sdc-listbox"><button type="button" class="SDC_SHARE sdc-wbtn" style="margin:0 4px">Share</button></div>`;
@@ -798,17 +837,22 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
       this.keySelect = document.createElement('div');
       this.keySelect.innerHTML = this.keySelectHtml;
-      let keySelectSelected = this.keySelect.getElementsByClassName('SDC_SELECTED')[0];
-      let keySelectDropdown = this.keySelect.getElementsByClassName('SDC_DROPDOWN')[0];
-      let keySelectOptions = this.keySelect.getElementsByClassName('SDC_OPTIONS')[0];
+      let keySelectSelected =
+        this.keySelect.getElementsByClassName('SDC_SELECTED')[0];
+      let keySelectDropdown =
+        this.keySelect.getElementsByClassName('SDC_DROPDOWN')[0];
+      let keySelectOptions =
+        this.keySelect.getElementsByClassName('SDC_OPTIONS')[0];
 
       this.menuWrapper = document.createElement('div');
       this.menuWrapper.innerHTML = this.menuHtml;
       document.body.appendChild(this.menuWrapper);
       let menu = this.menuWrapper.getElementsByClassName('SDC_MENU')[0];
       let menuFocus = this.menuWrapper.getElementsByClassName('SDC_FOCUS')[0];
-      let menuDmGroup = this.menuWrapper.getElementsByClassName('SDC_DMMENU')[0];
-      let menuNondmGroup = this.menuWrapper.getElementsByClassName('SDC_GROUPMENU')[0];
+      let menuDmGroup =
+        this.menuWrapper.getElementsByClassName('SDC_DMMENU')[0];
+      let menuNondmGroup =
+        this.menuWrapper.getElementsByClassName('SDC_GROUPMENU')[0];
 
       this.toggleOnButton = document.createElement('div');
       this.toggleOnButton.innerHTML = this.toggleOnButtonHtml;
@@ -818,15 +862,31 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       this.toggleOffButton.innerHTML = this.toggleOffButtonHtml;
       this.toggleOffButton.onclick = toggle;
 
-      Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', e => (e.ctrlKey ? exportDbRaw() : exportDb()));
+      Utils.AttachEventToClass(menu, 'SDC_EXPORTDB', 'mousedown', (e) =>
+        e.ctrlKey ? exportDbRaw() : exportDb()
+      );
       Utils.AttachEventToClass(menu, 'SDC_NEWDB', 'mousedown', () => newDb());
-      Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () => newDbKey());
-      Utils.AttachEventToClass(menu, 'SDC_KEYEXCHANGE', 'mousedown', () => keyExchange());
-      Utils.AttachEventToClass(menu, 'SDC_NEWKEY', 'mousedown', () => groupKey());
-      Utils.AttachEventToClass(menu, 'SDC_KEYMANAGER', 'mousedown', () => keyManager());
-      Utils.AttachEventToClass(menu, 'SDC_CHMANAGER', 'mousedown', () => channelManager());
-      Utils.AttachEventToClass(menu, 'SDC_KEYART', 'mousedown', () => keyVisualizer());
-      Utils.AttachEventToClass(menu, 'SDC_KEYSHARE', 'mousedown', () => keyShare());
+      Utils.AttachEventToClass(menu, 'SDC_NEWDBKEY', 'mousedown', () =>
+        newDbKey()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_KEYEXCHANGE', 'mousedown', () =>
+        keyExchange()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_NEWKEY', 'mousedown', () =>
+        groupKey()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_KEYMANAGER', 'mousedown', () =>
+        keyManager()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_CHMANAGER', 'mousedown', () =>
+        channelManager()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_KEYART', 'mousedown', () =>
+        keyVisualizer()
+      );
+      Utils.AttachEventToClass(menu, 'SDC_KEYSHARE', 'mousedown', () =>
+        keyShare()
+      );
 
       const dropdownOn = () => {
         let keys = getKeys();
@@ -855,7 +915,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         }
       };
 
-      this.toggleOnButton.oncontextmenu = this.toggleOffButton.oncontextmenu = e => {
+      this.toggleOnButton.oncontextmenu = this.toggleOffButton.oncontextmenu = (
+        e
+      ) => {
         e.preventDefault();
         menu.style.left = e.clientX + 'px';
         menu.style.top = e.clientY + 'px';
@@ -882,10 +944,13 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         if (this.mutationObserver != null) this.mutationObserver.disconnect();
         else
-          this.mutationObserver = new MutationObserver(changes => {
+          this.mutationObserver = new MutationObserver((changes) => {
             for (let change of changes)
               for (let removed of change.removedNodes)
-                if (removed === this.keySelect || removed.contains(this.keySelect)) {
+                if (
+                  removed === this.keySelect ||
+                  removed.contains(this.keySelect)
+                ) {
                   this.Update();
                   return;
                 }
@@ -899,18 +964,26 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         let keyInfo = getCurrentKeyInfo();
         keySelectSelected.innerText = keyInfo[0 /*descriptor*/];
-        keySelectSelected.style.color = keyInfo[1 /*trusted*/] ? BaseColor : null;
+        keySelectSelected.style.color = keyInfo[1 /*trusted*/]
+          ? BaseColor
+          : null;
 
-        if (!keySelectEnabled) titleElement.insertAdjacentElement('afterend', this.keySelect);
+        if (!keySelectEnabled)
+          titleElement.insertAdjacentElement('afterend', this.keySelect);
 
         if (toggledOn) {
           if (!styleEnabled) document.head.appendChild(this.toggledOnStyle);
           if (toggleOnEnabled) this.toggleOnButton.remove();
-          if (!toggleOffEnabled) titleElement.insertAdjacentElement('afterend', this.toggleOffButton);
+          if (!toggleOffEnabled)
+            titleElement.insertAdjacentElement(
+              'afterend',
+              this.toggleOffButton
+            );
         } else {
           if (styleEnabled) document.head.removeChild(this.toggledOnStyle);
           if (toggleOffEnabled) this.toggleOffButton.remove();
-          if (!toggleOnEnabled) titleElement.insertAdjacentElement('afterend', this.toggleOnButton);
+          if (!toggleOnEnabled)
+            titleElement.insertAdjacentElement('afterend', this.toggleOnButton);
         }
 
         if (getIsDmChannel()) {
@@ -921,7 +994,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           menuNondmGroup.style.display = null;
         }
 
-        let randomChangesNode = document.getElementsByClassName('base-3dtUhz')[0];
+        let randomChangesNode =
+          document.getElementsByClassName('base-3dtUhz')[0];
         if (randomChangesNode != null)
           this.mutationObserver.observe(randomChangesNode, {
             childList: true,
@@ -948,7 +1022,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       this.domElement = wrapper;
     },
     Update: function () {
-      if (!document.body.contains(this.domElement)) document.body.appendChild(this.domElement);
+      if (!document.body.contains(this.domElement))
+        document.body.appendChild(this.domElement);
     },
     New: function (message, okCallback, cancelCallback, ontop) {
       let popup = document.createElement('div');
@@ -975,7 +1050,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       return popup;
     },
     NewPromise: function (message, ontop, timeout) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         if (timeout > 0) {
           let cancelTimeout;
           let popup = this.New(
@@ -1048,10 +1123,14 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           uintOffset += 4;
           if (uintOffset === hashBuffer.byteLength) uintOffset = 0;
           if (inUintOffset !== 0) {
-            bits = (bits << inUintOffset) | (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
+            bits =
+              (bits << inUintOffset) |
+              (uints.getUint32(uintOffset) >>> (32 - inUintOffset));
           }
         } else {
-          bits = (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) & ~(~0 << count);
+          bits =
+            (uints.getUint32(uintOffset) >>> (32 - newInUintOffset)) &
+            ~(~0 << count);
           inUintOffset = newInUintOffset;
         }
 
@@ -1088,7 +1167,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         drawRectangle(color, 0, 0, 1000, 1000);
       }
 
-      const airObjects = '☀️|🌑|☁️|🌩️|🌨️|🐉|🦇|🦅|🕊️|🐝|🦋|🍃|🚁|✈️|🛩️|🚀|🛸|🛰️|🌜|☄️|🌟|❄️|⚡|✨|🎈|👾|👻'.split('|');
+      const airObjects =
+        '☀️|🌑|☁️|🌩️|🌨️|🐉|🦇|🦅|🕊️|🐝|🦋|🍃|🚁|✈️|🛩️|🚀|🛸|🛰️|🌜|☄️|🌟|❄️|⚡|✨|🎈|👾|👻'.split(
+          '|'
+        );
       function drawAirObject(x, y, size, rotation) {
         if (popBits(1)) return;
 
@@ -1309,14 +1391,26 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
   var Discord;
   var Utils = {
-    Log: message => {
-      console.log(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, '');
+    Log: (message) => {
+      console.log(
+        `%c[SimpleDiscordCrypt] %c${message}`,
+        `color:${BaseColor};font-weight:bold`,
+        ''
+      );
     },
-    Warn: message => {
-      console.warn(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, '');
+    Warn: (message) => {
+      console.warn(
+        `%c[SimpleDiscordCrypt] %c${message}`,
+        `color:${BaseColor};font-weight:bold`,
+        ''
+      );
     },
-    Error: message => {
-      console.error(`%c[SimpleDiscordCrypt] %c${message}`, `color:${BaseColor};font-weight:bold`, '');
+    Error: (message) => {
+      console.error(
+        `%c[SimpleDiscordCrypt] %c${message}`,
+        `color:${BaseColor};font-weight:bold`,
+        ''
+      );
     },
     Webpack: function () {
       if (this.cachedWebpack) return this.cachedWebpack;
@@ -1337,7 +1431,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         Discord.window.webpackChunkdiscord_app.push([
           [id],
           {},
-          req => {
+          (req) => {
             // It seems to get called with two different require functions
             if (req.c != null) {
               webpackExports = req;
@@ -1350,7 +1444,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let cachedExportsCount = 0;
       const moduleCache = new Set();
 
-      const addModuleToCache = module => {
+      const addModuleToCache = (module) => {
         if (typeof module !== 'object' && typeof module !== 'function') return;
 
         if (module.__esModule && module.default) module = module.default;
@@ -1358,24 +1452,31 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         moduleCache.add(module);
       };
 
-      const addModulesToCache = modules => {
+      const addModulesToCache = (modules) => {
+        const isModuleLike = (x) =>
+          x && (typeof x === 'object' || typeof x === 'function');
+
         for (const rawModule of modules) {
           const exports = rawModule.exports;
           if (!cachedExports.has(exports)) {
             cachedExports.add(exports);
 
-            if (typeof exports === 'object') {
-              const properties = Object.values(Object.getOwnPropertyDescriptors(exports));
-              const getters = properties.filter(x => x.get);
-              if (getters.length !== 0 && getters.length === properties.length) {
-                try {
-                  // These getters should work without the this parameter
-                  getters.map(({ get }) => get()).forEach(addModuleToCache);
-                } catch {
-                  addModuleToCache(exports);
-                }
-                continue;
-              }
+            if (typeof exports === 'object' && !exports.__esModule) {
+              const properties = Object.values(
+                Object.getOwnPropertyDescriptors(exports)
+              );
+              try {
+                // These getters should work without the this parameter
+                properties
+                  .filter((x) => x.get)
+                  .map(({ get }) => get())
+                  .filter(isModuleLike)
+                  .forEach(addModuleToCache);
+              } catch {}
+              properties
+                .map((x) => x.value)
+                .filter(isModuleLike)
+                .forEach(addModuleToCache);
             }
 
             addModuleToCache(exports);
@@ -1383,7 +1484,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         }
       };
 
-      const findModule = filter => {
+      const findModule = (filter) => {
         const cache = webpackExports?.c;
         if (cache == null) return null;
 
@@ -1400,8 +1501,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         return null;
       };
 
-      const findModuleByUniqueProperties = propNames =>
-        findModule(module => propNames.every(prop => module[prop] !== undefined));
+      const findModuleByUniqueProperties = (propNames) =>
+        findModule((module) =>
+          propNames.every((prop) => module[prop] !== undefined)
+        );
 
       return (this.cachedWebpack = {
         findModule,
@@ -1416,7 +1519,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   var KeyRotators;
   var ImageZoom;
   var ResolveInitPromise;
-  var InitPromise = new Promise(resolve => {
+  var InitPromise = new Promise((resolve) => {
     ResolveInitPromise = resolve;
   });
 
@@ -1435,25 +1538,39 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     let modules = {};
 
-    modules.MessageQueue = findModuleByUniqueProperties(['enqueue', 'handleSend', 'handleEdit']);
+    modules.MessageQueue = findModuleByUniqueProperties([
+      'enqueue',
+      'handleSend',
+      'handleEdit',
+    ]);
     if (modules.MessageQueue == null) {
       if (final) Utils.Error('MessageQueue not found.');
       return 0;
     }
 
-    modules.MessageDispatcher = findModuleByUniqueProperties(['dispatch', 'wait']);
+    modules.MessageDispatcher = findModuleByUniqueProperties([
+      'dispatch',
+      'wait',
+    ]);
     if (modules.MessageDispatcher == null) {
       if (final) Utils.Error('MessageDispatcher not found.');
       return 0;
     }
 
-    modules.UserCache = findModuleByUniqueProperties(['getUser', 'getUsers', 'getCurrentUser']);
+    modules.UserCache = findModuleByUniqueProperties([
+      'getUser',
+      'getUsers',
+      'getCurrentUser',
+    ]);
     if (modules.UserCache == null) {
       if (final) Utils.Error('UserCache not found.');
       return 0;
     }
 
-    modules.ChannelCache = findModuleByUniqueProperties(['getChannel', 'getDMFromUserId']);
+    modules.ChannelCache = findModuleByUniqueProperties([
+      'getChannel',
+      'getDMFromUserId',
+    ]);
     if (modules.ChannelCache == null) {
       if (final) Utils.Error('ChannelCache not found.');
       return 0;
@@ -1469,37 +1586,55 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       return 0;
     }
 
-    modules.GuildCache = findModule(x => x.constructor?.displayName === 'GuildStore');
+    modules.GuildCache = findModule(
+      (x) => x.constructor?.displayName === 'GuildStore'
+    );
     if (modules.GuildCache == null) {
       if (final) Utils.Error('GuildCache not found.');
       return 0;
     }
 
-    modules.FileUploader = findModuleByUniqueProperties(['upload', 'cancel', 'instantBatchUpload']);
+    modules.FileUploader = findModuleByUniqueProperties([
+      'upload',
+      'cancel',
+      'instantBatchUpload',
+    ]);
     if (modules.FileUploader == null) {
       if (final) Utils.Error('FileUploader not found.');
       return 0;
     }
 
-    modules.CloudUploadPrototype = findModuleByUniqueProperties(['CloudUpload'])?.CloudUpload.prototype;
+    modules.CloudUploadPrototype = findModule(
+      (x) => x.prototype?.uploadFileToCloud && x.prototype.upload
+    ).prototype;
     if (modules.CloudUploadPrototype == null) {
       if (final) Utils.Error('CloudUpload not found.');
       return 0;
     }
 
-    modules.CloudUploadHelper = findModuleByUniqueProperties(['getUploadPayload']);
+    modules.CloudUploadHelper = findModuleByUniqueProperties([
+      'getUploadPayload',
+    ]);
     if (modules.CloudUploadHelper == null) {
       if (final) Utils.Error('CloudUploadHelper not found.');
       return 0;
     }
 
-    modules.PermissionEvaluator = findModuleByUniqueProperties(['can', 'computePermissions', 'canEveryone']);
+    modules.PermissionEvaluator = findModuleByUniqueProperties([
+      'can',
+      'computePermissions',
+      'canManageUser',
+    ]);
     if (modules.PermissionEvaluator == null) {
       if (final) Utils.Error('PermissionEvaluator not found.');
       return 0;
     }
 
-    modules.RelationshipStore = findModuleByUniqueProperties(['isFriend', 'isBlocked', 'getFriendIDs']);
+    modules.RelationshipStore = findModuleByUniqueProperties([
+      'isFriend',
+      'isBlocked',
+      'getFriendIDs',
+    ]);
     if (modules.RelationshipStore == null) {
       if (final) Utils.Error('RelationshipStore not found.');
       return 0;
@@ -1516,7 +1651,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     }
 
     modules.Premium = findModuleByUniqueProperties(['canUseEmojisEverywhere']);
-    modules.MessageCache = findModuleByUniqueProperties(['getMessage', 'getMessages']);
+    modules.MessageCache = findModuleByUniqueProperties([
+      'getMessage',
+      'getMessages',
+    ]);
 
     Discord.modules = modules;
 
@@ -1534,40 +1672,40 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       StorageSave:
         typeof GM_getValue !== 'undefined' && typeof GM_setValue !== 'undefined'
           ? (key, value) =>
-              new Promise(resolve => {
+              new Promise((resolve) => {
                 resolve(GM_setValue(key, JSON.stringify(value)));
               })
           : typeof chrome !== 'undefined' && chrome.storage != null
           ? (key, value) =>
-              new Promise(resolve => {
+              new Promise((resolve) => {
                 chrome.storage.sync.set({ key: value }, resolve);
               })
           : (key, value) =>
-              new Promise(resolve => {
+              new Promise((resolve) => {
                 resolve(SavedLocalStorage.setItem(key, JSON.stringify(value)));
               }),
       StorageLoad:
         typeof GM_getValue !== 'undefined' && typeof GM_setValue !== 'undefined'
-          ? key =>
-              new Promise(resolve => {
+          ? (key) =>
+              new Promise((resolve) => {
                 let jsonValue = GM_getValue(key);
                 if (jsonValue == null) resolve(null);
                 resolve(JSON.parse(jsonValue));
               })
           : typeof chrome !== 'undefined' && chrome.storage != null
-          ? key =>
-              new Promise(resolve => {
-                chrome.storage.sync.get(key, result => resolve(result[key]));
+          ? (key) =>
+              new Promise((resolve) => {
+                chrome.storage.sync.get(key, (result) => resolve(result[key]));
               })
-          : key =>
-              new Promise(resolve => {
+          : (key) =>
+              new Promise((resolve) => {
                 let jsonValue = SavedLocalStorage.getItem(key);
                 if (jsonValue == null) resolve(null);
                 resolve(JSON.parse(jsonValue));
               }),
 
-      Sleep: ms => new Promise(resolve => setTimeout(resolve, ms)),
-      ReadFile: file =>
+      Sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      ReadFile: (file) =>
         new Promise((resolve, reject) => {
           let fileReader = new FileReader();
           fileReader.onload = () => resolve(fileReader.result);
@@ -1576,32 +1714,36 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         }),
       DownloadFile:
         typeof GM_xmlhttpRequest !== 'undefined'
-          ? url =>
+          ? (url) =>
               new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
                   method: 'GET',
                   url,
                   responseType: 'arraybuffer',
-                  onload: result => resolve(result.response),
+                  onload: (result) => resolve(result.response),
                   onerror: reject,
                 });
               })
           : nodeHttps != null
           ? function (url) {
               return new Promise((resolve, reject) => {
-                const request = nodeHttps.get(url, nodeHttpsOptions, response => {
-                  let data = [];
-                  response.on('data', chunk => data.push(chunk));
-                  response.on('end', () => resolve(this.ConcatBuffers(data)));
-                  response.on('aborted', reject);
-                });
+                const request = nodeHttps.get(
+                  url,
+                  nodeHttpsOptions,
+                  (response) => {
+                    let data = [];
+                    response.on('data', (chunk) => data.push(chunk));
+                    response.on('end', () => resolve(this.ConcatBuffers(data)));
+                    response.on('aborted', reject);
+                  }
+                );
                 request.on('error', reject);
                 request.on('timeout', function () {
                   this.abort();
                 });
               });
             }
-          : url =>
+          : (url) =>
               new Promise((resolve, reject) => {
                 let xhr = new XMLHttpRequest();
                 xhr.responseType = 'arraybuffer';
@@ -1624,8 +1766,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         URL.revokeObjectURL(url);
       },
 
-      TryCompress: buffer =>
-        new Promise(resolve => {
+      TryCompress: (buffer) =>
+        new Promise((resolve) => {
           let length = buffer.byteLength;
           if (length < 1600) return resolve(buffer);
           let bufferView = new DataView(buffer);
@@ -1644,7 +1786,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             pixels.setUint32(i * 4, pixel, true);
           }
           if (remainingBytes === 3) {
-            let pixel = bufferView.getUint16(length - 3, true) | (bufferView.getUint8(length - 1) << 16) | 0xff000000;
+            let pixel =
+              bufferView.getUint16(length - 3, true) |
+              (bufferView.getUint8(length - 1) << 16) |
+              0xff000000;
             pixels.setUint32(pixelMaxIndex * 4, pixel, true);
           } else if (remainingBytes === 2) {
             let pixel = bufferView.getUint16(length - 2, true) | 0xff000000;
@@ -1666,16 +1811,22 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             view.setUint32(2, length, true);
             resolve(buffer);
           };
-          canvas.toBlob(blob => fileReader.readAsArrayBuffer(blob), 'image/png');
+          canvas.toBlob(
+            (blob) => fileReader.readAsArrayBuffer(blob),
+            'image/png'
+          );
         }),
-      TryDecompress: async buffer => {
+      TryDecompress: async (buffer) => {
         let bufferView = new DataView(buffer);
-        if (buffer.byteLength < 2 || bufferView.getUint16(0, false) !== 0x5dc) return buffer;
+        if (buffer.byteLength < 2 || bufferView.getUint16(0, false) !== 0x5dc)
+          return buffer;
         let length = bufferView.getUint32(2, true);
         bufferView.setUint16(0, 0x8950, false);
         bufferView.setUint32(2, 0x4e470d0a, false); //restore original PNG signature
 
-        let bitmap = await createImageBitmap(new Blob([buffer], { type: 'image/png' }));
+        let bitmap = await createImageBitmap(
+          new Blob([buffer], { type: 'image/png' })
+        );
         let canvas = document.createElement('canvas');
         let ctx = canvas.getContext('2d');
         let width = (canvas.width = bitmap.width);
@@ -1685,19 +1836,28 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let pxbufferView = new DataView(pxbuffer);
         let pixelCount = Math.ceil(length / 3);
         for (let i = 0; i < pixelCount; i++) {
-          pxbufferView.setUint32(i * 3, pxbufferView.getUint32(i * 4, true), true);
+          pxbufferView.setUint32(
+            i * 3,
+            pxbufferView.getUint32(i * 4, true),
+            true
+          );
         }
         return pxbuffer.slice(0, length);
       },
 
       GetNonce:
         window.BigInt != null
-          ? () => (BigInt(Date.now() - 14200704e5 /*DISCORD_EPOCH*/) << BigInt(22)).toString()
+          ? () =>
+              (
+                BigInt(Date.now() - 14200704e5 /*DISCORD_EPOCH*/) << BigInt(22)
+              ).toString()
           : () => Date.now().toString(),
 
-      FormatTime: timestamp => {
+      FormatTime: (timestamp) => {
         let timezoneOffset = new Date().getTimezoneOffset() * 60000;
-        let dateNow = new Date(Date.now() - timezoneOffset).toISOString().slice(0, 10);
+        let dateNow = new Date(Date.now() - timezoneOffset)
+          .toISOString()
+          .slice(0, 10);
         let datetime = new Date(timestamp - timezoneOffset).toISOString();
         let date = datetime.slice(0, 10);
         let time = datetime.slice(11, 16);
@@ -1722,27 +1882,40 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         return result;
       },
 
-      Sha512: async buffer => await crypto.subtle.digest('SHA-512', buffer),
-      Sha512_128: async buffer => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
+      Sha512: async (buffer) => await crypto.subtle.digest('SHA-512', buffer),
+      Sha512_128: async (buffer) =>
+        (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 16),
       Sha512_128str: async function (string) {
         return await this.Sha512_128(this.StringToUtf8Bytes(string));
       },
-      Sha512_256: async buffer => (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 32),
+      Sha512_256: async (buffer) =>
+        (await crypto.subtle.digest('SHA-512', buffer)).slice(0, 32),
       Sha512_256str: async function (string) {
         return await this.Sha512_256(this.StringToUtf8Bytes(string));
       },
 
-      AesImportKey: async buffer =>
-        await crypto.subtle.importKey('raw', buffer, 'AES-CBC', false, ['encrypt', 'decrypt']),
+      AesImportKey: async (buffer) =>
+        await crypto.subtle.importKey('raw', buffer, 'AES-CBC', false, [
+          'encrypt',
+          'decrypt',
+        ]),
       AesEncrypt: async function (key, buffer) {
         let initializationVector = this.GetRandomBytes(16);
-        let encryptedBuffer = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: initializationVector }, key, buffer);
+        let encryptedBuffer = await crypto.subtle.encrypt(
+          { name: 'AES-CBC', iv: initializationVector },
+          key,
+          buffer
+        );
         return this.ConcatBuffers([initializationVector, encryptedBuffer]);
       },
       AesDecrypt: async function (key, buffer) {
         let initializationVector = buffer.slice(0, 16);
         let encryptedBuffer = buffer.slice(16);
-        return await crypto.subtle.decrypt({ name: 'AES-CBC', iv: initializationVector }, key, encryptedBuffer);
+        return await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: initializationVector },
+          key,
+          encryptedBuffer
+        );
       },
       AesEncryptString: async function (key, string) {
         let bytes = this.StringToUtf8Bytes(string);
@@ -1753,20 +1926,40 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         return this.Utf8BytesToString(bytes);
       },
       AesEncryptCompressString: async function (key, string) {
-        let buffer = await this.TryCompress(this.StringToUtf8Bytes(string).buffer);
+        let buffer = await this.TryCompress(
+          this.StringToUtf8Bytes(string).buffer
+        );
         return await this.AesEncrypt(key, buffer);
       },
       AesDecryptDecompressString: async function (key, string) {
-        let buffer = await this.TryDecompress(await this.AesDecrypt(key, string));
+        let buffer = await this.TryDecompress(
+          await this.AesDecrypt(key, string)
+        );
         return this.Utf8BytesToString(buffer);
       },
 
       DhGenerateKeys: async () =>
-        await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-521' }, true, ['deriveBits']),
-      DhImportPublicKey: async buffer =>
-        await crypto.subtle.importKey('raw', buffer, { name: 'ECDH', namedCurve: 'P-521' }, false, []),
-      DhImportPrivateKey: async buffer =>
-        await crypto.subtle.importKey('pkcs8', buffer, { name: 'ECDH', namedCurve: 'P-521' }, false, ['deriveBits']),
+        await crypto.subtle.generateKey(
+          { name: 'ECDH', namedCurve: 'P-521' },
+          true,
+          ['deriveBits']
+        ),
+      DhImportPublicKey: async (buffer) =>
+        await crypto.subtle.importKey(
+          'raw',
+          buffer,
+          { name: 'ECDH', namedCurve: 'P-521' },
+          false,
+          []
+        ),
+      DhImportPrivateKey: async (buffer) =>
+        await crypto.subtle.importKey(
+          'pkcs8',
+          buffer,
+          { name: 'ECDH', namedCurve: 'P-521' },
+          false,
+          ['deriveBits']
+        ),
       DhImportPrivateKeyFallback: async function (buffer) {
         return await crypto.subtle.importKey(
           'jwk',
@@ -1776,44 +1969,63 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           ['deriveBits']
         );
       },
-      DhExportPublicKey: async key => await crypto.subtle.exportKey('raw', key),
-      DhExportPrivateKey: async key => await crypto.subtle.exportKey('pkcs8', key),
+      DhExportPublicKey: async (key) =>
+        await crypto.subtle.exportKey('raw', key),
+      DhExportPrivateKey: async (key) =>
+        await crypto.subtle.exportKey('pkcs8', key),
       DhExportPrivateKeyFallback: async function (key) {
-        return this.StringToUtf8Bytes(JSON.stringify(await crypto.subtle.exportKey('jwk', key)));
+        return this.StringToUtf8Bytes(
+          JSON.stringify(await crypto.subtle.exportKey('jwk', key))
+        );
       },
       DhGetSecret: async (privateKey, publicKey) =>
-        await crypto.subtle.deriveBits({ name: 'ECDH', namedCurve: 'P-521', public: publicKey }, privateKey, 256),
+        await crypto.subtle.deriveBits(
+          { name: 'ECDH', namedCurve: 'P-521', public: publicKey },
+          privateKey,
+          256
+        ),
 
       utf8encoder: new TextEncoder(),
       utf8decoder: new TextDecoder(),
       StringToUtf8Bytes: function (string) {
         return this.utf8encoder.encode(string);
       },
-      StringToAsciiBytes: string => Uint8Array.from(string, c => c.charCodeAt(0)),
-      StringToUtf16Shorts: string => Uint16Array.from(string, c => c.charCodeAt(0)),
+      StringToAsciiBytes: (string) =>
+        Uint8Array.from(string, (c) => c.charCodeAt(0)),
+      StringToUtf16Shorts: (string) =>
+        Uint16Array.from(string, (c) => c.charCodeAt(0)),
       StringToUtf16Bytes: function (string) {
         return new Uint8Array(this.StringToUtf16Shorts(string).buffer);
       },
-      AsciiBytesToString: buffer => String.fromCharCode.apply(null, new Uint8Array(buffer)),
-      Utf16ShortsToString: buffer => String.fromCharCode.apply(null, new Uint16Array(buffer)),
+      AsciiBytesToString: (buffer) =>
+        String.fromCharCode.apply(null, new Uint8Array(buffer)),
+      Utf16ShortsToString: (buffer) =>
+        String.fromCharCode.apply(null, new Uint16Array(buffer)),
       Utf8BytesToString: function (buffer) {
         return this.utf8decoder.decode(buffer);
       },
 
-      BytesToBase64: buffer => btoa(String.fromCharCode.apply(null, new Uint8Array(buffer))),
-      Base64ToBytes: string => Uint8Array.from(atob(string), c => c.charCodeAt(0)),
+      BytesToBase64: (buffer) =>
+        btoa(String.fromCharCode.apply(null, new Uint8Array(buffer))),
+      Base64ToBytes: (string) =>
+        Uint8Array.from(atob(string), (c) => c.charCodeAt(0)),
 
       BytesToBase64url: function (buffer) {
-        return this.BytesToBase64(buffer).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        return this.BytesToBase64(buffer)
+          .replace(/=/g, '')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_');
       },
       Base64urlToBytes: function (string) {
-        return this.Base64ToBytes(string.replace(/\-/g, '+').replace(/_/g, '/'));
+        return this.Base64ToBytes(
+          string.replace(/\-/g, '+').replace(/_/g, '/')
+        );
       },
 
-      GetRandomBytes: n => crypto.getRandomValues(new Uint8Array(n)),
-      GetRandomUints: n => crypto.getRandomValues(new Uint32Array(n)),
+      GetRandomBytes: (n) => crypto.getRandomValues(new Uint8Array(n)),
+      GetRandomUints: (n) => crypto.getRandomValues(new Uint32Array(n)),
 
-      ConcatBuffers: buffers => {
+      ConcatBuffers: (buffers) => {
         let newLength = buffers.reduce((len, x) => len + x.byteLength, 0);
         let newBuffer = new Uint8Array(newLength);
 
@@ -1826,12 +2038,13 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         return newBuffer;
       },
 
-      PayloadEncode: buffer =>
+      PayloadEncode: (buffer) =>
         String.fromCharCode.apply(
           null,
-          Uint16Array.from(new Uint8Array(buffer), b => b + 0x2800)
+          Uint16Array.from(new Uint8Array(buffer), (b) => b + 0x2800)
         ),
-      PayloadDecode: string => Uint8Array.from(string, c => c.charCodeAt(0) - 0x2800),
+      PayloadDecode: (string) =>
+        Uint8Array.from(string, (c) => c.charCodeAt(0) - 0x2800),
 
       AttachEventToClass: (rootElement, className, eventName, callback) => {
         for (let element of rootElement.getElementsByClassName(className))
@@ -1866,7 +2079,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let keyBase64 = keyObj.k;
         let keyBytes = this.Base64ToBytes(keyBase64);
 
-        if (DataBase.isEncrypted) keyBytes = await this.AesDecrypt(Cache.dbKey, keyBytes);
+        if (DataBase.isEncrypted)
+          keyBytes = await this.AesDecrypt(Cache.dbKey, keyBytes);
 
         let key = await this.AesImportKey(keyBytes);
         this.trimKeyCache();
@@ -1882,7 +2096,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let keyBase64 = keyObj.k;
         let keyBytes = this.Base64ToBytes(keyBase64);
 
-        if (DataBase.isEncrypted) keyBytes = await this.AesDecrypt(Cache.dbKey, keyBytes);
+        if (DataBase.isEncrypted)
+          keyBytes = await this.AesDecrypt(Cache.dbKey, keyBytes);
 
         return keyBytes;
       },
@@ -1897,7 +2112,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           h /*hidden*/: hidden || type > 1 ? 1 : 0,
         };
 
-        if (DataBase.isEncrypted) keyBytes = await this.AesEncrypt(Cache.dbKey, keyBytes);
+        if (DataBase.isEncrypted)
+          keyBytes = await this.AesEncrypt(Cache.dbKey, keyBytes);
 
         keyObj.k = this.BytesToBase64(keyBytes);
         DataBase.keys[keyHashBase64] = keyObj;
@@ -1916,12 +2132,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               const newdbCallback = () => {
                 this.NewDb(callback);
               };
-              const passwordCallback = async password => {
+              const passwordCallback = async (password) => {
                 if (
-                  this.BytesToBase64(await this.Sha512_128str(password + DataBase.dbPasswordSalt)) ===
-                  DataBase.dbPasswordHash
+                  this.BytesToBase64(
+                    await this.Sha512_128str(password + DataBase.dbPasswordSalt)
+                  ) === DataBase.dbPasswordHash
                 ) {
-                  Cache.dbKey = await this.AesImportKey(await this.Sha512_256str(password + DataBase.dbKeySalt));
+                  Cache.dbKey = await this.AesImportKey(
+                    await this.Sha512_256str(password + DataBase.dbKeySalt)
+                  );
                   if (callback) callback();
                 } else UnlockWindow.Show(passwordCallback, newdbCallback);
               };
@@ -1953,7 +2172,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       DownloadDb: async function (uncompressed) {
         let buffer = this.StringToUtf8Bytes(JSON.stringify(DataBase)).buffer;
         if (!uncompressed) buffer = await this.TryCompress(buffer);
-        this.DownloadBlob(uncompressed ? 'SimpleDiscordCrypt.json' : 'SimpleDiscordCrypt.dat', new Blob([buffer]));
+        this.DownloadBlob(
+          uncompressed ? 'SimpleDiscordCrypt.json' : 'SimpleDiscordCrypt.dat',
+          new Blob([buffer])
+        );
       },
       fileInput: (() => {
         //need reference to keep gc away (bug?)
@@ -1966,7 +2188,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         this.fileInput.click();
         this.fileInput.onchange = async () => {
           let buffer = await this.ReadFile(this.fileInput.files[0]);
-          DataBase = JSON.parse(this.Utf8BytesToString(await this.TryDecompress(buffer)));
+          DataBase = JSON.parse(
+            this.Utf8BytesToString(await this.TryDecompress(buffer))
+          );
           if (secondary) DataBase.isSecondary = true;
           else delete DataBase.isSecondary;
           this.FastSaveDb();
@@ -1976,7 +2200,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
       NewDb: function (callback, cancelCallback) {
         NewdbWindow.Show(
-          async password => {
+          async (password) => {
             DataBase = {
               isEncrypted: password !== '',
               keys: {},
@@ -1992,7 +2216,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               DataBase.dbPasswordHash = await this.BytesToBase64(
                 await this.Sha512_128str(password + DataBase.dbPasswordSalt)
               );
-              Cache.dbKey = await this.AesImportKey(await this.Sha512_256str(password + DataBase.dbKeySalt));
+              Cache.dbKey = await this.AesImportKey(
+                await this.Sha512_256str(password + DataBase.dbKeySalt)
+              );
             }
 
             await this.NewPersonalKey();
@@ -2017,7 +2243,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       },
       NewDbPassword: function (callback) {
         //TODO: notifications
-        NewPasswordWindow.Show(async password => {
+        NewPasswordWindow.Show(async (password) => {
           let newDataBase = Object.assign({}, DataBase);
           let newDbKey = null;
           let oldDbKey = Cache.dbKey;
@@ -2030,7 +2256,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             newDataBase.dbPasswordHash = await this.BytesToBase64(
               await this.Sha512_128str(password + newDataBase.dbPasswordSalt)
             );
-            newDbKey = await this.AesImportKey(await this.Sha512_256str(password + newDataBase.dbKeySalt));
+            newDbKey = await this.AesImportKey(
+              await this.Sha512_256str(password + newDataBase.dbKeySalt)
+            );
 
             let keys = {};
             let dhKeyBytes;
@@ -2038,22 +2266,34 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               //re-encrypt keys
               for (let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
                 let newKey = Object.assign({}, oldKey);
-                let keyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(oldKey.k /*key*/));
-                newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
+                let keyBytes = await this.AesDecrypt(
+                  oldDbKey,
+                  this.Base64ToBytes(oldKey.k /*key*/)
+                );
+                newKey.k = this.BytesToBase64(
+                  await this.AesEncrypt(newDbKey, keyBytes)
+                );
                 keys[keyHash] = newKey;
               }
-              dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKey));
+              dhKeyBytes = await this.AesDecrypt(
+                oldDbKey,
+                this.Base64ToBytes(DataBase.dhPrivateKey)
+              );
             } else {
               //encrypt keys
               for (let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
                 let newKey = Object.assign({}, oldKey);
                 let keyBytes = this.Base64ToBytes(oldKey.k /*key*/);
-                newKey.k = this.BytesToBase64(await this.AesEncrypt(newDbKey, keyBytes));
+                newKey.k = this.BytesToBase64(
+                  await this.AesEncrypt(newDbKey, keyBytes)
+                );
                 keys[keyHash] = newKey;
               }
               dhKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
             }
-            newDataBase.dhPrivateKey = this.BytesToBase64(await this.AesEncrypt(newDbKey, dhKeyBytes));
+            newDataBase.dhPrivateKey = this.BytesToBase64(
+              await this.AesEncrypt(newDbKey, dhKeyBytes)
+            );
             newDataBase.keys = keys;
           } else if (DataBase.isEncrypted) {
             //decrypt keys
@@ -2063,11 +2303,17 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             let keys = {};
             for (let [keyHash, oldKey] of Object.entries(DataBase.keys)) {
               let newKey = Object.assign({}, oldKey);
-              let keyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(oldKey.k /*key*/));
+              let keyBytes = await this.AesDecrypt(
+                oldDbKey,
+                this.Base64ToBytes(oldKey.k /*key*/)
+              );
               newKey.k = this.BytesToBase64(keyBytes);
               keys[keyHash] = newKey;
             }
-            let dhKeyBytes = await this.AesDecrypt(oldDbKey, this.Base64ToBytes(DataBase.dhPrivateKey));
+            let dhKeyBytes = await this.AesDecrypt(
+              oldDbKey,
+              this.Base64ToBytes(DataBase.dhPrivateKey)
+            );
             newDataBase.dhPrivateKey = this.BytesToBase64(dhKeyBytes);
             newDataBase.keys = keys;
           }
@@ -2085,13 +2331,19 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         try {
           dhPrivateKeyBytes = await this.DhExportPrivateKey(dhKeys.privateKey);
         } catch (e) {
-          dhPrivateKeyBytes = await this.DhExportPrivateKeyFallback(dhKeys.privateKey);
+          dhPrivateKeyBytes = await this.DhExportPrivateKeyFallback(
+            dhKeys.privateKey
+          );
           dhPrivateKeyFallback = true;
         }
 
         let dhPublicKeyBytes = await this.DhExportPublicKey(dhKeys.publicKey);
 
-        if (DataBase.isEncrypted) dhPrivateKeyBytes = await this.AesEncrypt(Cache.dbKey, dhPrivateKeyBytes);
+        if (DataBase.isEncrypted)
+          dhPrivateKeyBytes = await this.AesEncrypt(
+            Cache.dbKey,
+            dhPrivateKeyBytes
+          );
 
         if (dhPrivateKeyFallback) DataBase.dhPrivateKeyFallback = true;
         else delete DataBase.dhPrivateKeyFallback;
@@ -2101,13 +2353,23 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       },
       ReadDhKey: async function () {
         let dhPrivateKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
-        if (DataBase.isEncrypted) dhPrivateKeyBytes = await this.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
+        if (DataBase.isEncrypted)
+          dhPrivateKeyBytes = await this.AesDecrypt(
+            Cache.dbKey,
+            dhPrivateKeyBytes
+          );
 
         if (DataBase.dhPrivateKeyFallback) {
-          let dhPrivateKey = await this.DhImportPrivateKeyFallback(dhPrivateKeyBytes);
+          let dhPrivateKey = await this.DhImportPrivateKeyFallback(
+            dhPrivateKeyBytes
+          );
           try {
             dhPrivateKeyBytes = await this.DhExportPrivateKey(dhPrivateKey);
-            if (DataBase.isEncrypted) dhPrivateKeyBytes = await this.AesEncrypt(Cache.dbKey, dhPrivateKeyBytes);
+            if (DataBase.isEncrypted)
+              dhPrivateKeyBytes = await this.AesEncrypt(
+                Cache.dbKey,
+                dhPrivateKeyBytes
+              );
 
             delete DataBase.dhPrivateKeyFallback;
             DataBase.dhPrivateKey = this.BytesToBase64(dhPrivateKeyBytes);
@@ -2117,7 +2379,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         } else return await this.DhImportPrivateKey(dhPrivateKeyBytes);
       },
       ChangeKeyDescriptor: function (hash, descriptor) {
-        DataBase.keys[hash].d = descriptor.replace(/[`\r\n]/g, '').substr(0, 250);
+        DataBase.keys[hash].d = descriptor
+          .replace(/[`\r\n]/g, '')
+          .substr(0, 250);
         this.FastSaveDb();
       },
       ChangeKeyHidden: function (hash, hidden) {
@@ -2138,14 +2402,22 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         this.dbChanged = true;
       },
       ReplaceChannelKeys: function (oldHash, newHash) {
-        Object.values(DataBase.channels).forEach(x => {
+        Object.values(DataBase.channels).forEach((x) => {
           if (x.k === oldHash) x.k = newHash;
         });
         this.FastSaveDb();
       },
       NewPersonalKey: async function () {
-        if (DataBase.personalKeyHash != null) this.ChangeKeyDescriptor(DataBase.personalKeyHash, 'Old personal key');
-        let newPersonalKeyHash = await this.SaveKey(this.GetRandomBytes(32), 3 /*personal*/, '#Your personal key#');
+        if (DataBase.personalKeyHash != null)
+          this.ChangeKeyDescriptor(
+            DataBase.personalKeyHash,
+            'Old personal key'
+          );
+        let newPersonalKeyHash = await this.SaveKey(
+          this.GetRandomBytes(32),
+          3 /*personal*/,
+          '#Your personal key#'
+        );
         this.ReplaceChannelKeys(DataBase.personalKeyHash, newPersonalKeyHash);
         DataBase.personalKeyHash = newPersonalKeyHash;
         this.FastSaveDb();
@@ -2154,7 +2426,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let keyObj = DataBase.keys[hash];
         if (keyObj.t /*type*/ === 3 /*personal*/) return;
         let trustedKeys = DataBase.trustedKeys;
-        if (trustedKeys == null) DataBase.trustedKeys = trustedKeys = { hash: 1 };
+        if (trustedKeys == null)
+          DataBase.trustedKeys = trustedKeys = { hash: 1 };
         else {
           if (DataBase.trustedKeys[hash]) {
             if (DataBase.trustedKeys.length === 1) delete DataBase.trustedKeys;
@@ -2206,7 +2479,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         if (descriptor != null) channelConfig.d = descriptor;
         else {
           let channel = Discord.getChannel(channelId);
-          if (channel != null && channel.type === 1) channelConfig.d = `DM with <@${channel.recipients[0]}>`;
+          if (channel != null && channel.type === 1)
+            channelConfig.d = `DM with <@${channel.recipients[0]}>`;
           else channelConfig.d = `<#${channelId}>`;
         }
         DataBase.channels[channelId] = channelConfig;
@@ -2219,15 +2493,27 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         this.dbChanged = true;
       },
       GetCurrentChannelKeyHash: () => {
-        return Cache.channelConfig != null ? Cache.channelConfig.k : DataBase.personalKeyHash;
+        return Cache.channelConfig != null
+          ? Cache.channelConfig.k
+          : DataBase.personalKeyHash;
       },
       GetCurrentChannelEncrypt: () => {
-        return Cache.channelConfig != null && Cache.channelConfig.e && Cache.channelBlacklist !== 1;
+        return (
+          Cache.channelConfig != null &&
+          Cache.channelConfig.e &&
+          Cache.channelBlacklist !== 1
+        );
       },
       ToggleCurrentChannelEncrypt: function () {
         if (Cache.channelBlacklist === 1) return;
 
-        if (Cache.channelConfig == null) Cache.channelConfig = this.NewChannelConfig(Cache.channelId, null, null, true);
+        if (Cache.channelConfig == null)
+          Cache.channelConfig = this.NewChannelConfig(
+            Cache.channelId,
+            null,
+            null,
+            true
+          );
         else {
           Cache.channelConfig.e = Cache.channelConfig.e ? 0 : 1;
           this.dbChanged = true;
@@ -2237,7 +2523,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       },
       SetCurrentChannelKey: async function (hash) {
         if (Cache.channelConfig == null)
-          Cache.channelConfig = this.NewChannelConfig(Cache.channelId, hash, null, false);
+          Cache.channelConfig = this.NewChannelConfig(
+            Cache.channelId,
+            hash,
+            null,
+            false
+          );
         else {
           let oldKeyHash = Cache.channelConfig.k;
           if (hash === oldKeyHash) return;
@@ -2265,8 +2556,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         this.ClearChannelAttachments(channelId);
       },
-      GetCurrentChannelIsDm: () => Discord.getChannel(Cache.channelId).type === 1,
-      GetCurrentDmUserId: () => Discord.getChannel(Cache.channelId).recipients[0],
+      GetCurrentChannelIsDm: () =>
+        Discord.getChannel(Cache.channelId).type === 1,
+      GetCurrentDmUserId: () =>
+        Discord.getChannel(Cache.channelId).recipients[0],
       RefreshCache: () => {
         Cache.channelId = Discord.getChannelId();
         Cache.channelConfig = DataBase.channels[Cache.channelId];
@@ -2317,8 +2610,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
         let key = await this.GetKeyByHash(keyHash);
-        let personalKey = await this.GetKeyBytesByHash(DataBase.personalKeyHash);
-        let personalKeyPayload = this.PayloadEncode(await this.AesEncrypt(key, personalKey));
+        let personalKey = await this.GetKeyBytesByHash(
+          DataBase.personalKeyHash
+        );
+        let personalKeyPayload = this.PayloadEncode(
+          await this.AesEncrypt(key, personalKey)
+        );
 
         this.SendSystemMessage(
           channelId,
@@ -2353,7 +2650,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let listenerKeys = Object.keys(listenerMap);
         if (listenerKeys.length === 0) return;
         let foundKeys = this.Intersect(keyList.sort(), listenerKeys.sort());
-        for (let key of foundKeys) for (let listener of listenerMap[key]) listener();
+        for (let key of foundKeys)
+          for (let listener of listenerMap[key]) listener();
       },
       messageDeleteListeners: {},
       AddMessageDeleteListener: function (messageId, listener) {
@@ -2410,11 +2708,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           channelConfig = this.GetChannelConfig(channelId);
           if (
             channelConfig != null &&
-            (channelConfig.s /*systemMessageTime*/ > 0 || channelConfig.w) /*waitingForSystemMessage*/
+            (channelConfig.s /*systemMessageTime*/ > 0 ||
+              channelConfig.w) /*waitingForSystemMessage*/
           )
             return 2;
 
-          if (/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+          if (
+            /friend/i.test(DataBase.autoKeyExchange) &&
+            !Discord.isFriend(userId)
+          ) {
             if (this.ongoingKeyExchanges[userId]) return 0;
             this.ongoingKeyExchanges[userId] = true;
             if (user.username == null) user = Discord.getUser(userId);
@@ -2444,10 +2746,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           channelId = await Discord.ensurePrivateChannel(userId);
         }
 
-        let dhPublicKeyPayload = this.PayloadEncode(this.Base64ToBytes(DataBase.dhPublicKey));
+        let dhPublicKeyPayload = this.PayloadEncode(
+          this.Base64ToBytes(DataBase.dhPublicKey)
+        );
 
-        this.SendSystemMessage(channelId, `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``);
-        channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
+        this.SendSystemMessage(
+          channelId,
+          `*type*: \`DH KEY\`\n*dhKey*: \`${dhPublicKeyPayload}\``
+        );
+        channelConfig =
+          channelConfig || this.GetOrCreateChannelConfig(channelId);
         channelConfig.w = 1;
         this.dbChanged = true;
         return 1;
@@ -2464,9 +2772,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let requestId = keyHash + userId;
         if (autoOnMessage) {
           channelConfig = this.GetChannelConfig(channelId);
-          if (channelConfig != null && channelConfig.w /*waitingForSystemMessage*/) return false;
+          if (
+            channelConfig != null &&
+            channelConfig.w /*waitingForSystemMessage*/
+          )
+            return false;
 
-          if (/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+          if (
+            /friend/i.test(DataBase.autoKeyExchange) &&
+            !Discord.isFriend(userId)
+          ) {
             if (this.ongoingKeyRequests[requestId]) return false;
             if (this.ongoingKeyExchanges[userId]) return false;
             if (
@@ -2499,33 +2814,53 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         keyExchangeWhitelist[userId] = true;
 
-        let requestedKeyPayload = this.PayloadEncode(this.Base64ToBytes(keyHash));
+        let requestedKeyPayload = this.PayloadEncode(
+          this.Base64ToBytes(keyHash)
+        );
 
-        this.SendSystemMessage(channelId, `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``);
-        channelConfig = channelConfig || this.GetOrCreateChannelConfig(channelId);
+        this.SendSystemMessage(
+          channelId,
+          `*type*: \`KEY REQUEST\`\n*requestedKey*: \`${requestedKeyPayload}\``
+        );
+        channelConfig =
+          channelConfig || this.GetOrCreateChannelConfig(channelId);
         channelConfig.w = 1;
         this.dbChanged = true;
         return true;
       },
       ongoingKeyExchangesWithRequest: {},
-      InitKeyExchangeAndRequestKey: async function (keyHash, user, autoOnMessage) {
+      InitKeyExchangeAndRequestKey: async function (
+        keyHash,
+        user,
+        autoOnMessage
+      ) {
         let requestId = keyHash + user.id;
         let ongoing = this.ongoingKeyExchangesWithRequest[requestId];
         if (ongoing && autoOnMessage) return false;
-        let initKeyExchangeStatus = await this.InitKeyExchange(user, autoOnMessage, keyHash);
+        let initKeyExchangeStatus = await this.InitKeyExchange(
+          user,
+          autoOnMessage,
+          keyHash
+        );
         if (initKeyExchangeStatus === 0) return false;
         if (ongoing) return false;
         this.ongoingKeyExchangesWithRequest[requestId] = true;
         let promiseResolve;
         if (initKeyExchangeStatus === 1) {
-          await new Promise(resolve => {
+          await new Promise((resolve) => {
             promiseResolve = resolve;
             this.AddKeyExchangeListener(user.id, resolve);
           });
           this.RemoveKeyExchangeListener(user.id, promiseResolve);
         }
-        if (await this.RequestKey(keyHash, user, initKeyExchangeStatus === 1 ? null : autoOnMessage)) {
-          await new Promise(resolve => {
+        if (
+          await this.RequestKey(
+            keyHash,
+            user,
+            initKeyExchangeStatus === 1 ? null : autoOnMessage
+          )
+        ) {
+          await new Promise((resolve) => {
             promiseResolve = resolve;
             this.AddKeyShareListener(keyHash, resolve);
           });
@@ -2537,7 +2872,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       ShareKey: async function (keyHash, channelId, nonForced, user) {
         let keyObj = DataBase.keys[keyHash];
         if (keyObj == null) {
-          this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``);
+          this.SendSystemMessage(
+            channelId,
+            `*type*: \`KEY SHARE\`\n*status*: \`NOT FOUND\``
+          );
           return;
         }
         let channelConfig;
@@ -2551,13 +2889,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             if (user.username == null) user = Discord.getUser(user.id);
             if (
               !(await PopupManager.NewPromise(
-                `Would you like to share key "${Utils.FormatDescriptor(keyObj.d)}" with ${user.username}#${
-                  user.discriminator
-                }`,
+                `Would you like to share key "${Utils.FormatDescriptor(
+                  keyObj.d
+                )}" with ${user.username}#${user.discriminator}`,
                 true
               ))
             ) {
-              this.SendSystemMessage(channelId, `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``);
+              this.SendSystemMessage(
+                channelId,
+                `*type*: \`KEY SHARE\`\n*status*: \`DENIED\``
+              );
               return;
             }
           }
@@ -2565,16 +2906,24 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         let sharedKeyBase64 = keyObj.k;
         let sharedKeyBytes = this.Base64ToBytes(sharedKeyBase64);
-        if (DataBase.isEncrypted) sharedKeyBytes = await this.AesDecrypt(Cache.dbKey, sharedKeyBytes);
+        if (DataBase.isEncrypted)
+          sharedKeyBytes = await this.AesDecrypt(Cache.dbKey, sharedKeyBytes);
 
-        if (channelConfig == null) channelConfig = this.GetOrCreateChannelConfig(channelId);
+        if (channelConfig == null)
+          channelConfig = this.GetOrCreateChannelConfig(channelId);
         let key = await this.GetKeyByHash(channelConfig.k);
-        let keyHashPayload = this.PayloadEncode(this.Base64ToBytes(channelConfig.k));
+        let keyHashPayload = this.PayloadEncode(
+          this.Base64ToBytes(channelConfig.k)
+        );
 
-        let sharedKeyPayload = this.PayloadEncode(await Utils.AesEncrypt(key, sharedKeyBytes));
+        let sharedKeyPayload = this.PayloadEncode(
+          await Utils.AesEncrypt(key, sharedKeyBytes)
+        );
 
         if (keyHash === DataBase.personalKeyHash) {
-          let keyDescriptor = `<@${Discord.getCurrentUser().id}>'s personal key`;
+          let keyDescriptor = `<@${
+            Discord.getCurrentUser().id
+          }>'s personal key`;
           this.SendSystemMessage(
             channelId,
             `*type*: \`KEY SHARE\`\n*status*: \`OK\`\n*key*: \`${keyHashPayload}\`\n*sharedKey*: \`${sharedKeyPayload}\`\n*keyType*: \`PERSONAL\`\n*keyDescriptor*: \`${keyDescriptor}\``
@@ -2595,7 +2944,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
                 if (sharedChannels.push(id) === 20) break;
               }
             }
-            systemMessage += `\n*sharedChannels*: \`${JSON.stringify(sharedChannels)}\``;
+            systemMessage += `\n*sharedChannels*: \`${JSON.stringify(
+              sharedChannels
+            )}\``;
           }
 
           this.SendSystemMessage(channelId, systemMessage);
@@ -2609,20 +2960,35 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           delete DataBase.keyRotators[keyHash];
           delete KeyRotators[keyHash];
           let now = Date.now();
-          let rotationCtr = Math.floor((now - keyRotator.start) / keyRotator.interval);
+          let rotationCtr = Math.floor(
+            (now - keyRotator.start) / keyRotator.interval
+          );
           let oldKey = DataBase.keys[keyHash];
           if (oldKey == null) {
             this.dbChanged = true;
             return;
           }
           let dhPrivateKeyBytes = this.Base64ToBytes(DataBase.dhPrivateKey);
-          if (DataBase.isEncrypted) dhPrivateKeyBytes = await this.AesDecrypt(Cache.dbKey, dhPrivateKeyBytes);
+          if (DataBase.isEncrypted)
+            dhPrivateKeyBytes = await this.AesDecrypt(
+              Cache.dbKey,
+              dhPrivateKeyBytes
+            );
           let seed = this.Base64ToBytes(keyRotator.seed);
-          let newName = /^(.*?)(?: +\d+)?$/.exec(oldKey.d /*descriptor*/)[1] + ' ' + rotationCtr;
+          let newName =
+            /^(.*?)(?: +\d+)?$/.exec(oldKey.d /*descriptor*/)[1] +
+            ' ' +
+            rotationCtr;
           let seedEdit = new DataView(seed.buffer);
-          seedEdit.setUint32(0, seedEdit.getUint32(0, true) ^ rotationCtr, true);
+          seedEdit.setUint32(
+            0,
+            seedEdit.getUint32(0, true) ^ rotationCtr,
+            true
+          );
           let newKeyHash = await this.SaveKey(
-            await this.Sha512_256(this.ConcatBuffers([seed, dhPrivateKeyBytes])),
+            await this.Sha512_256(
+              this.ConcatBuffers([seed, dhPrivateKeyBytes])
+            ),
             1 /*group*/,
             newName,
             oldKey.h /*hidden*/
@@ -2631,7 +2997,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           oldKey.d /*descriptor*/ = 'Rotated ' + oldKey.d;
           this.dbChanged = true;
           this.ReplaceChannelKeys(keyHash, newKeyHash);
-          if (Cache.channelConfig != null && Cache.channelConfig.k /*keyHash*/ === newKeyHash) MenuBar.Update();
+          if (
+            Cache.channelConfig != null &&
+            Cache.channelConfig.k /*keyHash*/ === newKeyHash
+          )
+            MenuBar.Update();
           this.StartKeyRotation(newKeyHash, keyRotator);
         }, timeFromNow);
       },
@@ -2640,11 +3010,18 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let timeFromNow =
           keyRotator.start > now
             ? keyRotator.start - now
-            : Math.ceil((1 - (((now - keyRotator.start) / keyRotator.interval) % 1)) * keyRotator.interval);
-        KeyRotators[keyHash] = this.KeyRotationTimeout(keyHash, keyRotator, timeFromNow);
+            : Math.ceil(
+                (1 - (((now - keyRotator.start) / keyRotator.interval) % 1)) *
+                  keyRotator.interval
+              );
+        KeyRotators[keyHash] = this.KeyRotationTimeout(
+          keyHash,
+          keyRotator,
+          timeFromNow
+        );
       },
-      StopKeyRotation: keyHash => clearTimeout(KeyRotators[keyHash]),
-      UpdateMessageContent: message => {
+      StopKeyRotation: (keyHash) => clearTimeout(KeyRotators[keyHash]),
+      UpdateMessageContent: (message) => {
         if (message.edited_timestamp == null) {
           message.edited_timestamp = message.timestamp;
           Discord.dispatch({ type: 'MESSAGE_UPDATE', message });
@@ -2652,10 +3029,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         } else Discord.dispatch({ type: 'MESSAGE_UPDATE', message });
       },
 
-      Can: (permission, user, context) => Discord.can({ permission, user, context }),
+      Can: (permission, user, context) =>
+        Discord.can({ permission, user, context }),
     });
-    //Discord.window.SdcUtils = Utils;
-    //Discord.window.SdcDiscord = Discord;
 
     if (!window.crypto || !crypto.subtle) {
       Utils.Error('Crypto API not found.');
@@ -2673,10 +3049,13 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     };
     Discord.window.SdcDecryptDl = async (filename, keyHash, url) => {
       let encryptedFileBuffer = await Utils.DownloadFile(url);
-      let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
+      let fileBuffer = await Utils.AesDecrypt(
+        await Utils.GetKeyByHash(keyHash),
+        encryptedFileBuffer
+      );
       Utils.DownloadBlob(filename, new File([fileBuffer], filename));
     };
-    Discord.window.SdcClearKeys = filterFunc => {
+    Discord.window.SdcClearKeys = (filterFunc) => {
       const typeLookup = [null, 'GROUP', 'CONVERSATION', 'PERSONAL'];
       for (let [hash, keyObj] of Object.entries(DataBase.keys)) {
         if (
@@ -2691,7 +3070,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           Utils.DeleteKey(hash);
       }
     };
-    Discord.window.SdcClearChannels = filterFunc => {
+    Discord.window.SdcClearChannels = (filterFunc) => {
       for (let [hash, channelObj] of Object.entries(DataBase.channels)) {
         if (
           filterFunc({
@@ -2703,7 +3082,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           Utils.DeleteChannelConfig(hash);
       }
     };
-    Discord.window.SdcSetPingOn = regexStr => {
+    Discord.window.SdcSetPingOn = (regexStr) => {
       if (!regexStr) {
         if (Cache.pingOn == null) return;
         Cache.pingOn = null;
@@ -2711,7 +3090,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       } else {
         regexStr = regexStr.toString();
         let fullRegex = /^\/(.*)\/([imsu]{0,4})$/.exec(regexStr);
-        Cache.pingOn = fullRegex ? new RegExp(fullRegex[1], fullRegex[2]) : new RegExp(regexStr);
+        Cache.pingOn = fullRegex
+          ? new RegExp(fullRegex[1], fullRegex[2])
+          : new RegExp(regexStr);
         DataBase.pingOn = regexStr;
       }
       Utils.dbChanged = true;
@@ -2732,7 +3113,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       }
       let keyHash = channelConfig.k; /*keyHash*/
       let keyRotator;
-      if (DataBase.keyRotators != null) keyRotator = DataBase.keyRotators[keyHash];
+      if (DataBase.keyRotators != null)
+        keyRotator = DataBase.keyRotators[keyHash];
       if (days > 0) {
         const day = 24 * 60 * 60 * 1000;
         let interval = days * day;
@@ -2756,7 +3138,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         } else {
           interval = day * days;
           if (keyRotator.start < Date.now())
-            Utils.Warn("Plase note that the numbering has been reset, you might want to change the key's name");
+            Utils.Warn(
+              "Plase note that the numbering has been reset, you might want to change the key's name"
+            );
           keyRotator.interval = interval;
           keyRotator.start = start;
           Utils.StopKeyRotation(keyHash);
@@ -2786,7 +3170,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let mirroredName = `original_${functionName}`;
       let originalFunction = module[functionName];
 
-      if (typeof originalFunction !== 'function') throw `${moduleName}.${functionName}() is invalid`;
+      if (typeof originalFunction !== 'function')
+        throw `${moduleName}.${functionName}() is invalid`;
 
       Discord[mirroredName] = originalFunction;
       Discord[functionName] = function () {
@@ -2800,7 +3185,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
       Object.defineProperty(Discord, detourName, {
         get: () => detourFunction,
-        set: value => (detourFunction = value),
+        set: (value) => (detourFunction = value),
       });
 
       modules[moduleName][functionName] = function () {
@@ -2841,7 +3226,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     }
 
     const iframePrototype = Discord.window.HTMLIFrameElement.prototype;
-    const iframeAttributeProperty = Object.getOwnPropertyDescriptor(iframePrototype, 'setAttribute');
+    const iframeAttributeProperty = Object.getOwnPropertyDescriptor(
+      iframePrototype,
+      'setAttribute'
+    );
     if (!iframeAttributeProperty || iframeAttributeProperty.configurable) {
       modules.IframePrototype = iframePrototype;
       mirrorFunction('IframePrototype', 'setAttribute');
@@ -2850,7 +3238,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     if (
       modules.Premium != null &&
-      Object.getOwnPropertyDescriptor(modules.Premium, 'canUseEmojisEverywhere')?.configurable
+      Object.getOwnPropertyDescriptor(modules.Premium, 'canUseEmojisEverywhere')
+        ?.configurable
     ) {
       mirrorFunction('Premium', 'canUseEmojisEverywhere');
       hookFunction('Premium', 'canUseEmojisEverywhere');
@@ -2859,7 +3248,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         hookFunction('Premium', 'canUseAnimatedEmojis');
       }
     }
-    if (modules.MessageCache != null && modules.MessageCache.getMessage != null) {
+    if (
+      modules.MessageCache != null &&
+      modules.MessageCache.getMessage != null
+    ) {
       mirrorFunction('MessageCache', 'getMessage');
     }
 
@@ -2903,10 +3295,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         //p.style.transform = null;
         //p.style.backgroundColor = 'transparent';
       }
-      parent.style = 'width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0';
-      this.style = 'position: relative; max-width: 100%; height: auto; user-select: none; -moz-user-select: none';
+      parent.style =
+        'width: 100vw; height: 100vh; display: flex; overflow: auto; outline: 0';
+      this.style =
+        'position: relative; max-width: 100%; height: auto; user-select: none; -moz-user-select: none';
       let loading = false;
-      if (url != null && url.length !== this.src.length && !url.startsWith('blob:')) {
+      if (
+        url != null &&
+        url.length !== this.src.length &&
+        !url.startsWith('blob:')
+      ) {
         let loadStart = Date.now();
         const onLoad = () => {
           let duration;
@@ -2916,14 +3314,19 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             parent.style.justifyContent = null;
             parent.style.alignItems = null;
             this.style.margin = 'auto';
-            parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
+            parent.scroll(
+              (this.width - parent.clientWidth) / 2,
+              (this.height - parent.clientHeight) / 2
+            );
             this.removeEventListener('transitionend', onTransitionEnd);
             this.style.transitionDuration = null;
           };
           this.addEventListener('transitionend', onTransitionEnd);
           this.style.transitionDuration = duration + 'ms';
           this.style.minWidth =
-            (this.naturalWidth > parent.clientWidth * 2 ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
+            (this.naturalWidth > parent.clientWidth * 2
+              ? parent.clientWidth * 2
+              : this.naturalWidth) + 'px';
           this.removeEventListener('load', onLoad);
           loading = false;
         };
@@ -2931,20 +3334,27 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         parent.style.justifyContent = 'center';
         parent.style.alignItems = 'center';
         this.style.minWidth =
-          (this.naturalWidth > parent.clientWidth * 2 ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
+          (this.naturalWidth > parent.clientWidth * 2
+            ? parent.clientWidth * 2
+            : this.naturalWidth) + 'px';
         loading = true;
         this.src = url; //img.src can be sync in FF
       } else {
         this.style.margin = 'auto';
         this.style.minWidth =
-          (this.naturalWidth > parent.clientWidth * 2 ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
-        parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
+          (this.naturalWidth > parent.clientWidth * 2
+            ? parent.clientWidth * 2
+            : this.naturalWidth) + 'px';
+        parent.scroll(
+          (this.width - parent.clientWidth) / 2,
+          (this.height - parent.clientHeight) / 2
+        );
       }
       this.draggable = false;
       let dragDelta;
       let oldX, oldY;
       let clickRemoved;
-      const drag = event => {
+      const drag = (event) => {
         let deltaX = oldX - event.clientX,
           deltaY = oldY - event.clientY;
         oldX = event.clientX;
@@ -2962,9 +3372,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         w.removeEventListener('mousemove', drag);
         w.removeEventListener('mouseup', stopDrag);
         w.removeEventListener('blur', stopDrag);
-        if (clickRemoved) setTimeout(() => parent.addEventListener('click', closeModal), 100);
+        if (clickRemoved)
+          setTimeout(() => parent.addEventListener('click', closeModal), 100);
       };
-      this.addEventListener('mousedown', event => {
+      this.addEventListener('mousedown', (event) => {
         if (event.button !== 0 /*Left click*/) return;
         dragDelta = 0;
         clickRemoved = false;
@@ -2975,7 +3386,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         w.addEventListener('mouseup', stopDrag);
         w.addEventListener('blur', stopDrag);
       });
-      this.addEventListener('dragstart', event => {
+      this.addEventListener('dragstart', (event) => {
         event.preventDefault();
       });
       parent.tabIndex = 0;
@@ -2983,13 +3394,18 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let loadAdded = false;
       parent.addEventListener(
         'keydown',
-        event => {
-          if (loading || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+        (event) => {
+          if (
+            loading ||
+            (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+          )
+            return;
           let images = document.querySelectorAll(ChatImageSelector);
           let count = images.length;
           for (let i = 0; i < count; i++)
             if (images[i].src.startsWith(url)) {
-              let image = event.key === 'ArrowLeft' ? images[i - 1] : images[i + 1];
+              let image =
+                event.key === 'ArrowLeft' ? images[i - 1] : images[i + 1];
               if (image != null && !image.src.startsWith('data:')) {
                 //still loading
                 const urlObj = new URL(image.src, location.href);
@@ -2999,8 +3415,13 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
                 if (!loadAdded) {
                   this.addEventListener('load', () => {
                     this.style.minWidth =
-                      (this.naturalWidth > parent.clientWidth * 2 ? parent.clientWidth * 2 : this.naturalWidth) + 'px';
-                    parent.scroll((this.width - parent.clientWidth) / 2, (this.height - parent.clientHeight) / 2);
+                      (this.naturalWidth > parent.clientWidth * 2
+                        ? parent.clientWidth * 2
+                        : this.naturalWidth) + 'px';
+                    parent.scroll(
+                      (this.width - parent.clientWidth) / 2,
+                      (this.height - parent.clientHeight) / 2
+                    );
                     loading = false;
                   });
                   loadAdded = true;
@@ -3016,13 +3437,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         true
       );
       if (isDesktopDc) {
-        this.addEventListener('contextmenu', event => {
+        this.addEventListener('contextmenu', (event) => {
           if (!loading && this.src) {
             const urlObj = new URL(this.src, location.href);
             urlObj.searchParams.delete('width');
             urlObj.searchParams.delete('height');
             urlObj.searchParams.delete('format');
-            const filename = urlObj.hash ? urlObj.hash.slice(1).split('?', 1)[0] : urlObj.pathname.split('/').pop();
+            const filename = urlObj.hash
+              ? urlObj.hash.slice(1).split('?', 1)[0]
+              : urlObj.pathname.split('/').pop();
             Discord.window.SdcDownloadUrl(filename, urlObj.href);
           }
           event.preventDefault();
@@ -3032,7 +3455,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       event.stopPropagation();
     };
     ImageZoom.zoom = zoom;
-    ImageZoom.observer = new MutationObserver(changes => {
+    ImageZoom.observer = new MutationObserver((changes) => {
       for (let change of changes)
         for (let added of change.addedNodes)
           if (added.tagName === 'IMG') {
@@ -3040,7 +3463,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               added.addEventListener('click', zoom);
             }
             return;
-          } else if (added.classList != null && added.classList.contains(ModalClass)) {
+          } else if (
+            added.classList != null &&
+            added.classList.contains(ModalClass)
+          ) {
             let img = added.querySelector(ImageWrapperImgSelector);
             if (img != null) {
               img.addEventListener('click', zoom);
@@ -3052,7 +3478,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   }
 
   async function handleMessage(event) {
-    if (!(await processMessage(event.message))) return await Discord.original_dispatch.apply(this, arguments);
+    if (!(await processMessage(event.message)))
+      return await Discord.original_dispatch.apply(this, arguments);
   }
   async function handleMessages(event) {
     for (let message of event.messages.slice()) //in case they reverse the array
@@ -3061,37 +3488,51 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     return await Discord.original_dispatch.apply(this, arguments);
   }
   async function handleSearch(event) {
-    for (let group of event.messages) for (let message of group) await processMessage(message);
+    for (let group of event.messages)
+      for (let message of group) await processMessage(message);
 
     return await Discord.original_dispatch.apply(this, arguments);
   }
   async function handleUpdate(event) {
     let message = event.message;
-    if (message.content == null && message.embeds != null && message.embeds.length === 1) {
+    if (
+      message.content == null &&
+      message.embeds != null &&
+      message.embeds.length === 1
+    ) {
       let embed = message.embeds[0];
       if (
         embed.footer != null &&
-        (embed.footer.text === 'SimpleDiscordCrypt' || embed.footer.text === '𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵')
+        (embed.footer.text === 'SimpleDiscordCrypt' ||
+          embed.footer.text === '𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵')
       ) {
         return; //ignore embed-only updates
       }
     }
 
-    if (!(await processMessage(message))) return await Discord.original_dispatch.apply(this, arguments);
+    if (!(await processMessage(message)))
+      return await Discord.original_dispatch.apply(this, arguments);
   }
 
-  const messageRegex = /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
+  const messageRegex =
+    /^([⠀-⣿]{16,}) `(?:SimpleDiscordCrypt|𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵)`$/;
   const systemMessageRegex =
     /^```(?:\w*\n)?-----SYSTEM MESSAGE-----\n?```\s*(.*?)\s*```(?:\w*\n)?(?:𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵|SimpleDiscordCrypt)\n?```$/s;
-  const unknownKeyMessage = '```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```';
-  const invalidMessage = '```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```'; //invisible separator after the first '-'
+  const unknownKeyMessage =
+    '```fix\n-----ENCRYPTED MESSAGE WITH UNKNOWN KEY-----\n```';
+  const invalidMessage =
+    '```diff\n-⁣----ENCRYPTED MESSAGE WITH UNKNOWN FORMAT-----\n```'; //invisible separator after the first '-'
   async function processMessage(message, ignoreAttachments) {
     let result;
     const content = message.content;
     const messageMatch = messageRegex.exec(content);
     if (messageMatch != null) {
       //simple messsage
-      result = await decryptMessage(message, messageMatch[1], ignoreAttachments);
+      result = await decryptMessage(
+        message,
+        messageMatch[1],
+        ignoreAttachments
+      );
     } else {
       const systemMessageMatch = systemMessageRegex.exec(content);
       if (systemMessageMatch != null) {
@@ -3102,7 +3543,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       }
     }
 
-    if (Cache.pingOn != null && Cache.pingOn.test(message.content)) message.mentions = [Discord.getCurrentUser()];
+    if (Cache.pingOn != null && Cache.pingOn.test(message.content))
+      message.mentions = [Discord.getCurrentUser()];
 
     return result;
   }
@@ -3110,7 +3552,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   function scrollChat(by) {
     let messageContainer = document.querySelector(MessageScrollerSelector);
     if (messageContainer == null) return;
-    if (messageContainer.scrollTop + 1 >= messageContainer.scrollHeight - messageContainer.clientHeight) return; //scrolled to bottom
+    if (
+      messageContainer.scrollTop + 1 >=
+      messageContainer.scrollHeight - messageContainer.clientHeight
+    )
+      return; //scrolled to bottom
     messageContainer.scrollTop += by;
   }
 
@@ -3129,7 +3575,13 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   const extensionRegex = /\.([^.]+)$/;
   var downloadLocked = false;
   var downloadLocks = [];
-  async function decryptAttachment(key, keyHash, message, attachment, channelConfig) {
+  async function decryptAttachment(
+    key,
+    keyHash,
+    message,
+    attachment,
+    channelConfig
+  ) {
     let encryptedFilename = Utils.Base64urlToBytes(attachment.filename);
     let filename;
     try {
@@ -3146,7 +3598,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let mediaType;
     if (match != null) mediaType = mediaTypes[match[1].toLowerCase()];
     if (mediaType == null) {
-      attachment.url = `javascript:SdcDecryptDl(${JSON.stringify(filename)},'${keyHash}','${encryptedUrl}')`;
+      attachment.url = `javascript:SdcDecryptDl(${JSON.stringify(
+        filename
+      )},'${keyHash}','${encryptedUrl}')`;
       delete attachment.proxy_url;
       message.attachments.push(attachment);
       return;
@@ -3189,7 +3643,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     const downloadAndProcess = async () => {
       if (downloadLocked) {
-        await new Promise(resolve => downloadLocks.push([message.channel_id, resolve]));
+        await new Promise((resolve) =>
+          downloadLocks.push([message.channel_id, resolve])
+        );
       } else downloadLocked = true;
 
       let encryptedFileBuffer;
@@ -3201,18 +3657,29 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       } finally {
         if (downloadLocks.length !== 0) {
           let unlockNext;
-          let importantDlIndex = downloadLocks.findIndex(([channelId]) => channelId === Cache.channelId);
+          let importantDlIndex = downloadLocks.findIndex(
+            ([channelId]) => channelId === Cache.channelId
+          );
           unlockNext =
-            importantDlIndex > 0 ? downloadLocks.splice(importantDlIndex, 1)[0][1] : downloadLocks.shift()[1];
+            importantDlIndex > 0
+              ? downloadLocks.splice(importantDlIndex, 1)[0][1]
+              : downloadLocks.shift()[1];
           unlockNext();
         } else downloadLocked = false;
       }
 
-      let fileBuffer = await Utils.AesDecrypt(await Utils.GetKeyByHash(keyHash), encryptedFileBuffer);
+      let fileBuffer = await Utils.AesDecrypt(
+        await Utils.GetKeyByHash(keyHash),
+        encryptedFileBuffer
+      );
       let blob = new File([fileBuffer], filename);
-      let bloburl = `${URL.createObjectURL(new File([fileBuffer], filename))}#${filename}`;
+      let bloburl = `${URL.createObjectURL(
+        new File([fileBuffer], filename)
+      )}#${filename}`;
       let url;
-      let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(filename)},${JSON.stringify(bloburl)})`;
+      let downloadUrl = `javascript:SdcDownloadUrl(${JSON.stringify(
+        filename
+      )},${JSON.stringify(bloburl)})`;
 
       let width;
       let height;
@@ -3220,7 +3687,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         url = bloburl;
         let tmpMedia = document.createElement(mediaType);
         if (isVideo) {
-          await new Promise(resolve => {
+          await new Promise((resolve) => {
             tmpMedia.onloadeddata = () => {
               tmpMedia.ontimeupdate = resolve;
               tmpMedia.currentTime = 0;
@@ -3238,7 +3705,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             canvas.height = height;
             if (spoiler) ctx.filter = 'blur(50px)';
             ctx.drawImage(tmpMedia, 0, 0);
-            coverImageUrl = URL.createObjectURL(await new Promise(resolve => canvas.toBlob(resolve))) + '#';
+            coverImageUrl =
+              URL.createObjectURL(
+                await new Promise((resolve) => canvas.toBlob(resolve))
+              ) + '#';
           } else {
             let posterWidth = width;
             let posterHeight = height;
@@ -3267,7 +3737,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             video: { url: downloadUrl, proxy_url: url, width, height },
           });
         } else {
-          await new Promise(resolve => {
+          await new Promise((resolve) => {
             tmpMedia.onload = resolve;
             tmpMedia.src = url;
           });
@@ -3336,7 +3806,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     };
     if (
       message.channel_id === Cache.channelId ||
-      (channelConfig != null && channelConfig.l /*lastseen*/ > Date.now() - InactiveChannelTime)
+      (channelConfig != null &&
+        channelConfig.l /*lastseen*/ > Date.now() - InactiveChannelTime)
     )
       downloadAndProcess();
     else {
@@ -3375,12 +3846,14 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   const youtubeRegex = /[?&]v=([\w-]+).*?(&(?:t|start)=[\dhms]+)?/;
   function embedYoutube(message, url, queryString) {
     let match = youtubeRegex.exec(queryString);
-    if (match != null) message.embeds.push(createYoutubeEmbed(match[1], match[2]));
+    if (match != null)
+      message.embeds.push(createYoutubeEmbed(match[1], match[2]));
   }
   const youtuRegex = /^([\w-]+).*?(\?(?:t|start)=[\dhms]+)?/;
   function embedYoutu(message, url, queryString) {
     let match = youtuRegex.exec(queryString);
-    if (match != null) message.embeds.push(createYoutubeEmbed(match[1], match[2]));
+    if (match != null)
+      message.embeds.push(createYoutubeEmbed(match[1], match[2]));
   }
   const imageRegex = /^[^?]*\.(?:png|jpe?g|gif|webp)(?:$|\?)/i;
   function embedImage(message, url, queryString) {
@@ -3450,7 +3923,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   const validSoundcloudRegex = /^[^\/]+\/[^\/?]+(\?|$)/;
   function embedSoundcloud(message, url, queryString) {
     if (validSoundcloudRegex.test(queryString))
-      embedEncrypted(message, 'https://w.soundcloud.com/player/?visual=true&url=' + encodeURIComponent(url), null);
+      embedEncrypted(
+        message,
+        'https://w.soundcloud.com/player/?visual=true&url=' +
+          encodeURIComponent(url),
+        null
+      );
   }
   const linkEmbedders = {
     'www.youtube.com': embedYoutube,
@@ -3474,7 +3952,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     /(?:<https?:\/\/(?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+)\/[^\s<>'"]+>|https?:\/\/((?:[^\s\/?\.#]+\.)+(?:[^\s\/?\.#]+))\/([^\s<>'"]+))/g;
   function postProcessMessage(message, content) {
     let currentUser = Discord.getCurrentUser();
-    if (content.includes(`<@${currentUser.id}>`) || content.includes(`<@!${currentUser.id}>`)) {
+    if (
+      content.includes(`<@${currentUser.id}>`) ||
+      content.includes(`<@!${currentUser.id}>`)
+    ) {
       message.mentions = [currentUser];
     } else if (message.author != null) {
       let guildId = message.guild_id;
@@ -3487,18 +3968,31 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let canMentionEveryone;
         if (everyoneRegex.test(content)) {
           if (channel == null) channel = Discord.getChannel(message.channel_id);
-          message.mention_everyone = canMentionEveryone = Utils.Can(MENTION_EVERYONE_CHECK, message.author, channel);
+          message.mention_everyone = canMentionEveryone = Utils.Can(
+            MENTION_EVERYONE_CHECK,
+            message.author,
+            channel
+          );
         }
 
-        let mentionRoles = [...content.matchAll(roleMentionRegex)].map(x => x[1]);
+        let mentionRoles = [...content.matchAll(roleMentionRegex)].map(
+          (x) => x[1]
+        );
         if (mentionRoles.length !== 0) {
           if (canMentionEveryone == null) {
-            if (channel == null) channel = Discord.getChannel(message.channel_id);
-            canMentionEveryone = Utils.Can(MENTION_EVERYONE_CHECK, message.author, channel);
+            if (channel == null)
+              channel = Discord.getChannel(message.channel_id);
+            canMentionEveryone = Utils.Can(
+              MENTION_EVERYONE_CHECK,
+              message.author,
+              channel
+            );
           }
           if (!canMentionEveryone) {
             let guild = Discord.getGuild(guildId);
-            mentionRoles = mentionRoles.filter(x => guild.roles[x] && guild.roles[x].mentionable);
+            mentionRoles = mentionRoles.filter(
+              (x) => guild.roles[x] && guild.roles[x].mentionable
+            );
           }
           message.mention_roles = mentionRoles;
         }
@@ -3518,14 +4012,17 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let waitingMessages = keywaitingMessages[keyHash];
     if (waitingMessages == null) return;
     for (let [message, payload, originalRef] of waitingMessages) {
-      decryptMessage(Object.assign(originalRef, message), payload).then(() => Utils.UpdateMessageContent(originalRef));
+      decryptMessage(Object.assign(originalRef, message), payload).then(() =>
+        Utils.UpdateMessageContent(originalRef)
+      );
     }
     delete keywaitingMessages[keyHash];
   }
 
   let keyChangeWatchers = {};
   async function decryptMessage(message, payload, ignoreAttachments) {
-    if (message.referenced_message != null) await processMessage(message.referenced_message, true);
+    if (message.referenced_message != null)
+      await processMessage(message.referenced_message, true);
 
     let payloadBuffer = Utils.PayloadDecode(payload).buffer;
     let keyHashBytes = payloadBuffer.slice(0, 16);
@@ -3537,10 +4034,14 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       let messageDeleted = false;
       if (!DataBase.isSecondary && message.author != null) {
         let keyExchangeConcluded = false;
-        let keyExchange = Utils.InitKeyExchangeAndRequestKey(keyHashBase64, message.author, message.id);
+        let keyExchange = Utils.InitKeyExchangeAndRequestKey(
+          keyHashBase64,
+          message.author,
+          message.id
+        );
 
         let onMessageDelete;
-        let messageDeleteException = new Promise(resolve => {
+        let messageDeleteException = new Promise((resolve) => {
           onMessageDelete = () => {
             messageDeleted = true;
             resolve();
@@ -3549,7 +4050,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         });
 
         for (let i = 1; i <= 5; i++) {
-          await Promise.race([keyExchange, Utils.Sleep(i * 200), messageDeleteException]);
+          await Promise.race([
+            keyExchange,
+            Utils.Sleep(i * 200),
+            messageDeleteException,
+          ]);
           if (messageDeleted) break;
 
           key = await Utils.GetKeyByHash(keyHashBase64);
@@ -3560,7 +4065,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       if (key == null) {
         if (!messageDeleted) {
           let waitingMessages = keywaitingMessages[keyHashBase64];
-          if (waitingMessages == null) keywaitingMessages[keyHashBase64] = waitingMessages = [];
+          if (waitingMessages == null)
+            keywaitingMessages[keyHashBase64] = waitingMessages = [];
           waitingMessages.push([Object.assign({}, message), payload, message]);
         }
         message.content = unknownKeyMessage;
@@ -3571,7 +4077,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     }
 
     let channelId = message.channel_id;
-    let channelConfig = channelId === Cache.channelId ? Cache.channelConfig : DataBase.channels[channelId]; //don't bump lastseen
+    let channelConfig =
+      channelId === Cache.channelId
+        ? Cache.channelConfig
+        : DataBase.channels[channelId]; //don't bump lastseen
     let keyObj = keyObjRef[0];
     let myKey;
     let differentKey = false;
@@ -3589,13 +4098,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     }
     if (differentKey) {
       differentKeyDescriptor = Utils.FormatDescriptor(keyObj.d /*descriptor*/);
-      differentKeyDesc = differentKeyDescriptor.replace(/ /g, '_').replace(/\W/g, '');
+      differentKeyDesc = differentKeyDescriptor
+        .replace(/ /g, '_')
+        .replace(/\W/g, '');
     }
     let timestamp = new Date(message.timestamp).getTime();
     if (differentKey && notPersonalKey && channelConfig != null) {
       if (timestamp > Date.now() - IgnoreDiffKeyAge) {
         let keyChangeWatcher = keyChangeWatchers[channelId];
-        if (keyChangeWatcher == null) keyChangeWatchers[channelId] = { different: 1, sameKeyTime: 0 };
+        if (keyChangeWatcher == null)
+          keyChangeWatchers[channelId] = { different: 1, sameKeyTime: 0 };
         else if (
           timestamp > keyChangeWatcher.sameKeyTime &&
           ++keyChangeWatcher.different === DiffKeyTrigger &&
@@ -3630,7 +4142,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       }
     } else if (timestamp > Date.now() - IgnoreDiffKeyAge) {
       let keyChangeWatcher = keyChangeWatchers[channelId];
-      if (keyChangeWatcher == null) keyChangeWatchers[channelId] = { different: 0, sameKeyTime: timestamp };
+      if (keyChangeWatcher == null)
+        keyChangeWatchers[channelId] = { different: 0, sameKeyTime: timestamp };
       else if (keyChangeWatcher.sameKeyTime < timestamp) {
         keyChangeWatcher.different = 0;
         keyChangeWatcher.sameKeyTime = timestamp;
@@ -3653,18 +4166,31 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         message.attachments = [];
         return false;
       }
-      if (!differentKey) message.content = '<:ENC:465534298662109185>' + content;
-      else message.content = `<:ENC_${differentKeyDesc}:611264394747183115>` + content;
+      if (!differentKey)
+        message.content = '<:ENC:465534298662109185>' + content;
+      else
+        message.content =
+          `<:ENC_${differentKeyDesc}:611264394747183115>` + content;
       //message.content = content.replace(/^/gm, "<:ENC:465534298662109185>"); //bad for code blocks
       postProcessMessage(message, content);
     }
 
-    if (message.attachments != null && message.attachments.length !== 0 && !ignoreAttachments) {
+    if (
+      message.attachments != null &&
+      message.attachments.length !== 0 &&
+      !ignoreAttachments
+    ) {
       let attachments = message.attachments;
       message.attachments = [];
       for (let attachment of attachments) {
         try {
-          await decryptAttachment(key, keyHashBase64, message, attachment, channelConfig);
+          await decryptAttachment(
+            key,
+            keyHashBase64,
+            message,
+            attachment,
+            channelConfig
+          );
         } catch (e) {
           attachment.filename = '-----ENCRYPTED FILE FAILED TO DECRYPT-----';
         }
@@ -3674,12 +4200,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   }
 
   function getSystemMessageProperty(propertyName, sysmsg) {
-    let match = new RegExp(`\\*${propertyName}\\*:\\s*\`(.*?)\``, 'i').exec(sysmsg);
+    let match = new RegExp(`\\*${propertyName}\\*:\\s*\`(.*?)\``, 'i').exec(
+      sysmsg
+    );
     return match == null ? null : match[1];
   }
 
-  const unknownKeySystemMessage = '```fix\n-----SYSTEM MESSAGE WITH UNKNOWN KEY-----\n```';
-  const invalidSystemMessage = '```diff\n-⁣----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```';
+  const unknownKeySystemMessage =
+    '```fix\n-----SYSTEM MESSAGE WITH UNKNOWN KEY-----\n```';
+  const invalidSystemMessage =
+    '```diff\n-⁣----SYSTEM MESSAGE WITH UNKNOWN FORMAT-----\n```';
   const blockedSystemMessage = '```fix\n-----SYSTEM MESSAGE BLOCKED-----\n```';
   var keyExchangeWhitelist = {};
   async function processSystemMessage(message, sysmsg) {
@@ -3690,7 +4220,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let timestamp = new Date(message.timestamp).getTime();
     let channelConfig = Utils.GetOrCreateChannelConfig(message.channel_id);
     let oldMessage = true;
-    if (channelConfig.s /*systemMessageTime*/ == null || timestamp > channelConfig.s) {
+    if (
+      channelConfig.s /*systemMessageTime*/ == null ||
+      timestamp > channelConfig.s
+    ) {
       channelConfig.s = timestamp;
       Utils.dbChanged = true;
       oldMessage = false;
@@ -3707,14 +4240,19 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     if (
       DataBase.isSecondary &&
       !keyExchangeWhitelist[userId] &&
-      (messageType !== 'KEY SHARE' || DataBase.trustedKeys == null || !DataBase.trustedKeys[channelConfig.s])
+      (messageType !== 'KEY SHARE' ||
+        DataBase.trustedKeys == null ||
+        !DataBase.trustedKeys[channelConfig.s])
     )
       oldMessage = true; //check the sender key later
 
     let nonForced = true;
     if (!oldMessage) {
       message.content = blockedSystemMessage;
-      if (/friend/i.test(DataBase.autoKeyExchange) && !Discord.isFriend(userId)) {
+      if (
+        /friend/i.test(DataBase.autoKeyExchange) &&
+        !Discord.isFriend(userId)
+      ) {
         if (
           messageType === 'DH KEY' ||
           messageType === 'DH RESPONSE' ||
@@ -3750,8 +4288,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
             let dhPrivateKey = await Utils.ReadDhKey();
 
-            let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
-            let keyHash = await Utils.SaveKey(sharedSecret, 2 /*conversation*/, `DM key with <@${message.author.id}>`);
+            let sharedSecret = await Utils.DhGetSecret(
+              dhPrivateKey,
+              dhRemoteKey
+            );
+            let keyHash = await Utils.SaveKey(
+              sharedSecret,
+              2 /*conversation*/,
+              `DM key with <@${message.author.id}>`
+            );
             Utils.KeyShareEvent(keyHash);
             channelConfig.k /*keyHash*/ = keyHash;
             if (message.channel_id === Cache.channelId) {
@@ -3759,7 +4304,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               MenuBar.Update();
             }
 
-            let dhPublicKeyPayload = Utils.PayloadEncode(Utils.Base64ToBytes(DataBase.dhPublicKey));
+            let dhPublicKeyPayload = Utils.PayloadEncode(
+              Utils.Base64ToBytes(DataBase.dhPublicKey)
+            );
 
             let key = await Utils.AesImportKey(sharedSecret);
 
@@ -3789,7 +4336,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
           let dhKeyPayload = getSystemMessageProperty('dhKey', sysmsg);
           if (dhKeyPayload == null) break;
-          let remotePersonalKeyPayload = getSystemMessageProperty('personalKey', sysmsg);
+          let remotePersonalKeyPayload = getSystemMessageProperty(
+            'personalKey',
+            sysmsg
+          );
           if (remotePersonalKeyPayload == null) break;
           try {
             let dhRemoteKeyBytes = Utils.PayloadDecode(dhKeyPayload);
@@ -3797,8 +4347,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
             let dhPrivateKey = await Utils.ReadDhKey();
 
-            let sharedSecret = await Utils.DhGetSecret(dhPrivateKey, dhRemoteKey);
-            let keyHash = await Utils.SaveKey(sharedSecret, 2 /*conversation*/, `DM key with <@${message.author.id}>`);
+            let sharedSecret = await Utils.DhGetSecret(
+              dhPrivateKey,
+              dhRemoteKey
+            );
+            let keyHash = await Utils.SaveKey(
+              sharedSecret,
+              2 /*conversation*/,
+              `DM key with <@${message.author.id}>`
+            );
             Utils.KeyShareEvent(keyHash);
             channelConfig.k /*keyHash*/ = keyHash;
             Utils.dbChanged = true;
@@ -3809,7 +4366,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
             let key = await Utils.AesImportKey(sharedSecret);
 
-            let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
+            let remotePersonalKey = await Utils.AesDecrypt(
+              key,
+              Utils.PayloadDecode(remotePersonalKeyPayload)
+            );
             if (remotePersonalKey.byteLength !== 32) break;
             let remotePersonalKeyHash = await Utils.SaveKey(
               remotePersonalKey,
@@ -3836,17 +4396,25 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
           let keyHashPayload = getSystemMessageProperty('key', sysmsg);
           if (keyHashPayload == null) break;
-          let remotePersonalKeyPayload = getSystemMessageProperty('personalKey', sysmsg);
+          let remotePersonalKeyPayload = getSystemMessageProperty(
+            'personalKey',
+            sysmsg
+          );
           if (remotePersonalKeyPayload == null) break;
           try {
-            let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
+            let keyHash = Utils.BytesToBase64(
+              Utils.PayloadDecode(keyHashPayload)
+            );
             let key = await Utils.GetKeyByHash(keyHash);
             if (key == null) {
               message.content = unknownKeySystemMessage;
               return true;
             }
 
-            let remotePersonalKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(remotePersonalKeyPayload));
+            let remotePersonalKey = await Utils.AesDecrypt(
+              key,
+              Utils.PayloadDecode(remotePersonalKeyPayload)
+            );
             if (remotePersonalKey.byteLength !== 32) break;
             let remotePersonalKeyHash = await Utils.SaveKey(
               remotePersonalKey,
@@ -3872,12 +4440,22 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           message.content = '💻 Hey, can you tell me what this means?';
           if (oldMessage) return false;
 
-          let requestedKeyPayload = getSystemMessageProperty('requestedKey', sysmsg);
+          let requestedKeyPayload = getSystemMessageProperty(
+            'requestedKey',
+            sysmsg
+          );
           if (requestedKeyPayload == null) break;
           try {
-            let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(requestedKeyPayload));
+            let keyHash = Utils.BytesToBase64(
+              Utils.PayloadDecode(requestedKeyPayload)
+            );
 
-            Utils.ShareKey(keyHash, message.channel_id, nonForced, message.author); //no need to wait
+            Utils.ShareKey(
+              keyHash,
+              message.channel_id,
+              nonForced,
+              message.author
+            ); //no need to wait
           } catch (e) {
             break;
           }
@@ -3905,14 +4483,19 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
           let keyDescriptor = getSystemMessageProperty('keyDescriptor', sysmsg);
           if (keyDescriptor == null) break;
           try {
-            let keyHash = Utils.BytesToBase64(Utils.PayloadDecode(keyHashPayload));
+            let keyHash = Utils.BytesToBase64(
+              Utils.PayloadDecode(keyHashPayload)
+            );
             let key = await Utils.GetKeyByHash(keyHash);
             if (key == null) {
               message.content = unknownKeySystemMessage;
               return true;
             }
 
-            let sharedKey = await Utils.AesDecrypt(key, Utils.PayloadDecode(sharedKeyPayload));
+            let sharedKey = await Utils.AesDecrypt(
+              key,
+              Utils.PayloadDecode(sharedKeyPayload)
+            );
             if (sharedKey.byteLength !== 32) break;
             const keyTypeNames = { GROUP: 1, CONVERSATION: 2, PERSONAL: 3 }; //let's get personal :3
             let keyType = keyTypeNames[keyTypeName];
@@ -3920,9 +4503,15 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
             if (keyType !== 1 /*group*/) keyDescriptor += ` by <@${userId}>`;
 
-            let keyHidden = getSystemMessageProperty('keyHidden', sysmsg) === 'YES';
+            let keyHidden =
+              getSystemMessageProperty('keyHidden', sysmsg) === 'YES';
 
-            let sharedKeyHash = await Utils.SaveKey(sharedKey, keyType, keyDescriptor, keyHidden);
+            let sharedKeyHash = await Utils.SaveKey(
+              sharedKey,
+              keyType,
+              keyDescriptor,
+              keyHidden
+            );
             Utils.KeyShareEvent(sharedKeyHash);
 
             delete channelConfig.w; //waitingForSystemMessage
@@ -3930,14 +4519,21 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             delete keyExchangeWhitelist[userId];
 
             if (keyType === 1 /*group*/) {
-              let sharedChannelsJson = getSystemMessageProperty('sharedChannels', sysmsg);
+              let sharedChannelsJson = getSystemMessageProperty(
+                'sharedChannels',
+                sysmsg
+              );
               if (sharedChannelsJson != null) {
-                let trustedKey = DataBase.trustedKeys != null && DataBase.trustedKeys[keyHash];
+                let trustedKey =
+                  DataBase.trustedKeys != null && DataBase.trustedKeys[keyHash];
                 let sharedChannels = JSON.parse(sharedChannelsJson);
                 for (let channelId of sharedChannels) {
                   let channelConfig = DataBase.channels[channelId];
                   if (channelConfig == null) {
-                    let sharedChannelConfig = Utils.NewChannelConfig(channelId, sharedKeyHash);
+                    let sharedChannelConfig = Utils.NewChannelConfig(
+                      channelId,
+                      sharedKeyHash
+                    );
                     if (channelId === Cache.channelId) {
                       Cache.channelConfig = sharedChannelConfig;
                       MenuBar.Update();
@@ -3967,7 +4563,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   }
 
   function processUpdateSystemMessage(message, sysmsg) {
-    processSystemMessage(message, sysmsg).then(delayed => {
+    processSystemMessage(message, sysmsg).then((delayed) => {
       if (delayed) Utils.UpdateMessageContent(message);
     });
   }
@@ -3978,7 +4574,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let embed = message.embeds[0];
     if (
       embed.footer == null ||
-      (embed.footer.text !== 'SimpleDiscordCrypt' && embed.footer.text !== '𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵')
+      (embed.footer.text !== 'SimpleDiscordCrypt' &&
+        embed.footer.text !== '𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵')
     )
       return;
 
@@ -3986,7 +4583,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     if (embed.author.name === '-----ENCRYPTED MESSAGE-----') {
       if (!descriptionRegex.test(embed.description)) return;
-      return await decryptMessage(message, embed.description, ignoreAttachments);
+      return await decryptMessage(
+        message,
+        embed.description,
+        ignoreAttachments
+      );
     } else if (embed.author.name === '-----SYSTEM MESSAGE-----') {
       processUpdateSystemMessage(message, embed.description);
     }
@@ -4034,7 +4635,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let prefixMatch = prefixRegex.exec(content);
     if (channelConfig == null) {
       if (prefixMatch != null) {
-        if (Cache.channelBlacklist !== 1) channelConfig = Utils.NewChannelConfig(channelId);
+        if (Cache.channelBlacklist !== 1)
+          channelConfig = Utils.NewChannelConfig(channelId);
       } else return null;
     }
     if (prefixMatch != null) content = content.substring(prefixMatch[0].length);
@@ -4065,7 +4667,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     if (
       forceSimple ||
       Cache.channelBlacklist === 2 ||
-      (channel.type === 0 && !Utils.Can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))
+      (channel.type === 0 &&
+        !Utils.Can(EMBED_LINKS_CHECK, Discord.getCurrentUser(), channel))
     ) {
       message.content = payload + ' `𝘚𝘪𝘮𝘱𝘭𝘦𝘋𝘪𝘴𝘤𝘰𝘳𝘥𝘊𝘳𝘺𝘱𝘵`';
     } else {
@@ -4089,7 +4692,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
   async function getChannelKey(channelId) {
     let channelConfig = Utils.GetChannelConfig(channelId);
-    if (channelConfig == null || !channelConfig.e || Cache.channelBlacklist === 1) {
+    if (
+      channelConfig == null ||
+      !channelConfig.e ||
+      Cache.channelBlacklist === 1
+    ) {
       return null;
     }
 
@@ -4105,10 +4712,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     let encryptedFilename;
     let filenameBytes = Utils.StringToUtf8Bytes(filename);
-    if (filenameBytes.byteLength > filenameLimit) filenameBytes = Utils.StringToUtf8Bytes('file' + filenameParts[2]);
+    if (filenameBytes.byteLength > filenameLimit)
+      filenameBytes = Utils.StringToUtf8Bytes('file' + filenameParts[2]);
     do {
-      encryptedFilename = Utils.BytesToBase64url(await Utils.AesEncrypt(key, filenameBytes));
-    } while (encryptedFilename.startsWith('_') || encryptedFilename.endsWith('_')); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
+      encryptedFilename = Utils.BytesToBase64url(
+        await Utils.AesEncrypt(key, filenameBytes)
+      );
+    } while (
+      encryptedFilename.startsWith('_') ||
+      encryptedFilename.endsWith('_')
+    ); //this character is trimmed by discord (the solution assumes that the encryption looks fully random)
 
     return encryptedFilename;
   }
@@ -4117,7 +4730,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     const messageReference = messageOptions?.messageReference;
 
     if (messageReference != null && Discord.getMessage != null) {
-      const referencedMessage = Discord.getMessage(messageReference.channel_id, messageReference.message_id);
+      const referencedMessage = Discord.getMessage(
+        messageReference.channel_id,
+        messageReference.message_id
+      );
       const referencedChannel = Discord.getChannel(messageReference.channel_id);
 
       if (referencedMessage && referencedChannel) {
@@ -4171,7 +4787,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let filename = editableFile.filename;
         if (editableFile.spoiler) {
           editableFile.spoiler = false;
-          if (!filename.startsWith('SPOILER_')) filename = 'SPOILER_' + filename;
+          if (!filename.startsWith('SPOILER_'))
+            filename = 'SPOILER_' + filename;
         }
 
         let encryptedFilename = await encryptFilename(key, filename);
@@ -4190,7 +4807,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   async function handleInstantUploads(channelId, fileList, draftType) {
     let message = { content: '' };
     let key = await handleSend(channelId, message, true);
-    if (key == null) return Discord.original_instantBatchUpload.apply(this, arguments);
+    if (key == null)
+      return Discord.original_instantBatchUpload.apply(this, arguments);
 
     try {
       for (let file of fileList) {
@@ -4254,7 +4872,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     let originalFile = item.file;
     item.file = this.ENCRYPTED_FILE;
 
-    let resultPromise = Discord.original_uploadFileToCloud.apply(this, arguments);
+    let resultPromise = Discord.original_uploadFileToCloud.apply(
+      this,
+      arguments
+    );
 
     item.file = originalFile;
 
@@ -4263,7 +4884,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
   var clearAttachmentBlockedChannels = new Set();
   function handleClearAttachments(event) {
-    if (!clearAttachmentBlockedChannels.has(event.channelId)) return Discord.original_dispatch.apply(this, arguments);
+    if (!clearAttachmentBlockedChannels.has(event.channelId))
+      return Discord.original_dispatch.apply(this, arguments);
   }
 
   const eventHandlers = {
@@ -4290,7 +4912,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         event.type === 'MESSAGE_CREATE' ||
         event.type === 'MESSAGE_UPDATE'
       ) {
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           messageLocks.push(resolve);
         });
 
@@ -4300,7 +4922,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       return await Discord.original_dispatch.apply(this, arguments);
     };
 
-    UnlockMessages = lifted => {
+    UnlockMessages = (lifted) => {
       if (!lifted) Discord.detour_dispatch = Discord.dispatch;
       for (let unlockMessage of messageLocks) unlockMessage();
       messageLocks = [];
@@ -4308,7 +4930,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
   }
 
   async function LoadBlacklist() {
-    let blacklistString = Utils.Utf8BytesToString(await Utils.DownloadFile(BlacklistUrl));
+    let blacklistString = Utils.Utf8BytesToString(
+      await Utils.DownloadFile(BlacklistUrl)
+    );
     let blacklistRegex = /^\s*(\d{1,20})(E?)/gm;
     Blacklist = {};
     let record;
@@ -4339,7 +4963,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     Discord.detour_enqueue = function (packet) {
       (async () => {
-        await handleSend(packet.message.channelId, packet.message, /*packet.type === 1/*edit*/ true);
+        await handleSend(
+          packet.message.channelId,
+          packet.message,
+          /*packet.type === 1/*edit*/ true
+        );
 
         Discord.original_enqueue.apply(this, arguments);
       })();
@@ -4385,7 +5013,10 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     if (Discord.detour_setAttribute != null)
       Discord.detour_setAttribute = function (key, value) {
-        if (key === 'src' && value?.startsWith('https://open.spotify.com/embed/playlist//'))
+        if (
+          key === 'src' &&
+          value?.startsWith('https://open.spotify.com/embed/playlist//')
+        )
           value = EmbedFrames[value.split(/\/playlist\/\/|\?/g, 2)[1]];
 
         return Discord.original_setAttribute.call(this, key, value);
@@ -4393,11 +5024,17 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
     if (Discord.detour_canUseEmojisEverywhere != null)
       Discord.detour_canUseEmojisEverywhere = function () {
-        return !!Utils.GetCurrentChannelEncrypt() || Discord.original_canUseEmojisEverywhere.apply(this, arguments);
+        return (
+          !!Utils.GetCurrentChannelEncrypt() ||
+          Discord.original_canUseEmojisEverywhere.apply(this, arguments)
+        );
       };
     if (Discord.detour_canUseAnimatedEmojis != null)
       Discord.detour_canUseAnimatedEmojis = function () {
-        return !!Utils.GetCurrentChannelEncrypt() || Discord.original_canUseAnimatedEmojis.apply(this, arguments);
+        return (
+          !!Utils.GetCurrentChannelEncrypt() ||
+          Discord.original_canUseAnimatedEmojis.apply(this, arguments)
+        );
       };
 
     MenuBar.Show(
@@ -4429,8 +5066,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         keys.push({
           hash: DataBase.personalKeyHash,
-          descriptor: Utils.FormatDescriptor(DataBase.keys[DataBase.personalKeyHash].d),
-          selected: currentKeyHash == null || DataBase.personalKeyHash === currentKeyHash,
+          descriptor: Utils.FormatDescriptor(
+            DataBase.keys[DataBase.personalKeyHash].d
+          ),
+          selected:
+            currentKeyHash == null ||
+            DataBase.personalKeyHash === currentKeyHash,
         });
 
         Object.entries(DataBase.keys)
@@ -4446,7 +5087,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
 
         return keys;
       },
-      async key => {
+      async (key) => {
         await Utils.SetCurrentChannelKey(key.hash);
         MenuBar.Update();
       },
@@ -4462,7 +5103,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       () => Utils.InitKeyExchange({ id: Utils.GetCurrentDmUserId() }),
       async () => {
         await Utils.SetCurrentChannelKey(
-          await Utils.SaveKey(Utils.GetRandomBytes(32), 1 /*group*/, `Group <#${Cache.channelId}>`)
+          await Utils.SaveKey(
+            Utils.GetRandomBytes(32),
+            1 /*group*/,
+            `Group <#${Cache.channelId}>`
+          )
         );
         MenuBar.Update();
       },
@@ -4477,7 +5122,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             lastseen: personalKey.l,
             hidden: personalKey.h,
             type: 'PERSONAL',
-            trusted: DataBase.trustedKeys != null && DataBase.trustedKeys[personalKeyHash],
+            trusted:
+              DataBase.trustedKeys != null &&
+              DataBase.trustedKeys[personalKeyHash],
             protected: true,
           },
         ];
@@ -4493,7 +5140,8 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
                 descriptor: Utils.FormatDescriptor(keyObj.d),
                 hidden: keyObj.h,
                 type: keyTypes[keyObj.t],
-                trusted: DataBase.trustedKeys != null && DataBase.trustedKeys[hash],
+                trusted:
+                  DataBase.trustedKeys != null && DataBase.trustedKeys[hash],
               });
           });
         KeyManagerWindow.Show(
@@ -4508,7 +5156,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             Utils.ChangeKeyHidden(key.hash, hidden);
             key.hidden = hidden;
           },
-          key => {
+          (key) => {
             Utils.DeleteKey(key.hash);
             MenuBar.Update();
           }
@@ -4523,7 +5171,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
               descriptor: Utils.FormatDescriptor(channel.d),
               lastseen: channel.l,
             })),
-          channel => {
+          (channel) => {
             Utils.DeleteChannelConfig(channel.id);
             if (channel.id === Cache.channelId) MenuBar.Update();
           }
@@ -4556,7 +5204,9 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
             }))
         );
 
-        ShareKeyWindow.Show(keys, key => Utils.ShareKey(key.hash, Cache.channelId));
+        ShareKeyWindow.Show(keys, (key) =>
+          Utils.ShareKey(key.hash, Cache.channelId)
+        );
       }
     );
 
@@ -4577,7 +5227,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     const fakeScriptLink = function (event) {
       return executeCall(event, this, this.attributes.href.value.substr(13));
     };
-    const tryReplaceLink = a => {
+    const tryReplaceLink = (a) => {
       let href = a.attributes.href;
       if (href === undefined) return;
       href = href.value;
@@ -4585,13 +5235,16 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         a.addEventListener('click', fakeScriptLink);
         a.addEventListener('auxclick', fakeScriptLink);
       } else if (href.startsWith('javascript:')) {
-        a.addEventListener(href.startsWith('javascript:SdcDecryptDl(') ? 'click' : 'auxclick', scriptLink);
+        a.addEventListener(
+          href.startsWith('javascript:SdcDecryptDl(') ? 'click' : 'auxclick',
+          scriptLink
+        );
       }
     };
     //const isFirefox = navigator.userAgent.includes('Firefox');
     if (!FixedCsp) {
       const imgsrcIdRegex = /#([^?]+)/;
-      const tryReplaceImage = async img => {
+      const tryReplaceImage = async (img) => {
         let srcmatch = imgsrcIdRegex.exec(img.src);
         if (srcmatch == null) return;
         let blob = Patcher.Images[srcmatch[1]];
@@ -4600,8 +5253,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         let width = bitmap.width;
         let height = bitmap.height;
         let canvas = document.createElement('canvas');
-        if (img.matches(ModalImgSelector)) canvas.addEventListener('click', ImageZoom.zoom);
-        else if (img.matches(MessageImgSelector) && (width > 800 || height > 600)) {
+        if (img.matches(ModalImgSelector))
+          canvas.addEventListener('click', ImageZoom.zoom);
+        else if (
+          img.matches(MessageImgSelector) &&
+          (width > 800 || height > 600)
+        ) {
           if (width / 800 > height / 600) {
             height = Math.round(height / (width / 800));
             width = 800;
@@ -4618,7 +5275,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
         img.replaceWith(canvas);
       };
       Patcher = {
-        observer: new MutationObserver(mutations => {
+        observer: new MutationObserver((mutations) => {
           for (let mutation of mutations) {
             if (mutation.type === 'attributes') {
               let tagName = mutation.target.tagName;
@@ -4653,7 +5310,7 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       };
     } else {
       Patcher = {
-        observer: new MutationObserver(mutations => {
+        observer: new MutationObserver((mutations) => {
           for (let mutation of mutations) {
             if (mutation.type === 'attributes') {
               if (mutation.target.tagName === 'A') {
@@ -4688,11 +5345,14 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     }
 
     let appDiv = document.getElementById('app-mount');
-    if (appDiv != null) ImageZoom.observer.observe(appDiv, { childList: true, subtree: true });
+    if (appDiv != null)
+      ImageZoom.observer.observe(appDiv, { childList: true, subtree: true });
 
     if (DataBase.pingOn) {
       let fullRegex = /^\/(.*)\/([imsu]{0,4})$/.exec(DataBase.pingOn);
-      Cache.pingOn = fullRegex ? new RegExp(fullRegex[1], fullRegex[2]) : new RegExp(DataBase.pingOn);
+      Cache.pingOn = fullRegex
+        ? new RegExp(fullRegex[1], fullRegex[2])
+        : new RegExp(DataBase.pingOn);
     }
 
     Utils.Log('loaded');
@@ -4714,9 +5374,12 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
     restoreFunction('CloudUploadPrototype', 'uploadFileToCloud');
     Discord.detour_cloudUpload = Discord.cloudUpload;
 
-    if (Discord.detour_canUseEmojisEverywhere != null) restoreFunction('Premium', 'canUseEmojisEverywhere');
-    if (Discord.detour_canUseAnimatedEmojis != null) restoreFunction('Premium', 'canUseAnimatedEmojis');
-    if (Discord.detour_setAttribute != null) restoreFunction('IframePrototype', 'setAttribute');
+    if (Discord.detour_canUseEmojisEverywhere != null)
+      restoreFunction('Premium', 'canUseEmojisEverywhere');
+    if (Discord.detour_canUseAnimatedEmojis != null)
+      restoreFunction('Premium', 'canUseAnimatedEmojis');
+    if (Discord.detour_setAttribute != null)
+      restoreFunction('IframePrototype', 'setAttribute');
 
     if (Patcher != null) Patcher.observer.disconnect();
 
