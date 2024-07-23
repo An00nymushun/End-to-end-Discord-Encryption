@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SimpleDiscordCrypt
 // @namespace    https://gitlab.com/An0/SimpleDiscordCrypt
-// @version      1.7.4.0
+// @version      1.7.5.0
 // @description  I hope people won't start calling this SDC ^_^
 // @author       An0
 // @license      LGPLv3 - https://www.gnu.org/licenses/lgpl-3.0.txt
@@ -1620,11 +1620,52 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       return 0;
     }
 
-    modules.PermissionEvaluator = findModuleByUniqueProperties([
-      'can',
-      'computePermissions',
-      'canManageUser',
-    ]);
+    let permissionEvaluatorCan;
+    modules.PermissionEvaluator = findModule((x) => {
+      const getters = Object.values(Object.getOwnPropertyDescriptors(x)).map(
+        (x) => x.get
+      );
+      if (getters.includes(undefined)) {
+        // All properties are getters on the searched module
+        return false;
+      }
+      let properties;
+      try {
+        properties = getters.map((x) => x());
+      } catch {
+        return false;
+      }
+      const bigints = properties.filter((x) => typeof x === 'bigint');
+      if (bigints.length < 3) {
+        // The module has some precomputed permissions we can filter for
+        return false;
+      }
+      const knownPermissionsMask = 0x7ffffffffffffn;
+      const defaultPermissions = 1720707884502593n;
+      const managementPermissions = 8798106288300n;
+      if (
+        !bigints.includes(0n) ||
+        !bigints.some(
+          (x) => (x & knownPermissionsMask) === defaultPermissions
+        ) ||
+        !bigints.some(
+          (x) => (x & knownPermissionsMask) === managementPermissions
+        )
+      ) {
+        return false;
+      }
+
+      const canFunctionRegex =
+        /^function \w+\(\w+\)\s*{\s*let\s*{\s*permission:\s*\w+,\s*user:\s*\w+,\s*context:/s;
+      const functionToString = Function.prototype.toString;
+      permissionEvaluatorCan = properties.find(
+        (x) =>
+          typeof x === 'function' &&
+          canFunctionRegex.test(functionToString.apply(x))
+      );
+
+      return permissionEvaluatorCan != null;
+    });
     if (modules.PermissionEvaluator == null) {
       if (final) Utils.Error('PermissionEvaluator not found.');
       return 0;
@@ -3205,11 +3246,11 @@ ${HeaderBarSelector}, ${HeaderBarChildrenSelector} { overflow: visible !importan
       mirrorFunction('FileUploader', 'upload');
       mirrorFunction('FileUploader', 'instantBatchUpload');
       mirrorFunction('FileUploader', 'uploadFiles');
-      mirrorFunction('PermissionEvaluator', 'can');
       mirrorFunction('RelationshipStore', 'isFriend');
       mirrorFunction('PrivateChannelManager', 'ensurePrivateChannel');
       mirrorFunction('CloudUploadHelper', 'getUploadPayload');
       mirrorFunction('CloudUploadPrototype', 'uploadFileToCloud');
+      Discord.can = permissionEvaluatorCan;
       Discord.cloudUpload = modules.CloudUploadPrototype.upload;
 
       hookFunction('MessageQueue', 'enqueue');
